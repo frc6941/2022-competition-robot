@@ -28,8 +28,10 @@ public interface SwerveDrivetrainBase extends Subsystem, Updatable{
     abstract SwerveDriveKinematics getKinematics();
 
     abstract void resetGyroAngle(Rotation2 angle);
+    
+    abstract void resetOdometry(Pose2d pose);
 
-    public void resetOdometry(Pose2d pose);
+    abstract void resetGyro(double degree);
 
-    abstract void zeroGyro();
+    
 }

@@ -1,20 +1,21 @@
 package org.frcteam6941.control;
 
+import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.Trajectory.State;
 
-public class HolonomicTrajectoryFollower extends TrajectoryFollower<HolonomicDriveSignal> {
+public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<HolonomicDriveSignal> {
     private PIDController xController;
     private PIDController yController;
     private ProfiledPIDController thetaController;
     private SimpleMotorFeedforward feedforward;
 
-    private Trajectory.State lastState = null;
+    private PathPlannerTrajectory.PathPlannerState lastState = null;
 
     private boolean finished = false;
 
@@ -30,14 +31,14 @@ public class HolonomicTrajectoryFollower extends TrajectoryFollower<HolonomicDri
 
     @Override
     protected HolonomicDriveSignal calculateDriveSignal(Pose2d currentPose, Translation2d velocity,
-            double rotationalVelocity, Trajectory trajectory, double time,
+            double rotationalVelocity, PathPlannerTrajectory trajectory, double time,
             double dt) {
         if (time > trajectory.getTotalTimeSeconds()) {
             finished = true;
             return new HolonomicDriveSignal(new Translation2d(0, 0), 0.0, true);
         }
 
-        State target = trajectory.sample(time);
+        PathPlannerState target = (PathPlannerState) trajectory.sample(time);
         double x = xController.calculate(currentPose.getX(), target.poseMeters.getX());
         double y = yController.calculate(currentPose.getY(), target.poseMeters.getY());
         double rotation = 0.0;
@@ -51,7 +52,8 @@ public class HolonomicTrajectoryFollower extends TrajectoryFollower<HolonomicDri
         }
 
         if(this.lockAngle){
-            rotation = this.thetaController.calculate(currentPose.getRotation().getDegrees(), target.poseMeters.getRotation().getDegrees());
+            // As we take clockwise as positive, the value provided by PathPlanner need to be converted.
+            rotation = this.thetaController.calculate(360.0 - currentPose.getRotation().getDegrees(), target.holonomicRotation.getDegrees());
         }
 
         return new HolonomicDriveSignal(
@@ -61,7 +63,7 @@ public class HolonomicTrajectoryFollower extends TrajectoryFollower<HolonomicDri
         );
     }
 
-    public Trajectory.State getLastState() {
+    public PathPlannerTrajectory.PathPlannerState getLastState() {
         return lastState;
     }
 

@@ -19,7 +19,7 @@ public class IntakerSubsystem extends SubsystemBase implements Updatable {
     private static IntakerSubsystem instance;
     private STATE state = STATE.OFF;
 
-    public IntakerSubsystem getInstance() {
+    public static IntakerSubsystem getInstance() {
         if (instance == null) {
             instance = new IntakerSubsystem();
         }
@@ -40,15 +40,15 @@ public class IntakerSubsystem extends SubsystemBase implements Updatable {
             case FAST_INTAKE:
                 this.leftSolenoid.set(Value.kForward);
                 this.rightSolenoid.set(Value.kForward);
-                this.intakeMotor.set(ControlMode.PercentOutput, 0.8);
+                this.intakeMotor.set(ControlMode.PercentOutput, Constants.INTAKER_FAST_INTAKE_PERCENTAGE);
             case SLOW_INTAKE:
                 this.leftSolenoid.set(Value.kForward);
                 this.rightSolenoid.set(Value.kForward);
-                this.intakeMotor.set(ControlMode.PercentOutput, 0.3);
+                this.intakeMotor.set(ControlMode.PercentOutput, Constants.INTAKER_SLOW_INTAKE_PERCENTAGE);
             case REVERSE:
                 this.leftSolenoid.set(Value.kForward);
                 this.rightSolenoid.set(Value.kForward);
-                this.intakeMotor.set(ControlMode.PercentOutput, -0.8);
+                this.intakeMotor.set(ControlMode.PercentOutput, -Constants.INTAKER_FAST_INTAKE_PERCENTAGE);
         }
     }
 

@@ -17,7 +17,7 @@ public class ShooterSubsystem extends SubsystemBase implements Updatable {
     private final TalonFX shooterFollowerMotor = new TalonFX(Constants.CANID.SHOOTER_FOLLOWER_MOTOR);
 
     private static ShooterSubsystem instance;
-    private STATE state = STATE.LOW_SPEED;
+    private STATE state = STATE.OFF;
 
     public static ShooterSubsystem getInstance() {
         if (instance == null) {
@@ -27,10 +27,13 @@ public class ShooterSubsystem extends SubsystemBase implements Updatable {
     }
 
     private ShooterSubsystem() {
+        shooterFollowerMotor.configFactoryDefault();
         shooterFollowerMotor.follow(shooterLeadMotor);
         shooterFollowerMotor.setInverted(InvertType.OpposeMaster);
         shooterFollowerMotor.setNeutralMode(NeutralMode.Coast);
+        shooterFollowerMotor.enableVoltageCompensation(true);
 
+        shooterLeadMotor.configFactoryDefault();
         shooterLeadMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
         shooterLeadMotor.enableVoltageCompensation(true);
         shooterLeadMotor.setInverted(InvertType.None);
@@ -40,26 +43,38 @@ public class ShooterSubsystem extends SubsystemBase implements Updatable {
         shooterLeadMotor.config_kD(0, Constants.SHOOTER_KD);
     }
 
+    public void setShooterPercentage(double percentage){
+        this.shooterLeadMotor.set(ControlMode.PercentOutput, percentage);
+    }
+
+    public void setShooterRPM(double rpm){
+        this.shooterLeadMotor.set(ControlMode.Velocity, Conversions.RPMToFalcon(rpm, Constants.SHOOTER_GEAR_RATIO));
+    }
+
     public double getShooterRPM(){
-        return Conversions.falconToRPM(this.shooterLeadMotor.getSelectedSensorVelocity(), 1.0);
+        return Conversions.falconToRPM(this.shooterLeadMotor.getSelectedSensorVelocity(), Constants.SHOOTER_GEAR_RATIO);
     }
 
     public double getShooterError(){
-        return Conversions.falconToRPM(this.shooterLeadMotor.getClosedLoopError(), 1.0);
+        return Conversions.falconToRPM(this.shooterLeadMotor.getClosedLoopError(), Constants.SHOOTER_GEAR_RATIO);
     }
 
-    public boolean shooterReady(){
+    public boolean isReady(){
         return getShooterError() <= Constants.SHOOTER_ERROR_TOLERANCE;
     }
 
     public void update(double time, double dt) {
         switch(state){
             case OFF:
-                this.shooterLeadMotor.set(ControlMode.PercentOutput, 0.0);
+                this.setShooterPercentage(0.0);
+                break;
             case LOW_SPEED:
-                this.shooterLeadMotor.set(ControlMode.Velocity, Conversions.RPMToFalcon(Constants.SHOOTER_LOW_SPEED, 1.0));
+                System.out.println("LOW SPEED");
+                this.setShooterRPM(Constants.SHOOTER_LOW_SPEED_RPM);
+                break;
             case HIGH_SPEED:
-                this.shooterLeadMotor.set(ControlMode.Velocity, Conversions.RPMToFalcon(Constants.SHOOTER_HIGH_SPEED, 1.0));
+                this.setShooterRPM(Constants.SHOOTER_HIGH_SPEED_RPM);
+                break;
         }
     }
 

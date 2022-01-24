@@ -1,15 +1,12 @@
 package org.frcteam6941.utils;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 import org.frcteam2910.common.robot.input.Axis;
 import org.frcteam2910.common.robot.input.Controller;
 import org.frcteam2910.common.robot.input.DPadButton;
 import org.frcteam2910.common.robot.input.JoystickAxis;
 
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.button.Button;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -49,21 +46,24 @@ public final class XboxControllerExtended extends Controller {
 
     private final DPadButton[] dpadButtons;
 
-    private final Runnable r;
-    private final Notifier n;
-    private final Timer timer = new Timer("Rumble Timer");
+    private boolean rumbling = false;
 
-    public enum RUMBLE_TYPE {
-        LEFT, RIGHT, BOTH
+    // Well, it supposed to be an ArrayList with indefinite length, but
+    // DriverStation 2022 only supports upto 5 controllers.. So it doesn't matter
+    // that much anymore.
+    private static XboxControllerExtended[] instances = new XboxControllerExtended[] { null, null, null, null, null };
+
+    public static XboxControllerExtended getController(int port){
+        if(instances[port] == null){
+            instances[port] = new XboxControllerExtended(port);
+        }
+        return instances[port];
     }
-
-    private RUMBLE_TYPE rType = RUMBLE_TYPE.BOTH;
-    private double intensity = 0;
 
     /**
      * @param port The port the controller is on
      */
-    public XboxControllerExtended(int port) {
+    private XboxControllerExtended(int port) {
         joystick = new Joystick(port);
 
         aButton = new JoystickButton(joystick, 1);
@@ -91,23 +91,6 @@ public final class XboxControllerExtended extends Controller {
         for (DPadButton.Direction dir : DPadButton.Direction.values()) {
             dpadButtons[dir.ordinal()] = new DPadButton(joystick, dir);
         }
-
-        r = () -> {
-            switch (rType) {
-                case LEFT:
-                    setRumbleRaw(RumbleType.kLeftRumble, intensity);
-                    break;
-                case RIGHT:
-                    setRumbleRaw(RumbleType.kRightRumble, intensity);
-                    break;
-                case BOTH:
-                    setRumbleRaw(RumbleType.kLeftRumble, intensity);
-                    setRumbleRaw(RumbleType.kRightRumble, intensity);
-                    break;
-            }
-        };
-        n = new Notifier(r);
-        n.startPeriodic(0.02);
     }
 
     @Override
@@ -199,19 +182,46 @@ public final class XboxControllerExtended extends Controller {
         return joystick;
     }
 
-    private void setRumbleRaw(RumbleType type, double intensity) {
-        this.joystick.setRumble(type, intensity);
+    public void rumble(double rumblesPerSecond, double numberOfSeconds) {
+        if (!rumbling) {
+            RumbleThread r = new RumbleThread(rumblesPerSecond, numberOfSeconds);
+            r.start();
+        }
     }
 
-    public void setRumble(RUMBLE_TYPE type, double in, double time){
-        rType = type;
-        intensity = in;
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                intensity = 0;
+    public boolean isRumbling() {
+        return rumbling;
+    }
+
+    public class RumbleThread extends Thread {
+        public double rumblesPerSec = 1;
+        public long interval = 500;
+        public double seconds = 1;
+        public double startTime = 0;
+
+        public RumbleThread(double rumblesPerSecond, double numberOfSeconds) {
+            rumblesPerSec = rumblesPerSecond;
+            seconds = numberOfSeconds;
+            interval = (long) (1 / (rumblesPerSec * 2) * 1000);
+        }
+
+        public void run() {
+            rumbling = true;
+            startTime = Timer.getFPGATimestamp();
+            try {
+                while ((Timer.getFPGATimestamp() - startTime) < seconds) {
+                    joystick.setRumble(RumbleType.kLeftRumble, 1);
+                    joystick.setRumble(RumbleType.kRightRumble, 1);
+                    sleep(interval);
+                    joystick.setRumble(RumbleType.kLeftRumble, 0);
+                    joystick.setRumble(RumbleType.kRightRumble, 0);
+                    sleep(interval);
+                }
+            } catch (InterruptedException e) {
+                rumbling = false;
+                e.printStackTrace();
             }
-        }, (long) time);
+            rumbling = false;
+        }
     }
-
 }

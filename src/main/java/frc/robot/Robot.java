@@ -8,11 +8,13 @@ import com.revrobotics.ColorSensorV3;
 
 import org.frcteam2910.common.robot.UpdateManager;
 
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.I2C.Port;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.ShooterSubsystem.STATE;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to

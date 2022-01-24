@@ -3,6 +3,7 @@ package org.frcteam6941.swerve;
 import java.util.Optional;
 
 import com.google.errorprone.annotations.concurrent.GuardedBy;
+import com.pathplanner.lib.PathPlannerTrajectory;
 
 import org.frcteam2910.common.math.RigidTransform2;
 import org.frcteam2910.common.math.Rotation2;
@@ -15,6 +16,7 @@ import org.frcteam6941.utils.AngleNormalization;
 import org.frcteam6941.utils.MasterKey;
 
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -24,10 +26,10 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Nat;
 import frc.robot.Constants;
+import frc.robot.subsystems.ShooterSubsystem.STATE;
 
 /**
  * Rectangular Swerve Drivetrain composed of SJTU Swerve Module MK5s. This is a
@@ -79,7 +81,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
     @GuardedBy("signalLock")
     private HolonomicDriveSignal driveSignal = new HolonomicDriveSignal(new Translation2d(0, 0), 0, true);
-    private STATE state = STATE.BRAKE;
+    private STATE state = STATE.DRIVE;
 
     // Auxillary Stuffs
     private final InterpolatingTreeMap<InterpolatingDouble, RigidTransform2> latencyCompensationMap = new InterpolatingTreeMap<>();
@@ -97,7 +99,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     public SJTUSwerveMK5Drivebase() {
         gyro = new Pigeon(0);
         gyro.getPigeonIMU().configFactoryDefault();
-        zeroGyro();
+        resetGyro(0.0);
 
         mSwerveMods = new SJTUSwerveModuleMK5[] {
                 new SJTUSwerveModuleMK5(0, Constants.CANID.DRIVETRAIN_FRONTLEFT_DRIVE_MOTOR,
@@ -129,7 +131,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     }
 
     @Override
-    public void setLockHeading(boolean status){
+    public void setLockHeading(boolean status) {
         this.isLockHeading = status;
         this.headingFeedforward = 0.0;
     }
@@ -165,7 +167,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         return this.headingTarget;
     }
 
-    public void lockCurrentHeading(){
+    public void lockCurrentHeading() {
         this.setHeadingTarget(this.getFieldOrientedHeading());
     }
 
@@ -227,7 +229,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         }
     }
 
-
     @Override
     public void update(double time, double dt) {
         updateOdometry(time, dt);
@@ -243,18 +244,12 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
             rotation += headingFeedforward;
             driveSignal = new HolonomicDriveSignal(driveSignal.getTranslation(), rotation, true);
         }
-        
+
         Optional<HolonomicDriveSignal> trajectorySignal = trajectoryFollower.update(getPose(), getTranslation(),
                 getAngularVelocity(), time, dt);
 
         if (trajectorySignal.isPresent()) {
             setState(STATE.PATH_FOLLOWING);
-        } else {
-            if (driveSignal.getTranslation().getNorm() < 0.001 & Math.abs(driveSignal.getRotation()) < 0.001) {
-                setState(STATE.BRAKE);
-            } else {
-                setState(STATE.DRIVE);
-            }
         }
 
         synchronized (signalLock) {
@@ -272,6 +267,8 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
                                 driveSignal.isFieldOriented());
 
                         updateModules(driveSignal, dt);
+                    } else{
+                        setState(STATE.DRIVE);
                     }
                     break;
             }
@@ -285,14 +282,14 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         }
     }
 
-    public void follow(Trajectory targetTrajectory) {
-        this.trajectoryFollower.setLockAngle(true);
+    public void follow(PathPlannerTrajectory targetTrajectory, boolean isLockAngle) {
+        this.trajectoryFollower.setLockAngle(isLockAngle);
+        this.resetOdometry(targetTrajectory.getInitialPose());
         this.trajectoryFollower.follow(targetTrajectory);
     }
 
-    public void follow(Trajectory targeTrajectory, boolean isLockAngle){
-        this.trajectoryFollower.setLockAngle(isLockAngle);
-        this.trajectoryFollower.follow(targeTrajectory);
+    public void follow(PathPlannerTrajectory targetTrajectory) {
+        this.follow(targetTrajectory, true);
     }
 
     /**
@@ -360,6 +357,11 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     }
 
     @Override
+    public void resetGyro(double degree) {
+        gyro.getPigeonIMU().setYaw(degree);
+    }
+
+    @Override
     public SwerveModuleState[] getStates() {
         SwerveModuleState[] states = new SwerveModuleState[4];
         for (SJTUSwerveModuleMK5 mod : mSwerveMods) {
@@ -369,21 +371,17 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     }
 
     @Override
-    public void zeroGyro() {
-        gyro.getPigeonIMU().setYaw(0);
-    }
-
-    @Override
     public Rotation2d getYaw() {
         synchronized (sensorLock) {
             double[] ypr = new double[3];
             gyro.getPigeonIMU().getYawPitchRoll(ypr);
             boolean isInverted = true; // If field-oriented have something wrong, check this option
+            // cw is taken as positive
             return (isInverted) ? Rotation2d.fromDegrees(360 - ypr[0]) : Rotation2d.fromDegrees(ypr[0]);
         }
     }
 
-    public double getFieldOrientedHeading(){
+    public double getFieldOrientedHeading() {
         return this.poseEstimator.getEstimatedPosition().getRotation().getDegrees();
     }
 
@@ -393,18 +391,21 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
     @Override
     public void periodic() {
-
+        for(SJTUSwerveModuleMK5 mod:this.mSwerveMods){
+            SmartDashboard.putNumber("Mod " + mod.moduleNumber, mod.getEncoderUnbound().getDegrees());
+        }
+        SmartDashboard.putNumber("Pose X", this.pose.getX());
+        SmartDashboard.putNumber("Pose Y", this.pose.getY());
+        SmartDashboard.putNumber("Field Oriented Heading", this.getFieldOrientedHeading());
     }
 
-    // State Machine Definition
-    private enum STATE {
+    public enum STATE {
         BRAKE,
         DRIVE,
         PATH_FOLLOWING
     };
 
     public void setState(STATE state) {
-        // All transitions are allowed, no special processing
         this.state = state;
     }
 
