@@ -1,8 +1,11 @@
 package frc.robot.subsystems;
 
+import java.util.Optional;
+
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
 import org.frcteam6941.vision.PhotonVision;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -21,6 +24,9 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
         return instance;
     }
 
+    private VisionSubsystem(){
+    }
+
     public double getUpperHubDeltaAngleDegrees(){
         return this.turretVision.getBestTarget().get().getYaw();
     }
@@ -30,7 +36,10 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
         turretVision.updateVision();
         if(turretVision.hasTargets()){
             this.setUpperHubState(VISION_STATE.HAS_TARGET);
+            SmartDashboard.putNumber("Target Yaw", this.getUpperHubDeltaAngleDegrees());
         }
+
+        
     }
 
     public enum VISION_STATE{

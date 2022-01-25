@@ -11,6 +11,7 @@ import frc.robot.Constants;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.subsystems.TurretSubsystem.STATE;
 import frc.robot.subsystems.VisionSubsystem.VISION_STATE;
 
 public class LauncherMechanismCoordinator extends SubsystemBase implements Updatable {
@@ -22,7 +23,7 @@ public class LauncherMechanismCoordinator extends SubsystemBase implements Updat
     private STATE state = STATE.OFF;
 
     private double targetAngle;
-    private boolean isLimited;
+    private boolean isLimited = true;
 
     private static LauncherMechanismCoordinator instance;
 
@@ -86,7 +87,11 @@ public class LauncherMechanismCoordinator extends SubsystemBase implements Updat
         }
     }
 
-    public void aimAtTurretOrientedAngle(double delta, boolean isLimited) {
+    public void aimAtTurretOrientedAngle(double turretAngle){
+        this.aimAtFieldOrientedAngle(this.drivebase.getFieldOrientedHeading() + turretAngle, isLimited);
+    }
+
+    public void aimAtTurretOrientedAngleDelta(double delta, boolean isLimited) {
         this.aimAtFieldOrientedAngle(this.drivebase.getFieldOrientedHeading() + this.turret.getTurretAngle() + delta,
                 isLimited);
     }
@@ -98,8 +103,11 @@ public class LauncherMechanismCoordinator extends SubsystemBase implements Updat
     }
 
     public void aimAtVisionTarget(){
+        System.out.println(this.vision.getUpperhubState());
         if(this.vision.getUpperhubState() == VISION_STATE.HAS_TARGET){
-            this.aimAtTurretOrientedAngle(this.vision.getUpperHubDeltaAngleDegrees(), isLimited);
+            this.aimAtTurretOrientedAngleDelta(this.vision.getUpperHubDeltaAngleDegrees(), isLimited);
+        } else{
+            this.exitLocking();
         }
     }
 
@@ -136,12 +144,12 @@ public class LauncherMechanismCoordinator extends SubsystemBase implements Updat
                 this.aimAtFieldOrientedAngleOnce(this.targetAngle, false);
                 break;
             case OFF:
-                this.turret.stopLock();
+                this.turret.turnOff();
                 break;
         }
     }
 
-    public enum STATE {
+    public static enum STATE {
         LOCKING,
         ON_TARGET,
         ON_SPEED,
@@ -154,6 +162,6 @@ public class LauncherMechanismCoordinator extends SubsystemBase implements Updat
     }
 
     public void setState(STATE state) {
-        this.setState(state);
+        this.state = state;
     }
 }

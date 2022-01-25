@@ -9,6 +9,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import org.frcteam1678.lib.math.Conversions;
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -60,7 +61,7 @@ public class ShooterSubsystem extends SubsystemBase implements Updatable {
     }
 
     public boolean isReady(){
-        return getShooterError() <= Constants.SHOOTER_ERROR_TOLERANCE;
+        return getShooterError() <= Constants.SHOOTER_ERROR_TOLERANCE && this.getState() != STATE.OFF;
     }
 
     public void update(double time, double dt) {
@@ -76,6 +77,9 @@ public class ShooterSubsystem extends SubsystemBase implements Updatable {
                 this.setShooterRPM(Constants.SHOOTER_HIGH_SPEED_RPM);
                 break;
         }
+
+        SmartDashboard.putNumber("RPM", this.getShooterRPM());
+        SmartDashboard.putBoolean("Ready", this.isReady());
     }
 
     public enum STATE {

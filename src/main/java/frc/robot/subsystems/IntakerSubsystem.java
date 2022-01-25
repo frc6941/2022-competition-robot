@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class IntakerSubsystem extends SubsystemBase implements Updatable {
-    private TalonSRX intakeMotor = new TalonSRX(Constants.CANID.INTAKE_MOTOR);
+    private TalonSRX intakeMotor = new TalonSRX(Constants.CANID.INTAKER_MOTOR);
     private DoubleSolenoid leftSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, 0, 1);
     private DoubleSolenoid rightSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, 2, 3);
 

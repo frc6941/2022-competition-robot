@@ -55,16 +55,22 @@ public final class Constants {
 
         public static int TURRET_MOTOR = 9;
 
-        public static int SHOOTER_LEAD_MOTOR = 12;
-        public static int SHOOTER_FOLLOWER_MOTOR = 13;
+        public static int SHOOTER_LEAD_MOTOR = 10;
+        public static int SHOOTER_FOLLOWER_MOTOR = 11;
 
-        public static int INTAKE_MOTOR = 16;
+        public static int INTAKER_MOTOR = 16;
     }
 
     // Analog ID Configurations
     public static final class ANALOG_ID {
         public static final int BALL_ENTER_DETECTOR_ID = 0;
         public static final int BALL_EXIT_DETECTOR_ID = 1;
+    }
+
+    // Pneumatics Configurations
+    public static final class PNEUMATICS_ID{
+        public static final int FEEDER_EXTENDER_FORWARD = 0;
+        public static final int FEEDER_EXTENDER_REVERSE = 1;
     }
 
     /**
@@ -126,12 +132,11 @@ public final class Constants {
     public static SimpleMotorFeedforward DRIVETRAIN_FEEDFORWARD = new SimpleMotorFeedforward(0.60757, 7.6216, 0.71241);
 
     // Feeder Constants
-    public static double FEEDER_POSITION_KP = 0.04;
-    public static double FEEDER_POSITION_CONSTANT = 61447.0 / 2.0; // FIXME: Need Remeasurement for more accurate data.
-    public static double FEEDER_FINAL_POSITION_TOLERANCE = 1200.0; // In CTRE Sensor Units. This equals to half turn of
-                                                                   // Falcon.
-    public static double FEEDER_END_MECHANISM_LOOPS_COUNT = 6.0;
-    public static double FEEDER_EXPEL_RPM = 6000;
+    public static double FEEDER_POSITION_KP = 0.65;
+    public static double FEEDER_POSITION_KD = 20.0;
+    public static double FEEDER_POSITION_CONSTANT = 18500.0; // FIXME: Need Remeasurement for more accurate data.
+    public static double FEEDER_FINAL_POSITION_TOLERANCE = 1500.0;
+    public static double FEEDER_END_MECHANISM_LOOPS_COUNT = 1.0;
 
     // Intaker Constans
 
@@ -147,16 +152,15 @@ public final class Constants {
     public static double SHOOTER_MAX_SPEED_RPM = 6380;
     public static double SHOOTER_KF = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_SPEED_RPM, 1.0);
     public static double SHOOTER_KP = 1024.0 / (Conversions.RPMToFalcon(SHOOTER_MAX_SPEED_RPM, 1.0) * 0.1);
-    public static double SHOOTER_KD = 1024.0 / (Conversions.RPMToFalcon(SHOOTER_MAX_SPEED_RPM, 1.0) * 0.5);
+    public static double SHOOTER_KD = 1024.0 / (Conversions.RPMToFalcon(SHOOTER_MAX_SPEED_RPM, 1.0) * 0.3);
     public static double SHOOTER_ERROR_TOLERANCE = 50.0;
 
     // Turret Constants
-    public static double TURRET_DEFAULT_ZERO_POSITION = 0.0;
-    public static double TURRET_GEAR_RATIO = 1.0;
+    public static double TURRET_GEAR_RATIO = 7.0 * 181.0 / 18.0;
     public static double TURRET_SAFE_ZONE_DEGREE = 70.0;
     public static double TURRET_MAX_ROTATION_DEGREE = 90.0;
-    public static double TURRET_FORWARD_MAX_POSITION = 2558.0;
-    public static double TURRET_REVERSE_MAX_POSITION = -1482.0;
+    public static double TURRET_FORWARD_MAX_POSITION = 81489;
+    public static double TURRET_REVERSE_MAX_POSITION = -5395;
     public static double TURRET_ERROR_TOLERANCE = 1.0;
 
     /**

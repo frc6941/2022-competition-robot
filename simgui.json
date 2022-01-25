@@ -1,5 +1,12 @@
 {
   "HALProvider": {
+    "Other Devices": {
+      "REV Color Sensor V3[0,82]": {
+        "header": {
+          "open": true
+        }
+      }
+    },
     "RoboRIO": {
       "RoboRIO Input": {
         "open": true
@@ -12,6 +19,8 @@
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/LiveWindow/FedexMechanismCoordinator": "Subsystem",
+      "/LiveWindow/FeederSubsystem": "Subsystem",
       "/LiveWindow/ShooterSubsystem": "Subsystem",
       "/LiveWindow/Ungrouped/PIDController[1]": "PIDController",
       "/LiveWindow/Ungrouped/PIDController[2]": "PIDController",

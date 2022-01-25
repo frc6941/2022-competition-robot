@@ -18,7 +18,16 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.commands.AimAtAngle;
+import frc.robot.commands.IntakeCommand;
+import frc.robot.commands.ShooterReadyCommand;
+import frc.robot.commands.VisionAimCommand;
+import frc.robot.coordinators.FedexMechanismCoordinator;
+import frc.robot.coordinators.LauncherMechanismCoordinator;
+import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.TurretSubsystem;
+import frc.robot.subsystems.VisionSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -30,7 +39,12 @@ import frc.robot.subsystems.ShooterSubsystem;
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     SJTUSwerveMK5Drivebase mDrivebase = SJTUSwerveMK5Drivebase.getInstance();
-    // FeederSubsystem mFeeder = FeederSubsystem.getInstance();
+    FeederSubsystem mFeeder = FeederSubsystem.getInstance();
+    // TurretSubsystem mTurret = TurretSubsystem.getInstance();
+    VisionSubsystem mVision = VisionSubsystem.getInstance();
+    ShooterSubsystem mShooter = ShooterSubsystem.getInstance();
+    LauncherMechanismCoordinator mLauncherCodi = LauncherMechanismCoordinator.getInstance();
+    // FedexMechanismCoordinator mFedexCodi = FedexMechanismCoordinator.getInstance();
     // ShooterSubsystem mShooter = ShooterSubsystem.getInstance();
 
     // Controller Definitions
@@ -52,16 +66,21 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         SwerveDriveCommand swerveDriveCommand = new SwerveDriveCommand(mDrivebase,
-        () -> driveController.getLeftYAxis().get(), () ->
-        driveController.getLeftXAxis().get(),
-        () -> driveController.getRightTriggerAxis().get(), () ->
-        driveController.getRightXAxis().get(), true);
+                () -> driveController.getLeftYAxis().get(), () -> driveController.getLeftXAxis().get(),
+                () -> driveController.getRightTriggerAxis().get(), () -> driveController.getRightXAxis().get(), true);
         SwerveBrakeCommand brakeCommand = new SwerveBrakeCommand();
         ZeroGyroCommand zeroGyroCommand = new ZeroGyroCommand(mDrivebase, 0.0);
+        VisionAimCommand visionCommand = new VisionAimCommand();
+        IntakeCommand intakeCommand = new IntakeCommand();
+        ShooterReadyCommand shooterReadyCommand = new ShooterReadyCommand();
 
         mDrivebase.setDefaultCommand(swerveDriveCommand);
         driveController.getLeftJoystickButton().whileActiveOnce(brakeCommand);
         driveController.getStartButton().whenActive(zeroGyroCommand);
+        driveController.getRightBumperButton().whileActiveOnce(intakeCommand);
+        driveController.getAButton().whileActiveContinuous(visionCommand);
+        driveController.getBButton().whileActiveOnce(new AimAtAngle(50.0));
+        driveController.getXButton().whileActiveOnce(shooterReadyCommand);
     }
 
     /**
@@ -73,16 +92,32 @@ public class RobotContainer {
         return null;
     }
 
-    public Updatable returnDrivetrain(){
-    return this.mDrivebase;
+    public Updatable returnDrivetrain() {
+        return this.mDrivebase;
     }
 
-    // public Updatable returnFeeder(){
-    // return this.mFeeder;
+    public Updatable returnFeeder() {
+        return this.mFeeder;
+    }
+
+    // public Updatable returnTurret(){+
+    //     return this.mTurret;
     // }
 
-    // public Updatable returnShooter() {
-    //     return this.mShooter;
+    public Updatable returnVision(){
+        return this.mVision;
+    }
+
+    public Updatable returnLauncherMechanismCoordinator(){
+        return this.mLauncherCodi;
+    }
+
+    public Updatable returnShooter() {
+        return this.mShooter;
+    }
+
+    // public Updatable returnFedexMechanismCoordinator(){
+    //     return this.mFedexCodi;
     // }
 
 }

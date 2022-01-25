@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
+import java.lang.StackWalker.Option;
 import java.lang.reflect.Array;
+import java.util.Optional;
 
 import javax.swing.GroupLayout.Alignment;
 
@@ -14,26 +16,29 @@ import com.revrobotics.ColorSensorV3;
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
 
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.gamepiece.Cargo;
 
 public class FeederSubsystem extends SubsystemBase implements Updatable {
     private TalonFX feederMotor = new TalonFX(Constants.CANID.FEEDER_MOTOR);
+    private DoubleSolenoid feederExtender = new DoubleSolenoid(PneumaticsModuleType.REVPH,
+            Constants.PNEUMATICS_ID.FEEDER_EXTENDER_FORWARD, Constants.PNEUMATICS_ID.FEEDER_EXTENDER_REVERSE);
     private ColorSensorV3 ballColorSensor = new ColorSensorV3(I2C.Port.kOnboard);
     private AnalogInput ballEnterDetector = new AnalogInput(Constants.ANALOG_ID.BALL_ENTER_DETECTOR_ID);
     private AnalogInput ballExitDetector = new AnalogInput(Constants.ANALOG_ID.BALL_EXIT_DETECTOR_ID);
 
     private static FeederSubsystem instance;
-    private STATE state = STATE.IDLE;
+    private STATE state = STATE.OFF;
 
     private boolean stepFlag = true; // A flag that shows the status of stepping. If true, the step action is
                                      // finished and
                                      // the next step can be taken. If false, the step is still in action.
-    private boolean ballIntakeFlag = true; // A flag that shows the status of ball intake. If true, the intake is clear
-                                           // for intake. If false, the current ball is still being processed and the
-                                           // storage status should not be updated.
+    
     private double tempRecording;
     private int loopStable;
 
@@ -48,6 +53,7 @@ public class FeederSubsystem extends SubsystemBase implements Updatable {
 
         // Position
         feederMotor.config_kP(0, Constants.FEEDER_POSITION_KP);
+        feederMotor.config_kD(0, Constants.FEEDER_POSITION_KD);
     }
 
     public static FeederSubsystem getInstance() {
@@ -55,6 +61,14 @@ public class FeederSubsystem extends SubsystemBase implements Updatable {
             instance = new FeederSubsystem();
         }
         return instance;
+    }
+
+    public void extendFeeder(){
+        this.feederExtender.set(DoubleSolenoid.Value.kForward);
+    }
+
+    public void retractFeeder(){
+        this.feederExtender.set(DoubleSolenoid.Value.kReverse);
     }
 
     public void setFeederPercent(double power) {
@@ -66,18 +80,26 @@ public class FeederSubsystem extends SubsystemBase implements Updatable {
         this.feederMotor.set(ControlMode.Position, this.tempRecording + step);
     }
 
-    private boolean feederAtTarget() {
+    public boolean feederAtTarget() {
         return this.loopStable > Constants.FEEDER_END_MECHANISM_LOOPS_COUNT;
     }
 
-    private boolean ballAtEntrance() {
+    public boolean ballAtEntrance() {
         return this.ballEnterDetector.getVoltage() > 2.0;
+    }
+
+    public Optional<Cargo> getPossibleCargo(){
+        if(this.ballAtEntrance()){
+            return Optional.ofNullable(new Cargo(this.ballColorSensor.getRed(), this.ballColorSensor.getBlue()));
+        } else{
+            return Optional.empty();
+        }
     }
 
     @Override
     public void update(double time, double dt) {
         switch (state) {
-            case IDLE:
+            case OFF:
                 this.setFeederPercent(0.0);
                 this.stepFlag = true;
                 break;
@@ -88,7 +110,7 @@ public class FeederSubsystem extends SubsystemBase implements Updatable {
                 }
                 this.setFeederStep(Constants.FEEDER_POSITION_CONSTANT);
                 if (this.feederAtTarget()) {
-                    this.setState(STATE.IDLE);
+                    this.setState(STATE.OFF);
                 }
                 break;
             case EXPEL:
@@ -96,7 +118,6 @@ public class FeederSubsystem extends SubsystemBase implements Updatable {
                 this.stepFlag = true;
                 break;
             case REVERSE:
-                this.setFeederPercent(-1.0);
                 this.stepFlag = true;
                 break;
         }
@@ -109,8 +130,8 @@ public class FeederSubsystem extends SubsystemBase implements Updatable {
         }
     }
 
-    public enum STATE {
-        IDLE,
+    public static enum STATE {
+        OFF,
         STEPPER,
         EXPEL,
         REVERSE
@@ -123,4 +144,6 @@ public class FeederSubsystem extends SubsystemBase implements Updatable {
     public void setState(STATE state) {
         this.state = state;
     }
+
+    
 }
