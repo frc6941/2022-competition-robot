@@ -8,6 +8,12 @@
       }
     },
     "RoboRIO": {
+      "5V Rail": {
+        "open": true
+      },
+      "6V Rail": {
+        "open": true
+      },
       "RoboRIO Input": {
         "open": true
       },
@@ -19,14 +25,18 @@
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/LiveWindow/BallPathSubsystem": "Subsystem",
       "/LiveWindow/FedexMechanismCoordinator": "Subsystem",
       "/LiveWindow/FeederSubsystem": "Subsystem",
+      "/LiveWindow/LauncherMechanismCoordinator": "Subsystem",
       "/LiveWindow/ShooterSubsystem": "Subsystem",
+      "/LiveWindow/TurretSubsystem": "Subsystem",
       "/LiveWindow/Ungrouped/PIDController[1]": "PIDController",
       "/LiveWindow/Ungrouped/PIDController[2]": "PIDController",
       "/LiveWindow/Ungrouped/PIDController[3]": "PIDController",
       "/LiveWindow/Ungrouped/PIDController[4]": "PIDController",
-      "/LiveWindow/Ungrouped/Scheduler": "Scheduler"
+      "/LiveWindow/Ungrouped/Scheduler": "Scheduler",
+      "/LiveWindow/VisionSubsystem": "Subsystem"
     }
   },
   "NetworkTables": {
@@ -37,9 +47,15 @@
       ".status": {
         "open": true
       },
+      "BallPathSubsystem": {
+        "open": true
+      },
       "Ungrouped": {
         "open": true
       },
+      "open": true
+    },
+    "SmartDashboard": {
       "open": true
     }
   }

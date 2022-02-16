@@ -24,6 +24,9 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
     private double reverseMaxPosition = Constants.TURRET_REVERSE_MAX_POSITION;
 
     private double angleLockTarget = 0.0;
+    private boolean isForwardCalibrated = false;
+    private boolean isReverseCalibrated = false;
+
     private static TurretSubsystem instance;
     private STATE state = STATE.OFF;
 
@@ -36,18 +39,21 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
 
     private TurretSubsystem() {
         turretMotor.configFactoryDefault();
-        turretMotor.setInverted(InvertType.InvertMotorOutput);
+        turretMotor.setInverted(InvertType.None);
         turretMotor.setNeutralMode(NeutralMode.Brake);
-        turretMotor.config_kP(0, 0.6);
-        turretMotor.config_kD(0, 10.0);
+        turretMotor.config_kP(0, 0.14);
+        turretMotor.config_kI(0, 0.0001);
+        turretMotor.config_kD(0, 3.0);
         turretMotor.config_kF(0, 1024.0 * 1.0 / 86942.0);
-        turretMotor.configMotionCruiseVelocity(24000);
-        turretMotor.configMotionAcceleration(24000 / 0.3);
+        turretMotor.configMotionCruiseVelocity(16000);
+        turretMotor.config_IntegralZone(0, 50);
+        turretMotor.configMotionAcceleration(16000 / 0.2);
         turretMotor.enableVoltageCompensation(true);
+        turretMotor.configNeutralDeadband(0.005);
     }
 
     public double getTurretAngle() {
-        return Conversions.falconToDegrees(
+        return -Conversions.falconToDegrees(
                 this.turretMotor.getSelectedSensorPosition() - ((forwardMaxPosition + reverseMaxPosition) / 2.0),
                 Constants.TURRET_GEAR_RATIO);
     }
@@ -66,17 +72,22 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
             angle += 360.0;
         }
 
-        boolean forwardSoftLimit = getTurretAngle() <= Constants.TURRET_MAX_ROTATION_DEGREE;
-        boolean reverseSoftLimit = getTurretAngle() >= -Constants.TURRET_MAX_ROTATION_DEGREE;
+        
         double delta = angle - this.getTurretAngle();
 
-        if ((delta >= 0 & forwardSoftLimit)
-                || (delta <= 0 & reverseSoftLimit)) {
+        if ((delta >= 0 && this.forwardSafe())
+                || (delta <= 0 && this.reverseSafe())) {
+            // As ccw is positive here due to sensor reasons, angle need to be reverted.
             this.turretMotor.set(ControlMode.MotionMagic,
-                    Conversions.degreesToFalcon(angle, Constants.TURRET_GEAR_RATIO) + (forwardMaxPosition + reverseMaxPosition) / 2.0);
+                    Conversions.degreesToFalcon(-angle, Constants.TURRET_GEAR_RATIO)
+                            + (forwardMaxPosition + reverseMaxPosition) / 2.0);
         } else {
             this.turnOff();
         }
+    }
+
+    public void setTurretPercentage(double power) {
+        this.turretMotor.set(ControlMode.PercentOutput, -power);
     }
 
     public void lockAngle(double angle) {
@@ -95,35 +106,54 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
     public boolean isOnTarget() {
         return Math.abs(this.getTurretAngle() - this.angleLockTarget) < Constants.TURRET_ERROR_TOLERANCE;
     }
+    public boolean forwardSafe(){
+        return getTurretAngle() <= Constants.TURRET_MAX_ROTATION_DEGREE;
+    }
+    public boolean reverseSafe(){
+        return getTurretAngle() >= -Constants.TURRET_MAX_ROTATION_DEGREE;
+    }   
 
     @Override
     public void update(double time, double dt) {
         if (this.turretMotor.isFwdLimitSwitchClosed() == 1) {
             this.forwardMaxPosition = turretMotor.getSelectedSensorPosition();
             System.out.println("Forward is being Calibrated.");
+            this.isForwardCalibrated = true;
         }
         if (this.turretMotor.isRevLimitSwitchClosed() == 1) {
             this.reverseMaxPosition = turretMotor.getSelectedSensorPosition();
             System.out.println("Reverse is being Calibrated.");
+            this.isReverseCalibrated = true;
         }
 
-        switch (state) {
-            case OFF:
-                this.turretMotor.set(ControlMode.PercentOutput, 0.0);
-            case IDLE:
-                this.setTurretAngle(0.0);
-                break;
-            case LOCK_ANGLE:
-                this.setTurretAngle(this.angleLockTarget);
-                break;
+        if (this.isForwardCalibrated && this.isReverseCalibrated) {
+            switch (state) {
+                case OFF:
+                    this.setTurretPercentage(0.0);
+                    break;
+                case IDLE:
+                    this.setTurretAngle(0.0);
+                    break;
+                case LOCK_ANGLE:
+                    this.setTurretAngle(this.angleLockTarget);
+                    break;
+            }
+
+            SmartDashboard.putNumber("Forward Max Position", this.forwardMaxPosition);
+            SmartDashboard.putNumber("Reverse Max Position", this.reverseMaxPosition);
+            SmartDashboard.putNumber("Current Position", this.turretMotor.getSelectedSensorPosition());
+            SmartDashboard.putNumber("Current Angle", this.getTurretAngle());
+            SmartDashboard.putNumber("Lock Angle", this.angleLockTarget);
+            SmartDashboard.putBoolean("Forward Safe", this.forwardSafe());
+            SmartDashboard.putBoolean("Reverse Safe", this.reverseSafe());
+        } else if(!this.isForwardCalibrated && !this.isReverseCalibrated){
+            this.turretMotor.set(ControlMode.PercentOutput, 0.15);
+        } else if(this.isForwardCalibrated && !this.isReverseCalibrated){
+            this.turretMotor.set(ControlMode.PercentOutput, -0.15);
+        } else if(!this.isForwardCalibrated && this.isReverseCalibrated){
+            this.turretMotor.set(ControlMode.PercentOutput, 0.15);
         }
 
-        SmartDashboard.putNumber("Forward Max Position", this.forwardMaxPosition);
-        SmartDashboard.putNumber("Reverse Max Position", this.reverseMaxPosition);
-        SmartDashboard.putNumber("Current Position", this.turretMotor.getSelectedSensorPosition());
-        SmartDashboard.putNumber("Current Angle", this.getTurretAngle());
-        SmartDashboard.putNumber("Lock Angle", this.angleLockTarget);
-        SmartDashboard.putString("TURRET STATE", this.getState().getClass().getName());
     }
 
     public enum STATE {

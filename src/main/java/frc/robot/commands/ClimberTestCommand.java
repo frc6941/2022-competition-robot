@@ -4,29 +4,37 @@ import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.coordinators.LauncherMechanismCoordinator;
+import frc.robot.subsystems.BallPathSubsystem;
+import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.TurretSubsystem.STATE;
 
-public class ShooterReadyCommand extends CommandBase {
-    ShooterSubsystem shooterSubsystem = ShooterSubsystem.getInstance();
+public class ClimberTestCommand extends CommandBase {
+    ClimberSubsystem mClimberSubsystem = ClimberSubsystem.getInstance();
+    double power;
 
-    public ShooterReadyCommand() {
+    public ClimberTestCommand(double power) {
+        addRequirements(mClimberSubsystem);
+        this.power = power;
     }
 
     @Override
     public void initialize() {
-        this.shooterSubsystem.setState(ShooterSubsystem.STATE.HIGH_SPEED);
+        
     }
 
     @Override
     public void execute() {
+        this.mClimberSubsystem.setClimberPercentage(power);
+        System.out.println("Clim");
     }
 
     @Override
     public void end(boolean iterrupted) {
-        this.shooterSubsystem.setState(ShooterSubsystem.STATE.OFF);
+        this.mClimberSubsystem.setClimberPercentage(0.0);
+        System.out.println("Stop");
     }
 
     @Override

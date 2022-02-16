@@ -61,7 +61,7 @@ public class ShooterSubsystem extends SubsystemBase implements Updatable {
     }
 
     public boolean isReady(){
-        return getShooterError() <= Constants.SHOOTER_ERROR_TOLERANCE && this.getState() != STATE.OFF;
+        return getShooterError() <= Constants.SHOOTER_ERROR_TOLERANCE && this.getState() != STATE.OFF && this.getShooterRPM() >= 200.0;
     }
 
     public void update(double time, double dt) {
@@ -70,7 +70,6 @@ public class ShooterSubsystem extends SubsystemBase implements Updatable {
                 this.setShooterPercentage(0.0);
                 break;
             case LOW_SPEED:
-                System.out.println("LOW SPEED");
                 this.setShooterRPM(Constants.SHOOTER_LOW_SPEED_RPM);
                 break;
             case HIGH_SPEED:
@@ -80,6 +79,7 @@ public class ShooterSubsystem extends SubsystemBase implements Updatable {
 
         SmartDashboard.putNumber("RPM", this.getShooterRPM());
         SmartDashboard.putBoolean("Ready", this.isReady());
+        SmartDashboard.putNumber("Shooter Error", this.getShooterError());
     }
 
     public enum STATE {

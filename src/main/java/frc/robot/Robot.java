@@ -39,12 +39,13 @@ public class Robot extends TimedRobot {
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
     this.updateManager = new UpdateManager(
-      m_robotContainer.returnDrivetrain(),
-      m_robotContainer.returnFeeder(),
-      // m_robotContainer.returnTurret(),
-      m_robotContainer.returnVision(),
+      // m_robotContainer.returnDrivetrain(),
+      m_robotContainer.returnIntaker(),
+      m_robotContainer.returnBallPath(),
+      m_robotContainer.returnTurret(),
       m_robotContainer.returnShooter(),
-      m_robotContainer.returnLauncherMechanismCoordinator()
+      m_robotContainer.returnVision(),
+      m_robotContainer.returnClimber()
     );
     this.updateManager.startLoop(Constants.kLooperDt);
   }

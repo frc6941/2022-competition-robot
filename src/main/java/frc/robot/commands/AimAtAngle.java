@@ -9,17 +9,17 @@ import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
 public class AimAtAngle extends CommandBase{
-    LauncherMechanismCoordinator mLauncherMechanismCoordinator = LauncherMechanismCoordinator.getInstance();
-    double targetAngle;
-    
+    TurretSubsystem mTurretSubsystem = TurretSubsystem.getInstance();
+    double target;
+
     public AimAtAngle(double targetAngle){
-        addRequirements(mLauncherMechanismCoordinator);
-        this.targetAngle = targetAngle;
+        addRequirements(mTurretSubsystem);
+        this.target = targetAngle;
     }
 
     @Override
     public void initialize(){
-        this.mLauncherMechanismCoordinator.aimAtTurretOrientedAngle(30.0);
+        this.mTurretSubsystem.lockAngle(target);
     }
 
     @Override
@@ -28,6 +28,7 @@ public class AimAtAngle extends CommandBase{
 
     @Override
     public void end(boolean iterrupted){
+        this.mTurretSubsystem.turnOff();
     }
 
     @Override

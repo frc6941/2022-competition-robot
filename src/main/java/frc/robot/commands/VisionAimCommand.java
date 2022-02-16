@@ -12,11 +12,9 @@ public class VisionAimCommand extends CommandBase{
     TurretSubsystem mTurret = TurretSubsystem.getInstance();
     ShooterSubsystem mShooter = ShooterSubsystem.getInstance();
     VisionSubsystem mVision = VisionSubsystem.getInstance();
-    SJTUSwerveMK5Drivebase mDrivebase = SJTUSwerveMK5Drivebase.getInstance();   
-    LauncherMechanismCoordinator mLauncherMechanismCoordinator = LauncherMechanismCoordinator.getInstance();
     
     public VisionAimCommand(){
-        addRequirements(mTurret, mDrivebase, mShooter, mLauncherMechanismCoordinator);
+        addRequirements(mTurret, mShooter);
     }
 
     @Override
@@ -26,11 +24,17 @@ public class VisionAimCommand extends CommandBase{
 
     @Override
     public void execute(){
-        this.mLauncherMechanismCoordinator.aimAtVisionTarget();
+        if(mVision.getUpperhubState() == VisionSubsystem.VISION_STATE.HAS_TARGET){
+            this.mTurret.lockAngle(this.mTurret.getTurretAngle() + this.mVision.getUpperHubDeltaAngleDegrees());
+        } else{
+            this.mTurret.turnOff();
+        }
+        
     }
 
     @Override
     public void end(boolean iterrupted){
+        this.mTurret.turnOff();
     }
 
     @Override

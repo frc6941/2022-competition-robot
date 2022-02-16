@@ -15,16 +15,20 @@ import org.frcteam6941.utils.SimpleTestTrajectories;
 import org.frcteam6941.utils.XboxControllerExtended;
 
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.PneumaticHub;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.commands.AimAtAngle;
-import frc.robot.commands.IntakeCommand;
-import frc.robot.commands.ShooterReadyCommand;
+import frc.robot.commands.ClimberTestCommand;
+import frc.robot.commands.ManualTurretControlCommand;
+import frc.robot.commands.ReadyForIntakeCommand;
+import frc.robot.commands.SimpleShootCommand;
 import frc.robot.commands.VisionAimCommand;
-import frc.robot.coordinators.FedexMechanismCoordinator;
 import frc.robot.coordinators.LauncherMechanismCoordinator;
-import frc.robot.subsystems.FeederSubsystem;
+import frc.robot.subsystems.BallPathSubsystem;
+import frc.robot.subsystems.ClimberSubsystem;
+import frc.robot.subsystems.IntakerSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
@@ -39,13 +43,12 @@ import frc.robot.subsystems.VisionSubsystem;
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     SJTUSwerveMK5Drivebase mDrivebase = SJTUSwerveMK5Drivebase.getInstance();
-    FeederSubsystem mFeeder = FeederSubsystem.getInstance();
-    // TurretSubsystem mTurret = TurretSubsystem.getInstance();
-    VisionSubsystem mVision = VisionSubsystem.getInstance();
     ShooterSubsystem mShooter = ShooterSubsystem.getInstance();
-    LauncherMechanismCoordinator mLauncherCodi = LauncherMechanismCoordinator.getInstance();
-    // FedexMechanismCoordinator mFedexCodi = FedexMechanismCoordinator.getInstance();
-    // ShooterSubsystem mShooter = ShooterSubsystem.getInstance();
+    TurretSubsystem mTurret = TurretSubsystem.getInstance();
+    VisionSubsystem mVision = VisionSubsystem.getInstance();
+    IntakerSubsystem mIntaker = IntakerSubsystem.getInstance();
+    BallPathSubsystem mBallPath = BallPathSubsystem.getInstance();
+    ClimberSubsystem mClimber = ClimberSubsystem.getInstance();
 
     // Controller Definitions
     XboxControllerExtended driveController = XboxControllerExtended.getController(Constants.DRIVER_CONTROLLER_PORT);
@@ -65,22 +68,29 @@ public class RobotContainer {
      * passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
-        SwerveDriveCommand swerveDriveCommand = new SwerveDriveCommand(mDrivebase,
-                () -> driveController.getLeftYAxis().get(), () -> driveController.getLeftXAxis().get(),
-                () -> driveController.getRightTriggerAxis().get(), () -> driveController.getRightXAxis().get(), true);
-        SwerveBrakeCommand brakeCommand = new SwerveBrakeCommand();
-        ZeroGyroCommand zeroGyroCommand = new ZeroGyroCommand(mDrivebase, 0.0);
-        VisionAimCommand visionCommand = new VisionAimCommand();
-        IntakeCommand intakeCommand = new IntakeCommand();
-        ShooterReadyCommand shooterReadyCommand = new ShooterReadyCommand();
+        // SwerveDriveCommand swerveDriveCommand = new SwerveDriveCommand(mDrivebase,
+        //         () -> driveController.getLeftYAxis().get(), () -> driveController.getLeftXAxis().get(),
+        //         () -> driveController.getRightTriggerAxis().get(), () -> driveController.getRightXAxis().get(), true);
+        // SwerveBrakeCommand brakeCommand = new SwerveBrakeCommand();
+        // ZeroGyroCommand zeroGyroCommand = new ZeroGyroCommand(mDrivebase, 0.0);
+        SimpleShootCommand simpleShootCommand = new SimpleShootCommand();
+        VisionAimCommand visionAimCommand = new VisionAimCommand();
+        AimAtAngle aimAtAngle = new AimAtAngle(45.0);
+        ManualTurretControlCommand manualTurretControlCommand = new ManualTurretControlCommand(() -> driveController.getLeftXAxis().get(), () -> driveController.getLeftYAxis().get());
+        ReadyForIntakeCommand readyForIntakeCommand = new ReadyForIntakeCommand();
+        ClimberTestCommand climberTestCommand = new ClimberTestCommand(0.3);
+        ClimberTestCommand climberReverseTestCommand = new ClimberTestCommand(-0.3);
 
-        mDrivebase.setDefaultCommand(swerveDriveCommand);
-        driveController.getLeftJoystickButton().whileActiveOnce(brakeCommand);
-        driveController.getStartButton().whenActive(zeroGyroCommand);
-        driveController.getRightBumperButton().whileActiveOnce(intakeCommand);
-        driveController.getAButton().whileActiveContinuous(visionCommand);
-        driveController.getBButton().whileActiveOnce(new AimAtAngle(50.0));
-        driveController.getXButton().whileActiveOnce(shooterReadyCommand);
+        // mDrivebase.setDefaultCommand(swerveDriveCommand);
+        // driveController.getLeftJoystickButton().whileActiveOnce(brakeCommand);
+        // // driveController.getStartButton().whenActive(zeroGyroCommand);
+        driveController.getRightBumperButton().whileActiveOnce(readyForIntakeCommand);
+        driveController.getBButton().whileActiveOnce(simpleShootCommand);
+        driveController.getYButton().whileActiveContinuous(manualTurretControlCommand);
+        driveController.getXButton().whileActiveOnce(aimAtAngle);
+        driveController.getAButton().whileActiveContinuous(visionAimCommand);
+        driveController.getDPadButton(Direction.UP).whileActiveContinuous(climberTestCommand);
+        driveController.getDPadButton(Direction.DOWN).whileActiveContinuous(climberReverseTestCommand);
     }
 
     /**
@@ -96,28 +106,28 @@ public class RobotContainer {
         return this.mDrivebase;
     }
 
-    public Updatable returnFeeder() {
-        return this.mFeeder;
+    public Updatable returnIntaker(){
+        return this.mIntaker;
     }
 
-    // public Updatable returnTurret(){+
-    //     return this.mTurret;
-    // }
-
-    public Updatable returnVision(){
-        return this.mVision;
-    }
-
-    public Updatable returnLauncherMechanismCoordinator(){
-        return this.mLauncherCodi;
+    public Updatable returnBallPath(){
+        return this.mBallPath;
     }
 
     public Updatable returnShooter() {
         return this.mShooter;
     }
 
-    // public Updatable returnFedexMechanismCoordinator(){
-    //     return this.mFedexCodi;
-    // }
+    public Updatable returnTurret(){
+        return this.mTurret;
+    }
+
+    public Updatable returnVision(){
+        return this.mVision;
+    }
+
+    public Updatable returnClimber(){
+        return this.mClimber;
+    }
 
 }
