@@ -4,25 +4,19 @@ import java.util.Optional;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.revrobotics.CANSparkMax;
 import com.revrobotics.ColorSensorV3;
-import com.revrobotics.CANSparkMax.IdleMode;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.team254.lib.util.TimeDelayedBoolean;
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
 import org.frcteam6941.utils.LazyTalonFX;
 
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.I2C;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.gamepiece.Cargo;
-import frc.robot.subsystems.IntakerSubsystem.STATE;
 
 public class BallPathSubsystem extends SubsystemBase implements Updatable {
     private LazyTalonFX feederMotor = new LazyTalonFX(Constants.CANID.FEEDER_MOTOR);
@@ -31,7 +25,6 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
     private AnalogInput ballEntranceDetector = new AnalogInput(Constants.ANALOG_ID.BALL_ENTRANCE_DETECTOR);
     private AnalogInput ballPositionOneDetector = new AnalogInput(Constants.ANALOG_ID.BALL_POSITION_ONE_DETECTOR);
     private AnalogInput ballPositionTwoDetector = new AnalogInput(Constants.ANALOG_ID.BALL_POSITION_TWO_DETECTOR);
-    private DigitalInput digitalTesDigitalInput = new DigitalInput(0);
 
     private static BallPathSubsystem instance;
     private STATE state = STATE.PROCESSING;
@@ -84,7 +77,7 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
 
     @Override
     public void update(double time, double dt) {
-        if(DriverStation.isDisabled()){
+        if (DriverStation.isDisabled()) {
             this.feederTarget = 0;
         }
         switch (state) {
@@ -125,26 +118,35 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
                         this.intakeFlag = false;
                         break;
                     case 1:
-                        setFeederPercent(Constants.FEEDER_NORMAL_PERCENTAGE);
+                        setFeederPercent(Constants.BALLPATH_NORMAL_PERCENTAGE);
                         if (this.ballAtPositionOne()) {
                             this.feederTarget = 0;
                         }
                         break;
                     case 2:
-                        setFeederPercent(Constants.FEEDER_NORMAL_PERCENTAGE);
+                        setFeederPercent(Constants.BALLPATH_NORMAL_PERCENTAGE);
                         if (this.ballAtPositionTwo()) {
                             this.feederTarget = 0;
                         }
                 }
                 break;
             case EXPELLING:
-                if (!ballAtPositionTwo() && !expelOverride && !expelBoolean.update(true, Constants.EXPEL_TIME)) {
+                if (!ballAtPositionTwo() && !expelOverride
+                        && !expelBoolean.update(true, Constants.BALLPATH_EXPEL_TIME)) {
                     setState(STATE.PROCESSING);
                 } else {
-                    setFeederPercent(Constants.FEEDER_EXPELLING_PERCENTAGE);
+                    setFeederPercent(Constants.BALLPATH_EXPELLING_PERCENTAGE);
                     this.feederTarget = 0;
                 }
                 break;
+            case REVERSE:
+                if (!reverseBoolean.update(true, Constants.BALLPATH_REVERSE_TIME) && !ballAtEntrance()
+                        && mIntaker.getState() == IntakerSubsystem.STATE.EXTENDED) {
+                    setState(STATE.PROCESSING);
+                } else {
+                    setFeederPercent(0.0);
+                    mIntaker.setState(IntakerSubsystem.STATE.REVERSE);
+                }
 
         }
 
@@ -158,7 +160,8 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
     public static enum STATE {
         IDLE,
         PROCESSING,
-        EXPELLING
+        EXPELLING,
+        REVERSE
     }
 
     public STATE getState() {

@@ -4,28 +4,20 @@
 
 package frc.robot;
 
-import org.frcteam2910.common.robot.UpdateManager;
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
 import org.frcteam2910.common.robot.input.DPadButton.Direction;
-import org.frcteam6941.commands.basic.SwerveBrakeCommand;
-import org.frcteam6941.commands.basic.SwerveDriveCommand;
-import org.frcteam6941.commands.basic.ZeroGyroCommand;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
-import org.frcteam6941.utils.SimpleTestTrajectories;
 import org.frcteam6941.utils.XboxControllerExtended;
 
 import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.PneumaticHub;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.commands.AimAtAngle;
 import frc.robot.commands.ClimberTestCommand;
 import frc.robot.commands.ManualTurretControlCommand;
 import frc.robot.commands.ReadyForIntakeCommand;
 import frc.robot.commands.SimpleShootCommand;
 import frc.robot.commands.VisionAimCommand;
-import frc.robot.coordinators.LauncherMechanismCoordinator;
 import frc.robot.subsystems.BallPathSubsystem;
 import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.IntakerSubsystem;

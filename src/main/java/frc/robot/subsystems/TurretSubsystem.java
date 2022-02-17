@@ -41,18 +41,19 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
         turretMotor.configFactoryDefault();
         turretMotor.setInverted(InvertType.None);
         turretMotor.setNeutralMode(NeutralMode.Brake);
-        turretMotor.config_kP(0, 0.14);
-        turretMotor.config_kI(0, 0.0001);
-        turretMotor.config_kD(0, 3.0);
-        turretMotor.config_kF(0, 1024.0 * 1.0 / 86942.0);
-        turretMotor.configMotionCruiseVelocity(16000);
-        turretMotor.config_IntegralZone(0, 50);
-        turretMotor.configMotionAcceleration(16000 / 0.2);
+        turretMotor.config_kP(0, Constants.TURRET_KP);
+        turretMotor.config_kI(0, Constants.TURRET_KI);
+        turretMotor.config_kD(0, Constants.TURRET_KD);
+        turretMotor.config_kF(0, Constants.TURRET_KF);
+        turretMotor.configMotionCruiseVelocity(Constants.TURRET_MOTION_CRUISE_VELOCITY);
+        turretMotor.config_IntegralZone(0, Constants.TURRET_INTEGRAL_ZONE);
+        turretMotor.configMotionAcceleration(Constants.TURRET_MOTION_ACCELERATION);
         turretMotor.enableVoltageCompensation(true);
-        turretMotor.configNeutralDeadband(0.005);
+        turretMotor.configNeutralDeadband(Constants.TURRET_NEUTRAL_DEADBAND);
     }
 
     public double getTurretAngle() {
+        // As ccw is positive, the angle read by the sensor need to be reverted again.
         return -Conversions.falconToDegrees(
                 this.turretMotor.getSelectedSensorPosition() - ((forwardMaxPosition + reverseMaxPosition) / 2.0),
                 Constants.TURRET_GEAR_RATIO);
@@ -72,9 +73,9 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
             angle += 360.0;
         }
 
-        
         double delta = angle - this.getTurretAngle();
 
+        // See if the turret is turing to the 'unsafe' direction: if so, immediately stop its motion.
         if ((delta >= 0 && this.forwardSafe())
                 || (delta <= 0 && this.reverseSafe())) {
             // As ccw is positive here due to sensor reasons, angle need to be reverted.
@@ -106,12 +107,14 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
     public boolean isOnTarget() {
         return Math.abs(this.getTurretAngle() - this.angleLockTarget) < Constants.TURRET_ERROR_TOLERANCE;
     }
-    public boolean forwardSafe(){
+
+    public boolean forwardSafe() {
         return getTurretAngle() <= Constants.TURRET_MAX_ROTATION_DEGREE;
     }
-    public boolean reverseSafe(){
+
+    public boolean reverseSafe() {
         return getTurretAngle() >= -Constants.TURRET_MAX_ROTATION_DEGREE;
-    }   
+    }
 
     @Override
     public void update(double time, double dt) {
@@ -126,6 +129,8 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
             this.isReverseCalibrated = true;
         }
 
+        // Carry out calibration according to sensor status. Reverse and forward must
+        // both be calibrated either by hand or through motor before further actions.
         if (this.isForwardCalibrated && this.isReverseCalibrated) {
             switch (state) {
                 case OFF:
@@ -146,12 +151,12 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
             SmartDashboard.putNumber("Lock Angle", this.angleLockTarget);
             SmartDashboard.putBoolean("Forward Safe", this.forwardSafe());
             SmartDashboard.putBoolean("Reverse Safe", this.reverseSafe());
-        } else if(!this.isForwardCalibrated && !this.isReverseCalibrated){
-            this.turretMotor.set(ControlMode.PercentOutput, 0.15);
-        } else if(this.isForwardCalibrated && !this.isReverseCalibrated){
-            this.turretMotor.set(ControlMode.PercentOutput, -0.15);
-        } else if(!this.isForwardCalibrated && this.isReverseCalibrated){
-            this.turretMotor.set(ControlMode.PercentOutput, 0.15);
+        } else if (!this.isForwardCalibrated && !this.isReverseCalibrated) {
+            this.turretMotor.set(ControlMode.PercentOutput, 0.2);
+        } else if (this.isForwardCalibrated && !this.isReverseCalibrated) {
+            this.turretMotor.set(ControlMode.PercentOutput, -0.2);
+        } else if (!this.isForwardCalibrated && this.isReverseCalibrated) {
+            this.turretMotor.set(ControlMode.PercentOutput, 0.2);
         }
 
     }

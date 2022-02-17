@@ -84,12 +84,12 @@ public class IntakerSubsystem extends SubsystemBase implements Updatable {
             case EXTENDED:
                 extendIntaker();
                 extendFeeder();
-                setIntakerPercent(Constants.FAST_INTAKE_PERCENTAGE);
+                setIntakerPercent(Constants.INTAKER_FAST_INTAKE_PERCENTAGE);
                 break;
             case REVERSE:
                 extendIntaker();
                 extendFeeder();
-                setIntakerPercent(-Constants.FAST_INTAKE_PERCENTAGE);
+                setIntakerPercent(-Constants.INTAKER_FAST_INTAKE_PERCENTAGE);
                 break;
             case RETRACTING:
                 retractIntaker();

@@ -33,7 +33,7 @@ public class ManualTurretControlCommand extends CommandBase {
     @Override
     public void execute() {
         if (Math.abs(x.getAsDouble()) > 0.1 && Math.abs(y.getAsDouble()) > 0.1) {
-            double angle = new Rotation2d(x.getAsDouble(), y.getAsDouble()).getDegrees();
+            double angle = new Rotation2d(x.getAsDouble(), y.getAsDouble()).getDegrees() - 90.0;
             this.mTurretSubsystem.lockAngle(angle);
         }
 

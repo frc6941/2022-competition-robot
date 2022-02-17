@@ -106,7 +106,7 @@ public final class Constants {
      * should appear to be in "X" shape.
      * (Hope you get it)
      * 6. Final check when a translation is inputed, whether the modules are all
-     * turing at the correct direction. If not, add or minus 180 and the problem
+     * turning at the correct direction. If not, add or minus 180 and the problem
      * would be solved.
      */
     public static final double FRONT_LEFT_OFFSET = -45.0 + 66.09375 + 45.0 + 180.0;
@@ -130,45 +130,56 @@ public final class Constants {
     // voltage(which is in the range of +-12V). So when in
     // autonomous, the gain need to be resized to value ranging from -1 to 1
     // accordingly.
-    public static final SimpleMotorFeedforward DRIVETRAIN_FEEDFORWARD = new SimpleMotorFeedforward(0.60757, 7.6216, 0.71241);
+    public static final SimpleMotorFeedforward DRIVETRAIN_FEEDFORWARD = new SimpleMotorFeedforward(0.60757, 7.6216,
+            0.71241);
+
+    // Intaker Constants
+    public static final double INTAKER_WAITING_TIME = 1.0; // Time waited before the feeder extender takes action
+
+    public static final double INTAKER_FAST_INTAKE_PERCENTAGE = 0.8;
+    public static final double INTAKER_SLOW_INTAKE_PERCENTAGE = 0.6;
+    public static final double INTAKER_REVERSE_INTAKE_PERCENTAGE = -1.0;
 
     // Ball Path Constants
-    public static final double INTAKER_WAITING_TIME = 1.0;
 
-    public static final double FAST_INTAKE_PERCENTAGE = 0.8; // FIXME: Need testing for more accurate data.
-    public static final double SLOW_INTAKE_PERCENTAGE = 0.6; // FIXME: Need testing for more accurate data.
-    public static final double REVERSE_INTAKE_PERCENTAGE = -1.0; // FIXME: Need testing for more accurate data.
+    public static final double BALLPATH_NORMAL_PERCENTAGE = 0.4;
+    public static final double BALLPATH_EXPELLING_PERCENTAGE = 0.8;
 
-    public static final double FEEDER_NORMAL_PERCENTAGE = 0.4;
-    public static final double FEEDER_EXPELLING_PERCENTAGE = 0.8;
-
-    public static final double REVERSE_TIME = 0.5;
-    public static final double EXPEL_TIME = 0.5;
-    public static final double COLOR_SENSING_THRESHOLD = 250; // FIXME: Need testing for more accurate data.
+    public static final double BALLPATH_EXPEL_TIME = 0.5; // Time wait to turn back to normal if a ball with incorrect
+                                                          // color is expelled.
+    public static final double BALLPATH_REVERSE_TIME = 1.0; // Time wait to turn back to normal if a ball with
+                                                            // incorrecto color is reversed out of the intaker.
+    public static final double BALLPATH_COLOR_SENSING_THRESHOLD_RED = 200;
+    public static final double BALLPATH_COLOR_SENSING_THRESHOLD_BLUE = 250; // TODO: Implement red and blue cargo
 
     // Shooter Constants
-    // FIXME: All need remeasurement.
     public static final double SHOOTER_LOW_SPEED_RPM = 1000;
     public static final double SHOOTER_HIGH_SPEED_RPM = 3000;
     public static final double SHOOTER_GEAR_RATIO = 24.0 / 15.0;
     public static final double SHOOTER_MAX_SPEED_RPM = 6380;
+
     public static final double SHOOTER_KF = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_SPEED_RPM, 1.0);
     public static final double SHOOTER_KP = 1024.0 / (Conversions.RPMToFalcon(SHOOTER_MAX_SPEED_RPM, 1.0) * 0.1);
-    public static final double SHOOTER_KD = (1024.0 / (Conversions.RPMToFalcon(SHOOTER_MAX_SPEED_RPM, 1.0) * 0.3)) * 0.5;
+    public static final double SHOOTER_KD = (1024.0 / (Conversions.RPMToFalcon(SHOOTER_MAX_SPEED_RPM, 1.0) * 0.3))
+            * 0.5;
     public static final double SHOOTER_ERROR_TOLERANCE = 50.0;
 
     // Turret Constants
     public static final double TURRET_GEAR_RATIO = 7.0 * 181.0 / 18.0;
     public static final double TURRET_SAFE_ZONE_DEGREE = 70.0;
     public static final double TURRET_MAX_ROTATION_DEGREE = 85.0;
-    public static final double TURRET_FORWARD_MAX_POSITION = 81489;
-    public static final double TURRET_REVERSE_MAX_POSITION = -5395;
+    public static final double TURRET_FORWARD_MAX_POSITION = 0.0;
+    public static final double TURRET_REVERSE_MAX_POSITION = 0.0;
     public static final double TURRET_ERROR_TOLERANCE = 1.0;
 
-    /**
-     * Start Coordinator Constants Definitions.
-     * 1.
-     */
+    public static final double TURRET_KF = 1024.0 * 1.0 / 86942.0;
+    public static final double TURRET_KP = 0.14;
+    public static final double TURRET_KI = 0.0001;
+    public static final double TURRET_KD = 3.0;
+    public static final double TURRET_MOTION_CRUISE_VELOCITY = 16000.0;
+    public static final double TURRET_MOTION_ACCELERATION = 1600.0 / 0.2;
+    public static final double TURRET_INTEGRAL_ZONE = 50;
+    public static final double TURRET_NEUTRAL_DEADBAND = 0.005;
 
     // Controller Constants
     public static final int DRIVER_CONTROLLER_PORT = 0;

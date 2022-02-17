@@ -8,13 +8,13 @@ public class Cargo {
 
     public Cargo(double red, double blue) {
         if (Constants.FMS.ALLIANCE() == Alliance.Red) {
-            if (red > Constants.COLOR_SENSING_THRESHOLD) {
+            if (red > Constants.BALLPATH_COLOR_SENSING_THRESHOLD_RED) {
                 this.correct = true;
             } else {
                 this.correct = false;
             }
         } else if (Constants.FMS.ALLIANCE() == Alliance.Blue) {
-            if (blue > Constants.COLOR_SENSING_THRESHOLD) {
+            if (blue > Constants.BALLPATH_COLOR_SENSING_THRESHOLD_BLUE) {
                 this.correct = true;
             } else {
                 this.correct = false;
