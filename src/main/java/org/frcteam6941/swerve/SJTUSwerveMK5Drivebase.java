@@ -29,7 +29,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Nat;
 import frc.robot.Constants;
-import frc.robot.subsystems.ShooterSubsystem.STATE;
 
 /**
  * Rectangular Swerve Drivetrain composed of SJTU Swerve Module MK5s. This is a
@@ -220,7 +219,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     }
 
     // TODO: Underwork
-    private RigidTransform2 getPoseAtTime(double timestamp) {
+    public RigidTransform2 getPoseAtTime(double timestamp) {
         synchronized (statusLock) {
             if (latencyCompensationMap.isEmpty()) {
                 return RigidTransform2.ZERO;

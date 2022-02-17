@@ -28,43 +28,50 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 public final class Constants {
     // FMS Related Informations
     public static final class FMS {
-        public static final Alliance ALLIANCE() {
+        public static Alliance ALLIANCE() {
             return DriverStation.getAlliance();
         }
 
-        public static final String EVENT_NAME() {
+        public static String EVENT_NAME() {
             return DriverStation.getEventName();
         }
     }
 
     // Looper Configurations
-    public static double kLooperDt = 1.0 / 200.0; // The robot is running at 200Hz
+    public static final double kLooperDt = 1.0 / 200.0; // The robot is running at 200Hz
 
     // CAN ID Configurations
     public static final class CANID {
-        public static int DRIVETRAIN_FRONTLEFT_DRIVE_MOTOR = 0;
-        public static int DRIVETRAIN_FRONTLEFT_STEER_MOTOR = 1;
-        public static int DRIVETRAIN_FRONTRIGHT_DRIVE_MOTOR = 2;
-        public static int DRIVETRAIN_FRONTRIGHT_STEER_MOTOR = 3;
-        public static int DRIVETRAIN_BACKLEFT_DRIVE_MOTOR = 4;
-        public static int DRIVETRAIN_BACKLEFT_STEER_MOTOR = 5;
-        public static int DRIVETRAIN_BACKRIGHT_DRIVE_MOTOR = 6;
-        public static int DRIVETRAIN_BACKRIGHT_STEER_MOTOR = 7;
+        public static final int DRIVETRAIN_FRONTLEFT_DRIVE_MOTOR = 0;
+        public static final int DRIVETRAIN_FRONTLEFT_STEER_MOTOR = 1;
+        public static final int DRIVETRAIN_FRONTRIGHT_DRIVE_MOTOR = 2;
+        public static final int DRIVETRAIN_FRONTRIGHT_STEER_MOTOR = 3;
+        public static final int DRIVETRAIN_BACKLEFT_DRIVE_MOTOR = 4;
+        public static final int DRIVETRAIN_BACKLEFT_STEER_MOTOR = 5;
+        public static final int DRIVETRAIN_BACKRIGHT_DRIVE_MOTOR = 6;
+        public static final int DRIVETRAIN_BACKRIGHT_STEER_MOTOR = 7;
 
-        public static int FEEDER_MOTOR = 8;
-
-        public static int TURRET_MOTOR = 9;
-
-        public static int SHOOTER_LEAD_MOTOR = 12;
-        public static int SHOOTER_FOLLOWER_MOTOR = 13;
-
-        public static int INTAKE_MOTOR = 16;
+        public static final int FEEDER_MOTOR = 8;
+        public static final int TURRET_MOTOR = 9;
+        public static final int SHOOTER_LEAD_MOTOR = 10;
+        public static final int SHOOTER_FOLLOWER_MOTOR = 11;
+        public static final int CLIMBER_MOTOR = 12;
+        public static final int INTAKER_MOTOR = 15;
     }
 
     // Analog ID Configurations
     public static final class ANALOG_ID {
-        public static final int BALL_ENTER_DETECTOR_ID = 0;
-        public static final int BALL_EXIT_DETECTOR_ID = 1;
+        public static final int BALL_ENTRANCE_DETECTOR = 0;
+        public static final int BALL_POSITION_ONE_DETECTOR = 1;
+        public static final int BALL_POSITION_TWO_DETECTOR = 2;
+    }
+
+    // Pneumatics Configurations
+    public static final class PNEUMATICS_ID {
+        public static final int INTAKER_EXTENDER_FORWARD = 2;
+        public static final int INTAKER_EXTENDER_REVERSE = 3;
+        public static final int FEEDER_EXTENDER_FORWARD = 0;
+        public static final int FEEDER_EXTENDER_REVERSE = 1;
     }
 
     /**
@@ -77,11 +84,11 @@ public final class Constants {
      */
 
     // Swerve Drivetrain Constants
-    public static double MODULE_MAX_VELOCITY = 4.0; // TODO: Need remeasurement for more accurate data.
-    public static double MODULE_MAX_ANGULAR_VELOCITY = 12.0; // TODO: Need remeasurement for more accurate data.
-    public static double MODULE_WHEEL_CIRCUMFERENCE = Math.PI * Units.inchesToMeters(4.1);
-    public static double DRIVE_GEAR_RATIO = 7.73;
-    public static double ANGLE_GEAR_RATIO = 10.0; // TODO: Need reconfirmation.
+    public static final double MODULE_MAX_VELOCITY = 4.0; // TODO: Need remeasurement for more accurate data.
+    public static final double MODULE_MAX_ANGULAR_VELOCITY = 12.0; // TODO: Need remeasurement for more accurate data.
+    public static final double MODULE_WHEEL_CIRCUMFERENCE = Math.PI * Units.inchesToMeters(4.1);
+    public static final double DRIVE_GEAR_RATIO = 7.73;
+    public static final double ANGLE_GEAR_RATIO = 10.0; // TODO: Need reconfirmation.
 
     /**
      * Systematic approach to determine angle offsets:
@@ -99,23 +106,23 @@ public final class Constants {
      * should appear to be in "X" shape.
      * (Hope you get it)
      * 6. Final check when a translation is inputed, whether the modules are all
-     * turing at the correct direction. If not, add or minus 180 and the problem
+     * turning at the correct direction. If not, add or minus 180 and the problem
      * would be solved.
      */
-    public static double FRONT_LEFT_OFFSET = -45.0 + 66.09375 + 45.0 + 180.0;
-    public static double FRONT_RIGHT_OFFSET = 225.0 + 134.736328125 + 45.0 + 90.0 + 180.0;
-    public static double BACK_LEFT_OFFSET = 225.0 + 75.849609375 + 45.0 + 90.0 + 180.0;
-    public static double BACK_RIGHT_OFFSET = -45.0 + 61.34965625 + 45.0 + 180.0;
+    public static final double FRONT_LEFT_OFFSET = -45.0 + 66.09375 + 45.0 + 180.0;
+    public static final double FRONT_RIGHT_OFFSET = 225.0 + 134.736328125 + 45.0 + 90.0 + 180.0;
+    public static final double BACK_LEFT_OFFSET = 225.0 + 75.849609375 + 45.0 + 90.0 + 180.0;
+    public static final double BACK_RIGHT_OFFSET = -45.0 + 61.34965625 + 45.0 + 180.0;
 
-    public static double DRIVE_MAX_VELOCITY = 4.0; // FIXME: Need remeasurement for more accurate data.
-    public static double DRIVE_MAX_ANGULAR_VELOCITY = 220; // FIXME: Need remeasurement for more accurate data.
-    public static double DRIVE_MAX_ANGULAR_ACCELERATION = 40; // FIXME: Need remeasurement for more accurate data.
-    public static int MAX_LATENCY_COMPENSATION_MAP_ENTRIES = 25;
+    public static final double DRIVE_MAX_VELOCITY = 4.0; // FIXME: Need remeasurement for more accurate data.
+    public static final double DRIVE_MAX_ANGULAR_VELOCITY = 220; // FIXME: Need remeasurement for more accurate data.
+    public static final double DRIVE_MAX_ANGULAR_ACCELERATION = 40; // FIXME: Need remeasurement for more accurate data.
+    public static final int MAX_LATENCY_COMPENSATION_MAP_ENTRIES = 25;
 
-    public static double DRIVETRAIN_HEADING_CONTROLLER_KP = 1.0 / 70.0;
-    public static double DRIVETRAIN_HEADING_CONTROLLER_KI = 0;
-    public static double DRIVETRAIN_HEADING_CONTROLLER_KD = 0.0004;
-    public static double DRIVETRAIN_STATIC_HEADING_KS = 0.03;
+    public static final double DRIVETRAIN_HEADING_CONTROLLER_KP = 1.0 / 70.0;
+    public static final double DRIVETRAIN_HEADING_CONTROLLER_KI = 0;
+    public static final double DRIVETRAIN_HEADING_CONTROLLER_KD = 0.0004;
+    public static final double DRIVETRAIN_STATIC_HEADING_KS = 0.03;
     public static TrapezoidProfile.Constraints DRIVETRAIN_HEADING_CONTROLLER_CONSTRAINT = new TrapezoidProfile.Constraints(
             400.0, 200.0);
 
@@ -123,54 +130,64 @@ public final class Constants {
     // voltage(which is in the range of +-12V). So when in
     // autonomous, the gain need to be resized to value ranging from -1 to 1
     // accordingly.
-    public static SimpleMotorFeedforward DRIVETRAIN_FEEDFORWARD = new SimpleMotorFeedforward(0.60757, 7.6216, 0.71241);
+    public static final SimpleMotorFeedforward DRIVETRAIN_FEEDFORWARD = new SimpleMotorFeedforward(0.60757, 7.6216,
+            0.71241);
 
-    // Feeder Constants
-    public static double FEEDER_POSITION_KP = 0.04;
-    public static double FEEDER_POSITION_CONSTANT = 61447.0 / 2.0; // FIXME: Need Remeasurement for more accurate data.
-    public static double FEEDER_FINAL_POSITION_TOLERANCE = 1200.0; // In CTRE Sensor Units. This equals to half turn of
-                                                                   // Falcon.
-    public static double FEEDER_END_MECHANISM_LOOPS_COUNT = 6.0;
-    public static double FEEDER_EXPEL_RPM = 6000;
+    // Intaker Constants
+    public static final double INTAKER_WAITING_TIME = 1.0; // Time waited before the feeder extender takes action
 
-    // Intaker Constans
+    public static final double INTAKER_FAST_INTAKE_PERCENTAGE = 0.8;
+    public static final double INTAKER_SLOW_INTAKE_PERCENTAGE = 0.6;
+    public static final double INTAKER_REVERSE_INTAKE_PERCENTAGE = -1.0;
 
-    public static double INTAKER_FAST_INTAKE_PERCENTAGE = 0.8; // FIXME: Need testing for more accurate data.
-    public static double INTAKER_SLOW_INTAKE_PERCENTAGE = 0.6; // FIXME: Need testing for more accurate data.
-    public static double INTAKE_COLOR_SENSING_THRESHOLD = 250; // FIXME: Need testing for more accurate data.
+    // Ball Path Constants
+
+    public static final double BALLPATH_NORMAL_PERCENTAGE = 0.4;
+    public static final double BALLPATH_EXPELLING_PERCENTAGE = 0.8;
+
+    public static final double BALLPATH_EXPEL_TIME = 0.5; // Time wait to turn back to normal if a ball with incorrect
+                                                          // color is expelled.
+    public static final double BALLPATH_REVERSE_TIME = 1.0; // Time wait to turn back to normal if a ball with
+                                                            // incorrecto color is reversed out of the intaker.
+    public static final double BALLPATH_COLOR_SENSING_THRESHOLD_RED = 200;
+    public static final double BALLPATH_COLOR_SENSING_THRESHOLD_BLUE = 250; // TODO: Implement red and blue cargo
 
     // Shooter Constants
-    // FIXME: All need remeasurement.
-    public static double SHOOTER_LOW_SPEED_RPM = 1000;
-    public static double SHOOTER_HIGH_SPEED_RPM = 3100;
-    public static double SHOOTER_GEAR_RATIO = 24.0 / 15.0;
-    public static double SHOOTER_MAX_SPEED_RPM = 6380;
-    public static double SHOOTER_KF = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_SPEED_RPM, 1.0);
-    public static double SHOOTER_KP = 1024.0 / (Conversions.RPMToFalcon(SHOOTER_MAX_SPEED_RPM, 1.0) * 0.1);
-    public static double SHOOTER_KD = 1024.0 / (Conversions.RPMToFalcon(SHOOTER_MAX_SPEED_RPM, 1.0) * 0.5);
-    public static double SHOOTER_ERROR_TOLERANCE = 50.0;
+    public static final double SHOOTER_LOW_SPEED_RPM = 1000;
+    public static final double SHOOTER_HIGH_SPEED_RPM = 3000;
+    public static final double SHOOTER_GEAR_RATIO = 24.0 / 15.0;
+    public static final double SHOOTER_MAX_SPEED_RPM = 6380;
+
+    public static final double SHOOTER_KF = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_SPEED_RPM, 1.0);
+    public static final double SHOOTER_KP = 1024.0 / (Conversions.RPMToFalcon(SHOOTER_MAX_SPEED_RPM, 1.0) * 0.1);
+    public static final double SHOOTER_KD = (1024.0 / (Conversions.RPMToFalcon(SHOOTER_MAX_SPEED_RPM, 1.0) * 0.3))
+            * 0.5;
+    public static final double SHOOTER_ERROR_TOLERANCE = 50.0;
 
     // Turret Constants
-    public static double TURRET_DEFAULT_ZERO_POSITION = 0.0;
-    public static double TURRET_GEAR_RATIO = 1.0;
-    public static double TURRET_SAFE_ZONE_DEGREE = 70.0;
-    public static double TURRET_MAX_ROTATION_DEGREE = 90.0;
-    public static double TURRET_FORWARD_MAX_POSITION = 2558.0;
-    public static double TURRET_REVERSE_MAX_POSITION = -1482.0;
-    public static double TURRET_ERROR_TOLERANCE = 1.0;
+    public static final double TURRET_GEAR_RATIO = 7.0 * 181.0 / 18.0;
+    public static final double TURRET_SAFE_ZONE_DEGREE = 70.0;
+    public static final double TURRET_MAX_ROTATION_DEGREE = 85.0;
+    public static final double TURRET_FORWARD_MAX_POSITION = 0.0;
+    public static final double TURRET_REVERSE_MAX_POSITION = 0.0;
+    public static final double TURRET_ERROR_TOLERANCE = 1.0;
 
-    /**
-     * Start Coordinator Constants Definitions.
-     * 1.
-     */
+    public static final double TURRET_KF = 1024.0 * 1.0 / 86942.0;
+    public static final double TURRET_KP = 0.14;
+    public static final double TURRET_KI = 0.0001;
+    public static final double TURRET_KD = 3.0;
+    public static final double TURRET_MOTION_CRUISE_VELOCITY = 16000.0;
+    public static final double TURRET_MOTION_ACCELERATION = 1600.0 / 0.2;
+    public static final double TURRET_INTEGRAL_ZONE = 50;
+    public static final double TURRET_NEUTRAL_DEADBAND = 0.005;
 
     // Controller Constants
-    public static int DRIVER_CONTROLLER_PORT = 0;
+    public static final int DRIVER_CONTROLLER_PORT = 0;
 
-    public static double DEADBAND = 0.08; // Strange: the deadband is really large
-    public static boolean INVERT_X = true;
-    public static boolean INVERT_Y = true;
-    public static boolean INVERT_R = false;
+    public static final double DEADBAND = 0.08; // Strange: the deadband is really large
+    public static final boolean INVERT_X = true;
+    public static final boolean INVERT_Y = true;
+    public static final boolean INVERT_R = false;
 
     // Auto Constants
     public static final class AutoConstants {
@@ -189,5 +206,6 @@ public final class Constants {
     // Vision Constants
     public static final class VisionConstants {
         public static final String TURRET_PHOTON_NAME = "photonvision-turret";
+        public static final String BALL_PHOTON_NAME = "photonvision-ball";
     }
 }
