@@ -9,6 +9,7 @@ import org.frcteam2910.common.robot.UpdateManager.Updatable;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -72,33 +73,41 @@ public class IntakerSubsystem extends SubsystemBase implements Updatable {
             case OFF:
                 retractIntaker();
                 retractFeeder();
+                tBoolean.update(false, 0.0);
+                SmartDashboard.putNumber("State", 0);
                 break;
             case EXTENDING:
                 retractIntaker();
                 extendFeeder();
-                if (tBoolean.update(true, Constants.INTAKER_WAITING_TIME)) {
+                if (tBoolean.update(true, Constants.INTAKER_WAITING_TIME_EXTEND)) {
                     extendIntaker();
                     setState(STATE.EXTENDED);
                 }
+                SmartDashboard.putNumber("State", 1);
                 break;
             case EXTENDED:
                 extendIntaker();
                 extendFeeder();
                 setIntakerPercent(Constants.INTAKER_FAST_INTAKE_PERCENTAGE);
+                tBoolean.update(false, 0.0);
+                SmartDashboard.putNumber("State", 2);
                 break;
             case REVERSE:
                 extendIntaker();
                 extendFeeder();
                 setIntakerPercent(-Constants.INTAKER_FAST_INTAKE_PERCENTAGE);
+                tBoolean.update(false, 0.0);
+                SmartDashboard.putNumber("State", 3);
                 break;
             case RETRACTING:
                 retractIntaker();
                 extendFeeder();
                 setIntakerPercent(0.0);
-                if (!tBoolean.update(false, Constants.INTAKER_WAITING_TIME)) {
+                if (tBoolean.update(true, Constants.INTAKER_WAITING_TIME_RETRACT)) {
                     retractFeeder();
                     setState(STATE.OFF);
                 }
+                SmartDashboard.putNumber("State", 4);
                 break;
         }
 

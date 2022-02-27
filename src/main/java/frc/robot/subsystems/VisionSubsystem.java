@@ -1,34 +1,42 @@
 package frc.robot.subsystems;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
-import javax.sound.sampled.Line;
-
-import com.team254.lib.geometry.Pose2d;
-
+import org.frcteam2910.common.math.Vector2;
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
 import org.frcteam2910.common.util.InterpolatingDouble;
 import org.frcteam2910.common.util.InterpolatingTreeMap;
-import org.frcteam6941.vision.PhotonVision;
+import org.frcteam6328.utils.CircleFitter;
+import org.photonvision.targeting.PhotonTrackedTarget;
+import org.photonvision.targeting.TargetCorner;
 
 import edu.wpi.first.math.filter.LinearFilter;
-import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
+import frc.robot.utils.PhotonVision;
 
 public class VisionSubsystem extends SubsystemBase implements Updatable {
-    private PhotonVision turretVision = new PhotonVision(Constants.VisionConstants.TURRET_PHOTON_NAME);
-    private PhotonVision ballVision = new PhotonVision(Constants.VisionConstants.BALL_PHOTON_NAME);
+    private PhotonVision turretVision = new PhotonVision(Constants.VisionConstants.Turret.TURRET_PHOTON_NAME);
+    private PhotonVision ballVision = new PhotonVision(Constants.VisionConstants.Ball.BALL_PHOTON_NAME);
 
     private VISION_STATE upperhubState = VISION_STATE.LOSS_TARGET;
     private VISION_STATE ballState = VISION_STATE.LOSS_TARGET;
 
-    private InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> upperHubDeltaAngleTreeMap = new InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble>(
+    private InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> latencyCompensationUpperHubAngleMap = new InterpolatingTreeMap<>(
             50);
-    private LinearFilter upperHubDeltaAngleFilter = LinearFilter.singlePoleIIR(0.1, Constants.kLooperDt);
+    private LinearFilter upperHubAngleFilter = LinearFilter.singlePoleIIR(0.1, Constants.kLooperDt);
+
+    private InterpolatingTreeMap<InterpolatingDouble, Vector2> timeStampedVisionCameraToTargetTranslationMap = new InterpolatingTreeMap<InterpolatingDouble, Vector2>(
+            100);
 
     private static VisionSubsystem instance;
+    private LED_STATE ledState = LED_STATE.ON;
 
     public static VisionSubsystem getInstance() {
         if (instance == null) {
@@ -44,8 +52,163 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
         return this.turretVision.getBestTarget().get().getYaw();
     }
 
-    public Transform2d getCameraToUpperHubPose() {
-        return this.turretVision.getBestTarget().get().getCameraToTarget();
+    // TODO: Need a lot of testing to see if the smoothing and latency compensation
+    // works well.
+    public double getCompensatedUpperHubDeltaAngleDegreesAtTime(double time, boolean filtered) {
+        if (latencyCompensationUpperHubAngleMap.isEmpty()) {
+            return getUpperHubDeltaAngleDegrees();
+        } else {
+            if (filtered) {
+                return upperHubAngleFilter.calculate(latencyCompensationUpperHubAngleMap
+                        .getInterpolated(new InterpolatingDouble(time)).value);
+            } else {
+                return latencyCompensationUpperHubAngleMap
+                        .getInterpolated(new InterpolatingDouble(time)).value;
+            }
+        }
+    }
+
+    public Optional<Translation2d> getCompensatedCameraToTargetAtTime(double time) {
+        if (timeStampedVisionCameraToTargetTranslationMap.isEmpty()) {
+            return Optional.empty();
+        } else {
+            Vector2 temp = timeStampedVisionCameraToTargetTranslationMap.getInterpolated(new InterpolatingDouble(time));
+            return Optional.ofNullable(new Translation2d(temp.x, temp.y));
+        }
+    }
+
+    /**
+     * Getting the translation of the camera to the upper hub. Huge thanks to team
+     * 6328.
+     * 
+     * @return A translation 2d showing the relative position of the camera to the
+     *         target.
+     */
+    private Optional<Translation2d> getCameraToTargetTranslation2d() {
+        List<PhotonTrackedTarget> targets = turretVision.getMultipleTargets().get();
+        if (targets.size() > Constants.VisionConstants.Turret.MIN_TARGET_COUNT) {
+            List<Translation2d> cameraToTargetTranslations = new ArrayList<>();
+            for (int targetIndex = 0; targetIndex < targets.size(); targetIndex++) {
+                List<TargetCorner> corners = targets.get(targetIndex).getCorners();
+                double totalX = 0.0;
+                double totalY = 0.0;
+                for (TargetCorner corner : corners) {
+                    totalX += corner.x;
+                    totalY += corner.y;
+                }
+
+                TargetCorner targetAverage = new TargetCorner(totalX / 4.0, totalY / 4.0);
+                corners = sortCorners(corners, targetAverage);
+                for (int i = 0; i < corners.size(); i++) {
+                    Translation2d translation = solveCameraToTargetTranslation(
+                            corners.get(i), i < 2 ? FieldConstants.visionTargetHeightUpper
+                                    : FieldConstants.visionTargetHeightLower);
+                    if (translation != null) {
+                        cameraToTargetTranslations.add(translation);
+                    }
+                }
+            }
+
+            if (cameraToTargetTranslations.size() >= Constants.VisionConstants.Turret.MIN_TARGET_COUNT * 4) {
+                Translation2d cameraToTargetTranslation = CircleFitter.fit(FieldConstants.visionTargetDiameter / 2.0,
+                        cameraToTargetTranslations, Constants.VisionConstants.Turret.TARGET_CIRCLE_FIT_PRECISION);
+                return Optional.ofNullable(cameraToTargetTranslation);
+            }
+            return Optional.empty();
+        }
+        return Optional.empty();
+    }
+
+    private List<TargetCorner> sortCorners(List<TargetCorner> corners, TargetCorner pointAverage) {
+        // Find top corners
+        Integer topLeftIndex = null;
+        Integer topRightIndex = null;
+        double minPosRads = Math.PI;
+        double minNegRads = Math.PI;
+        for (int i = 0; i < corners.size(); i++) {
+            TargetCorner corner = corners.get(i);
+            double angleRad = new Rotation2d(corner.x - pointAverage.x, pointAverage.y - corner.y)
+                    .minus(Rotation2d.fromDegrees(90)).getRadians();
+            if (angleRad > 0) {
+                if (angleRad < minPosRads) {
+                    minPosRads = angleRad;
+                    topLeftIndex = i;
+                }
+            } else {
+                if (Math.abs(angleRad) < minNegRads) {
+                    minNegRads = Math.abs(angleRad);
+                    topRightIndex = i;
+                }
+            }
+        }
+
+        // Find lower corners
+        Integer lowerIndex1 = null;
+        Integer lowerIndex2 = null;
+        for (int i = 0; i < corners.size(); i++) {
+            boolean alreadySaved = false;
+            if (topLeftIndex != null) {
+                if (topLeftIndex.equals(i)) {
+                    alreadySaved = true;
+                }
+            }
+            if (topRightIndex != null) {
+                if (topRightIndex.equals(i)) {
+                    alreadySaved = true;
+                }
+            }
+            if (!alreadySaved) {
+                if (lowerIndex1 == null) {
+                    lowerIndex1 = i;
+                } else {
+                    lowerIndex2 = i;
+                }
+            }
+        }
+
+        // Combine final list
+        List<TargetCorner> newCorners = new ArrayList<>();
+        if (topLeftIndex != null) {
+            newCorners.add(corners.get(topLeftIndex));
+        }
+        if (topRightIndex != null) {
+            newCorners.add(corners.get(topRightIndex));
+        }
+        if (lowerIndex1 != null) {
+            newCorners.add(corners.get(lowerIndex1));
+        }
+        if (lowerIndex2 != null) {
+            newCorners.add(corners.get(lowerIndex2));
+        }
+        return newCorners;
+    }
+
+    private Translation2d solveCameraToTargetTranslation(TargetCorner corner,
+            double goalHeight) {
+        double yPixels = corner.x;
+        double zPixels = corner.y;
+
+        // Robot frame of reference
+        double nY = -((yPixels - Constants.VisionConstants.Turret.FRAME_WIDTH / 2.0)
+                / Constants.VisionConstants.Turret.FRAME_WIDTH / 2.0);
+        double nZ = -((zPixels - Constants.VisionConstants.Turret.FRAME_HEIGHT / 2.0)
+                / Constants.VisionConstants.Turret.FRAME_HEIGHT / 2.0);
+        Translation2d xzPlaneTranslation = new Translation2d(1.0,
+                Constants.VisionConstants.Turret.VISION_ANGLE_VERTICAL / 2.0 * nZ).rotateBy(
+                        Rotation2d.fromDegrees(Constants.VisionConstants.Turret.VISION_LENS_ANGLE_TO_HORIZONTAL));
+        double x = xzPlaneTranslation.getX();
+        double y = Constants.VisionConstants.Turret.VISION_ANGLE_HORIZONTAL / 2.0 * nY;
+        double z = xzPlaneTranslation.getY();
+
+        double differentialHeight = Constants.VisionConstants.Turret.VISION_LENS_HEIGHT - goalHeight;
+        if ((z < 0.0) == (differentialHeight > 0.0)) {
+            double scaling = differentialHeight / -z;
+            double distance = Math.hypot(x, y) * scaling;
+            Rotation2d angle = new Rotation2d(x, y);
+            return new Translation2d(distance * angle.getCos(),
+                    distance * angle.getSin());
+        }
+        return null;
     }
 
     @Override
@@ -53,9 +216,38 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
         turretVision.updateVision();
         if (turretVision.hasTargets()) {
             this.setUpperHubState(VISION_STATE.HAS_TARGET);
-            SmartDashboard.putNumber("Target Yaw", this.getUpperHubDeltaAngleDegrees());
+            double latencySeconds = turretVision.getLatencySeconds();
+            Optional<Translation2d> translation = this.getCameraToTargetTranslation2d();
+
+            this.latencyCompensationUpperHubAngleMap.put(
+                    new InterpolatingDouble(time - latencySeconds),
+                    new InterpolatingDouble(this.getUpperHubDeltaAngleDegrees()));
+
+            if (translation.isPresent()) {
+                this.timeStampedVisionCameraToTargetTranslationMap.put(
+                        new InterpolatingDouble(time - latencySeconds),
+                        new Vector2(translation.get().getX(), translation.get().getY()));
+                SmartDashboard.putNumber("Vision Translation Estimation X",
+                        this.timeStampedVisionCameraToTargetTranslationMap
+                                .getInterpolated(new InterpolatingDouble(time)).x);
+                SmartDashboard.putNumber("Vision Translation Estimation Y",
+                        this.timeStampedVisionCameraToTargetTranslationMap
+                                .getInterpolated(new InterpolatingDouble(time)).y);
+            } else {
+                this.timeStampedVisionCameraToTargetTranslationMap.clear();
+            }
         } else {
             this.setUpperHubState(VISION_STATE.LOSS_TARGET);
+            this.latencyCompensationUpperHubAngleMap.clear();
+        }
+
+        switch (ledState) {
+            case ON:
+                this.turretVision.turnOnLED();
+                break;
+            case OFF:
+                this.turretVision.turnOffLED();
+                break;
         }
 
     }
@@ -81,4 +273,8 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
         LOSS_TARGET
     }
 
+    public enum LED_STATE {
+        OFF,
+        ON
+    }
 }

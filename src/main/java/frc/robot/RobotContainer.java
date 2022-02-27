@@ -6,6 +6,9 @@ package frc.robot;
 
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
 import org.frcteam2910.common.robot.input.DPadButton.Direction;
+import org.frcteam6941.commands.basic.SwerveBrakeCommand;
+import org.frcteam6941.commands.basic.SwerveDriveCommand;
+import org.frcteam6941.commands.basic.ZeroGyroCommand;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 import org.frcteam6941.utils.XboxControllerExtended;
 
@@ -13,11 +16,17 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.commands.AimAtAngle;
+import frc.robot.commands.ClimberExtendCommand;
+import frc.robot.commands.ClimberGoToHeightAndStop;
+import frc.robot.commands.ClimberLockHeightCommand;
+import frc.robot.commands.ClimberRetractCommand;
 import frc.robot.commands.ClimberTestCommand;
 import frc.robot.commands.ManualTurretControlCommand;
 import frc.robot.commands.ReadyForIntakeCommand;
 import frc.robot.commands.SimpleShootCommand;
 import frc.robot.commands.VisionAimCommand;
+import frc.robot.coordinators.Alerts;
+import frc.robot.coordinators.RobotStateEstimator;
 import frc.robot.subsystems.BallPathSubsystem;
 import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.IntakerSubsystem;
@@ -42,6 +51,9 @@ public class RobotContainer {
     BallPathSubsystem mBallPath = BallPathSubsystem.getInstance();
     ClimberSubsystem mClimber = ClimberSubsystem.getInstance();
 
+    Alerts mAlert = Alerts.getInstance();
+    RobotStateEstimator mEstimator = RobotStateEstimator.getInstance();
+
     // Controller Definitions
     XboxControllerExtended driveController = XboxControllerExtended.getController(Constants.DRIVER_CONTROLLER_PORT);
 
@@ -60,29 +72,38 @@ public class RobotContainer {
      * passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
-        // SwerveDriveCommand swerveDriveCommand = new SwerveDriveCommand(mDrivebase,
-        //         () -> driveController.getLeftYAxis().get(), () -> driveController.getLeftXAxis().get(),
-        //         () -> driveController.getRightTriggerAxis().get(), () -> driveController.getRightXAxis().get(), true);
-        // SwerveBrakeCommand brakeCommand = new SwerveBrakeCommand();
-        // ZeroGyroCommand zeroGyroCommand = new ZeroGyroCommand(mDrivebase, 0.0);
+        SwerveDriveCommand swerveDriveCommand = new SwerveDriveCommand(mDrivebase,
+                () -> driveController.getLeftYAxis().get(), () -> driveController.getLeftXAxis().get(),
+                () -> driveController.getRightTriggerAxis().get(), () -> driveController.getRightXAxis().get(), true);
+        SwerveBrakeCommand brakeCommand = new SwerveBrakeCommand();
+        ZeroGyroCommand zeroGyroCommand = new ZeroGyroCommand(mDrivebase, 0.0);
         SimpleShootCommand simpleShootCommand = new SimpleShootCommand();
+        AimAtAngle aimAtAngle = new AimAtAngle(0.0);
         VisionAimCommand visionAimCommand = new VisionAimCommand();
-        AimAtAngle aimAtAngle = new AimAtAngle(45.0);
         ManualTurretControlCommand manualTurretControlCommand = new ManualTurretControlCommand(() -> driveController.getLeftXAxis().get(), () -> driveController.getLeftYAxis().get());
         ReadyForIntakeCommand readyForIntakeCommand = new ReadyForIntakeCommand();
-        ClimberTestCommand climberTestCommand = new ClimberTestCommand(0.3);
-        ClimberTestCommand climberReverseTestCommand = new ClimberTestCommand(-0.3);
 
-        // mDrivebase.setDefaultCommand(swerveDriveCommand);
-        // driveController.getLeftJoystickButton().whileActiveOnce(brakeCommand);
-        // // driveController.getStartButton().whenActive(zeroGyroCommand);
+        ClimberGoToHeightAndStop climberGoBottom = new ClimberGoToHeightAndStop(0.00
+        , 1.0);
+        ClimberGoToHeightAndStop climberGotoExtension = new ClimberGoToHeightAndStop(0.52, 0.5);
+        ClimberGoToHeightAndStop climberGotoTop = new ClimberGoToHeightAndStop(0.82, 0.15);
+        ClimberExtendCommand climberExtendCommand = new ClimberExtendCommand();
+        ClimberRetractCommand climberRetractCommand = new ClimberRetractCommand();
+        
+
+        mDrivebase.setDefaultCommand(swerveDriveCommand);
+        driveController.getLeftJoystickButton().whileActiveOnce(brakeCommand);
+        driveController.getStartButton().whenActive(zeroGyroCommand);
         driveController.getRightBumperButton().whileActiveOnce(readyForIntakeCommand);
         driveController.getBButton().whileActiveOnce(simpleShootCommand);
         driveController.getYButton().whileActiveContinuous(manualTurretControlCommand);
         driveController.getXButton().whileActiveOnce(aimAtAngle);
-        driveController.getAButton().whileActiveContinuous(visionAimCommand);
-        driveController.getDPadButton(Direction.UP).whileActiveContinuous(climberTestCommand);
-        driveController.getDPadButton(Direction.DOWN).whileActiveContinuous(climberReverseTestCommand);
+        driveController.getLeftBumperButton().whileActiveOnce(visionAimCommand);
+        driveController.getDPadButton(Direction.DOWN).whileActiveOnce(climberGoBottom);
+        driveController.getDPadButton(Direction.UP).whileActiveOnce(climberGotoTop);
+        driveController.getDPadButton(Direction.LEFT).whileActiveOnce(climberGotoExtension);
+        driveController.getAButton().whileActiveOnce(climberRetractCommand);
+        driveController.getDPadButton(Direction.RIGHT).whileActiveOnce(climberExtendCommand);
     }
 
     /**
@@ -122,4 +143,11 @@ public class RobotContainer {
         return this.mClimber;
     }
 
+    public Updatable returnAlerts(){
+        return this.mAlert;
+    }
+
+    public Updatable returnRobotStateEstimator(){
+        return this.mEstimator;
+    }
 }

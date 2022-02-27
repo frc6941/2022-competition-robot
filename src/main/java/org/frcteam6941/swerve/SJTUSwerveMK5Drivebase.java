@@ -83,7 +83,8 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     private STATE state = STATE.DRIVE;
 
     // Auxillary Stuffs
-    private final InterpolatingTreeMap<InterpolatingDouble, RigidTransform2> latencyCompensationMap = new InterpolatingTreeMap<>();
+    private final InterpolatingTreeMap<InterpolatingDouble, RigidTransform2> poseHistoryMap = new InterpolatingTreeMap<>(
+            100);
     private final Object sensorLock = new Object();
     private final Object statusLock = new Object();
     private final Object signalLock = new Object();
@@ -115,8 +116,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         swerveKinematics = new SwerveDriveKinematics(swerveModulePositions);
 
         // Advanced Kalman Filter Swerve Pose Estimator.
-        // TODO: test the accuracy of the filter comparing to traditional ones.
-        // TODO: add vision measurement and to find out how accurate is the estimator.
         poseEstimator = new SwerveDrivePoseEstimator(getYaw(), new Pose2d(), swerveKinematics,
                 new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.05, 0.05, 0.06), // State Error
                 new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.01), // Encoder Error
@@ -173,10 +172,10 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     // TODO: Underwork
     private void addLatencyCompensationMapEntry(Pose2d pose2d, double time) {
         synchronized (statusLock) {
-            if (latencyCompensationMap.size() > MAX_LATENCY_COMPENSATION_MAP_ENTRIES) {
-                latencyCompensationMap.remove(latencyCompensationMap.firstKey());
+            if (poseHistoryMap.size() > MAX_LATENCY_COMPENSATION_MAP_ENTRIES) {
+                poseHistoryMap.remove(poseHistoryMap.firstKey());
             }
-            latencyCompensationMap.put(new InterpolatingDouble(time),
+            poseHistoryMap.put(new InterpolatingDouble(time),
                     MasterKey.transform(pose2d, RigidTransform2.class));
         }
     }
@@ -218,13 +217,14 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         }
     }
 
-    // TODO: Underwork
-    public RigidTransform2 getPoseAtTime(double timestamp) {
+    public Optional<Pose2d> getPoseAtTime(double timestamp) {
         synchronized (statusLock) {
-            if (latencyCompensationMap.isEmpty()) {
-                return RigidTransform2.ZERO;
+            if (poseHistoryMap.isEmpty()) {
+                return Optional.empty();
             }
-            return latencyCompensationMap.getInterpolated(new InterpolatingDouble(timestamp));
+            RigidTransform2 requiredPose = poseHistoryMap.getInterpolated(new InterpolatingDouble(timestamp));
+            return Optional.ofNullable(new Pose2d(requiredPose.translation.x, requiredPose.translation.y,
+                    Rotation2d.fromDegrees(requiredPose.rotation.toDegrees())));
         }
     }
 
@@ -266,7 +266,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
                                 driveSignal.isFieldOriented());
 
                         updateModules(driveSignal, dt);
-                    } else{
+                    } else {
                         setState(STATE.DRIVE);
                     }
                     break;
@@ -369,14 +369,33 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         return states;
     }
 
-    @Override
-    public Rotation2d getYaw() {
+    public Rotation2d getYawRaw() {
         synchronized (sensorLock) {
             double[] ypr = new double[3];
             gyro.getPigeonIMU().getYawPitchRoll(ypr);
-            boolean isInverted = true; // If field-oriented have something wrong, check this option
+            boolean isInverted = true;
             // cw is taken as positive
             return (isInverted) ? Rotation2d.fromDegrees(360 - ypr[0]) : Rotation2d.fromDegrees(ypr[0]);
+        }
+    }
+
+    // TODO: Still need testing: see if this method reduces gyro drift
+    @Override
+    public Rotation2d getYaw() {
+        synchronized (sensorLock) {
+            boolean isInverted = true; // If field-oriented have something wrong, check this option
+            // cw is taken as positive
+            return (isInverted) ? Rotation2d.fromDegrees(360 - gyro.getPigeonIMU().getYaw())
+                    : Rotation2d.fromDegrees(gyro.getPigeonIMU().getYaw());
+        }
+    }
+
+    public Rotation2d getPitch() {
+        synchronized (sensorLock) {
+            double[] ypr = new double[3];
+            gyro.getPigeonIMU().getYawPitchRoll(ypr);
+            boolean isInverted = false;
+            return (isInverted) ? Rotation2d.fromDegrees(360 - ypr[1]) : Rotation2d.fromDegrees(ypr[1]);
         }
     }
 
@@ -390,12 +409,13 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
     @Override
     public void periodic() {
-        for(SJTUSwerveModuleMK5 mod:this.mSwerveMods){
+        for (SJTUSwerveModuleMK5 mod : this.mSwerveMods) {
             SmartDashboard.putNumber("Mod " + mod.moduleNumber, mod.getEncoderUnbound().getDegrees());
         }
         SmartDashboard.putNumber("Pose X", this.pose.getX());
         SmartDashboard.putNumber("Pose Y", this.pose.getY());
         SmartDashboard.putNumber("Field Oriented Heading", this.getFieldOrientedHeading());
+        SmartDashboard.putNumber("Pitch Angle", this.getPitch().getDegrees());
     }
 
     public enum STATE {

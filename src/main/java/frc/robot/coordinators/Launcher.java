@@ -11,10 +11,9 @@ import frc.robot.Constants;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
-import frc.robot.subsystems.TurretSubsystem.STATE;
 import frc.robot.subsystems.VisionSubsystem.VISION_STATE;
 
-public class LauncherMechanismCoordinator extends SubsystemBase implements Updatable {
+public class Launcher extends SubsystemBase implements Updatable {
     private ShooterSubsystem shooter = ShooterSubsystem.getInstance();
     private TurretSubsystem turret = TurretSubsystem.getInstance();
     private VisionSubsystem vision = VisionSubsystem.getInstance();
@@ -25,16 +24,16 @@ public class LauncherMechanismCoordinator extends SubsystemBase implements Updat
     private double targetAngle;
     private boolean isLimited = true;
 
-    private static LauncherMechanismCoordinator instance;
+    private static Launcher instance;
 
-    public static LauncherMechanismCoordinator getInstance() {
+    public static Launcher getInstance() {
         if (instance == null) {
-            instance = new LauncherMechanismCoordinator();
+            instance = new Launcher();
         }
         return instance;
     }
 
-    private LauncherMechanismCoordinator() {
+    private Launcher() {
     }
 
     /**
@@ -118,13 +117,13 @@ public class LauncherMechanismCoordinator extends SubsystemBase implements Updat
     @Override
     public void update(double time, double dt) {
         if(getState() != STATE.OFF){
-            if(this.shooter.isReady() && this.turret.isOnTarget()){
+            if(this.shooter.isHighReady() && this.turret.isOnTarget()){
                 this.setState(STATE.READY);
-            } else if(this.shooter.isReady() && !this.turret.isOnTarget()){
+            } else if(this.shooter.isHighReady() && !this.turret.isOnTarget()){
                 this.setState(STATE.ON_SPEED);
-            } else if(!this.shooter.isReady() && this.turret.isOnTarget()){
+            } else if(!this.shooter.isHighReady() && this.turret.isOnTarget()){
                 this.setState(STATE.ON_TARGET);
-            } else if (!this.shooter.isReady() && !this.turret.isOnTarget()){
+            } else if (!this.shooter.isHighReady() && !this.turret.isOnTarget()){
                 this.setState(STATE.LOCKING);
             }
                 

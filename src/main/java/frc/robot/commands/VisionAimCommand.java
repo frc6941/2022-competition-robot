@@ -1,44 +1,60 @@
 package frc.robot.commands;
 
-import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
-
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.coordinators.LauncherMechanismCoordinator;
+import frc.robot.Constants;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
-public class VisionAimCommand extends CommandBase{
+public class VisionAimCommand extends CommandBase {
     TurretSubsystem mTurret = TurretSubsystem.getInstance();
-    ShooterSubsystem mShooter = ShooterSubsystem.getInstance();
     VisionSubsystem mVision = VisionSubsystem.getInstance();
-    
-    public VisionAimCommand(){
-        addRequirements(mTurret, mShooter);
-    }
+    PIDController angleDeltaController = new PIDController(0.7, 0.0001, 0.0);
 
-    @Override
-    public void initialize(){
-        
-    }
-
-    @Override
-    public void execute(){
-        if(mVision.getUpperhubState() == VisionSubsystem.VISION_STATE.HAS_TARGET){
-            this.mTurret.lockAngle(this.mTurret.getTurretAngle() + this.mVision.getUpperHubDeltaAngleDegrees());
-        } else{
-            this.mTurret.turnOff();
+    Runnable r = new Runnable() {
+        @Override
+        public void run() {
+            if (mVision.getUpperhubState() == VisionSubsystem.VISION_STATE.HAS_TARGET) {
+                mTurret.lockAngle(
+                        mTurret.getTurretAngle() -
+                        angleDeltaController.calculate(mVision.getCompensatedUpperHubDeltaAngleDegreesAtTime(Timer.getFPGATimestamp(), false)));
+            } else {
+                mTurret.turnOff();
+            }
         }
-        
+    };
+    Notifier n = new Notifier(r);
+
+    public VisionAimCommand() {
+        addRequirements(mTurret);
+        angleDeltaController.setSetpoint(0.0);
+        angleDeltaController.setTolerance(0.10);
     }
 
     @Override
-    public void end(boolean iterrupted){
+    public void initialize() {
+        angleDeltaController.reset();
+        n.startPeriodic(0.02);
+    }
+
+    @Override
+    public void execute() {
+
+    }
+
+    @Override
+    public void end(boolean iterrupted) {
+        n.stop();
         this.mTurret.turnOff();
     }
 
     @Override
-    public boolean isFinished(){
+    public boolean isFinished() {
         return false;
     }
 }

@@ -3,24 +3,24 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.ClimberSubsystem;
 
-public class ClimberTestCommand extends CommandBase {
+public class ClimberLockHeightCommand extends CommandBase{
     ClimberSubsystem mClimberSubsystem = ClimberSubsystem.getInstance();
-    double power;
+    double height;
 
-    public ClimberTestCommand(double power) {
+    public ClimberLockHeightCommand(double height) {
         addRequirements(mClimberSubsystem);
-        this.power = power;
+        this.height = height;
     }
 
     @Override
     public void initialize() {
-        this.mClimberSubsystem.setClimberPercentage(power);
-        System.out.println("Clim");
+        
     }
 
     @Override
     public void execute() {
-        
+        this.mClimberSubsystem.lockClimberHeight(height, false);
+        System.out.println("Clim");
     }
 
     @Override
@@ -31,7 +31,6 @@ public class ClimberTestCommand extends CommandBase {
 
     @Override
     public boolean isFinished() {
-        return false;
+        return this.mClimberSubsystem.isClimberOnTarget();
     }
-
 }

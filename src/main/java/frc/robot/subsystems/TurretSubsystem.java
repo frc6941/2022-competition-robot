@@ -1,16 +1,15 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
-import com.ctre.phoenix.motorcontrol.can.TalonFX;
 
 import org.frcteam1678.lib.math.Conversions;
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
+import org.frcteam6941.utils.LazyTalonFX;
 
-import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -18,7 +17,7 @@ import frc.robot.Constants;
 
 public class TurretSubsystem extends SubsystemBase implements Updatable {
 
-    private TalonFX turretMotor = new TalonFX(Constants.CANID.TURRET_MOTOR);
+    private LazyTalonFX turretMotor = new LazyTalonFX(Constants.CANID.TURRET_MOTOR);
 
     private double forwardMaxPosition = Constants.TURRET_FORWARD_MAX_POSITION;
     private double reverseMaxPosition = Constants.TURRET_REVERSE_MAX_POSITION;
@@ -53,10 +52,18 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
     }
 
     public double getTurretAngle() {
-        // As ccw is positive, the angle read by the sensor need to be reverted again.
+        // As cw is the true positive and ccw is what the motor thinks is positive, the
+        // angle read by the sensor need to be reverted again.
         return -Conversions.falconToDegrees(
                 this.turretMotor.getSelectedSensorPosition() - ((forwardMaxPosition + reverseMaxPosition) / 2.0),
                 Constants.TURRET_GEAR_RATIO);
+    }
+
+    public Translation2d getTurretToDrivetrainTranslation(){
+        Rotation2d turretRotation = Rotation2d.fromDegrees(getTurretAngle() - 180.0 + 90.0);
+        return Constants.VisionConstants.Turret.TURRET_RING_CENTER_TO_ROBOT_CENTER.plus(
+            new Translation2d(Constants.VisionConstants.Turret.TURRET_RING_RADIUS, turretRotation)
+        );
     }
 
     /**
@@ -75,16 +82,26 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
 
         double delta = angle - this.getTurretAngle();
 
-        // See if the turret is turing to the 'unsafe' direction: if so, immediately stop its motion.
-        if ((delta >= 0 && this.forwardSafe())
-                || (delta <= 0 && this.reverseSafe())) {
-            // As ccw is positive here due to sensor reasons, angle need to be reverted.
-            this.turretMotor.set(ControlMode.MotionMagic,
-                    Conversions.degreesToFalcon(-angle, Constants.TURRET_GEAR_RATIO)
-                            + (forwardMaxPosition + reverseMaxPosition) / 2.0);
+        // First, determine if the set angle is out of reach. If so, set the angle to
+        // the reachable maximum or minimum.
+        if (Math.abs(angle) < Constants.TURRET_MAX_ROTATION_DEGREE) {
+            // Second, judge actively if the turret has reached the limit. If so, actively
+            // stop the turret from going any further.
+            if ((delta >= 0 && this.forwardSafe())
+                    || (delta <= 0 && this.reverseSafe())) {
+                // As ccw is positive here due to sensor reasons, angle need to be reverted.
+                this.turretMotor.set(ControlMode.MotionMagic,
+                        Conversions.degreesToFalcon(-angle, Constants.TURRET_GEAR_RATIO)
+                                + (forwardMaxPosition + reverseMaxPosition) / 2.0);
+            } else {
+                this.turnOff();
+            }
         } else {
-            this.turnOff();
+            this.turretMotor.set(ControlMode.MotionMagic,
+                    Conversions.degreesToFalcon(-Math.copySign(90.0, angle), Constants.TURRET_GEAR_RATIO)
+                            + (forwardMaxPosition + reverseMaxPosition) / 2.0);
         }
+
     }
 
     public void setTurretPercentage(double power) {
@@ -108,6 +125,10 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
         return Math.abs(this.getTurretAngle() - this.angleLockTarget) < Constants.TURRET_ERROR_TOLERANCE;
     }
 
+    public boolean isCalibrated(){
+        return isForwardCalibrated && isReverseCalibrated;
+    }
+
     public boolean forwardSafe() {
         return getTurretAngle() <= Constants.TURRET_MAX_ROTATION_DEGREE;
     }
@@ -118,14 +139,18 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
 
     @Override
     public void update(double time, double dt) {
+        if(DriverStation.isDisabled() || Math.abs(getTurretAngle()) < Constants.TURRET_SAFE_ZONE_DEGREE){
+            this.turretMotor.setNeutralMode(NeutralMode.Coast);
+        } else{
+            this.turretMotor.setNeutralMode(NeutralMode.Brake);
+        }
+
         if (this.turretMotor.isFwdLimitSwitchClosed() == 1) {
             this.forwardMaxPosition = turretMotor.getSelectedSensorPosition();
-            System.out.println("Forward is being Calibrated.");
             this.isForwardCalibrated = true;
         }
         if (this.turretMotor.isRevLimitSwitchClosed() == 1) {
             this.reverseMaxPosition = turretMotor.getSelectedSensorPosition();
-            System.out.println("Reverse is being Calibrated.");
             this.isReverseCalibrated = true;
         }
 
