@@ -10,13 +10,12 @@ import org.frcteam2910.common.robot.UpdateManager.Updatable;
 import org.frcteam6941.utils.LazyTalonFX;
 
 import edu.wpi.first.wpilibj.AnalogInput;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.gamepiece.Cargo;
+import frc.robot.utils.Cargo;
 
 public class BallPathSubsystem extends SubsystemBase implements Updatable {
     private LazyTalonFX feederMotor = new LazyTalonFX(Constants.CANID.FEEDER_MOTOR);
@@ -56,15 +55,19 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
     }
 
     public boolean ballAtEntrance() {
-        return this.ballEntranceDetector.getVoltage() > 2.0;
+        return this.ballEntranceDetector.getVoltage() > 2.0 && (this.mIntaker.getState() == IntakerSubsystem.STATE.EXTENDED);
     }
 
     public boolean ballAtPositionOne() {
-        return this.ballPositionOneDetector.getVoltage() > 2.0;
+        return this.ballPositionOneDetector.getVoltage() < 2.0;
     }
 
     public boolean ballAtPositionTwo() {
-        return this.ballPositionTwoDetector.getVoltage() > 2.0;
+        return this.ballPositionTwoDetector.getVoltage() < 2.0;
+    }
+
+    public boolean isFull(){
+        return this.ballAtPositionOne() && this.ballAtPositionTwo();
     }
 
     public Optional<Cargo> getPossibleCargo() {
@@ -86,7 +89,7 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
                 break;
             case PROCESSING:
                 if (this.ignoreBallColor) {
-                    if (this.ballAtEntrance() & !this.intakeFlag) {
+                    if (this.ballAtEntrance() && !this.intakeFlag & !this.isFull()) {
                         this.intakeFlag = true;
                         if (!this.ballAtPositionOne()) {
                             this.feederTarget = 1;

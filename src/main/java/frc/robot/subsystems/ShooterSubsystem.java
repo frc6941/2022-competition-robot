@@ -4,18 +4,18 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.can.TalonFX;
 
 import org.frcteam1678.lib.math.Conversions;
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
+import org.frcteam6941.utils.LazyTalonFX;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class ShooterSubsystem extends SubsystemBase implements Updatable {
-    private final TalonFX shooterLeadMotor = new TalonFX(Constants.CANID.SHOOTER_LEAD_MOTOR);
-    private final TalonFX shooterFollowerMotor = new TalonFX(Constants.CANID.SHOOTER_FOLLOWER_MOTOR);
+    private final LazyTalonFX shooterLeadMotor = new LazyTalonFX(Constants.CANID.SHOOTER_LEAD_MOTOR);
+    private final LazyTalonFX shooterFollowerMotor = new LazyTalonFX(Constants.CANID.SHOOTER_FOLLOWER_MOTOR);
 
     private static ShooterSubsystem instance;
     private STATE state = STATE.OFF;
@@ -60,8 +60,8 @@ public class ShooterSubsystem extends SubsystemBase implements Updatable {
         return Conversions.falconToRPM(this.shooterLeadMotor.getClosedLoopError(), Constants.SHOOTER_GEAR_RATIO);
     }
 
-    public boolean isReady(){
-        return getShooterError() <= Constants.SHOOTER_ERROR_TOLERANCE && this.getState() != STATE.OFF && this.getShooterRPM() >= 200.0;
+    public boolean isHighReady(){
+        return getShooterError() <= Constants.SHOOTER_ERROR_TOLERANCE && this.getState() != STATE.OFF && this.getShooterRPM() >= Constants.SHOOTER_LOW_SPEED_RPM + 500.0;
     }
 
     public void update(double time, double dt) {
@@ -78,7 +78,7 @@ public class ShooterSubsystem extends SubsystemBase implements Updatable {
         }
 
         SmartDashboard.putNumber("RPM", this.getShooterRPM());
-        SmartDashboard.putBoolean("Ready", this.isReady());
+        SmartDashboard.putBoolean("Ready", this.isHighReady());
         SmartDashboard.putNumber("Shooter Error", this.getShooterError());
     }
 

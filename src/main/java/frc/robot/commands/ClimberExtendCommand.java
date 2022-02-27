@@ -3,19 +3,16 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.ClimberSubsystem;
 
-public class ClimberTestCommand extends CommandBase {
+public class ClimberExtendCommand extends CommandBase {
     ClimberSubsystem mClimberSubsystem = ClimberSubsystem.getInstance();
-    double power;
 
-    public ClimberTestCommand(double power) {
+    public ClimberExtendCommand() {
         addRequirements(mClimberSubsystem);
-        this.power = power;
     }
 
     @Override
     public void initialize() {
-        this.mClimberSubsystem.setClimberPercentage(power);
-        System.out.println("Clim");
+        this.mClimberSubsystem.extendClimber();
     }
 
     @Override
@@ -25,8 +22,6 @@ public class ClimberTestCommand extends CommandBase {
 
     @Override
     public void end(boolean iterrupted) {
-        this.mClimberSubsystem.lockCurrentHeight();
-        System.out.println("Stop");
     }
 
     @Override

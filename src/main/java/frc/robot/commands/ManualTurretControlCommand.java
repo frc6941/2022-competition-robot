@@ -2,17 +2,9 @@ package frc.robot.commands;
 
 import java.util.function.DoubleSupplier;
 
-import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.coordinators.LauncherMechanismCoordinator;
-import frc.robot.subsystems.BallPathSubsystem;
-import frc.robot.subsystems.ClimberSubsystem;
-import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
-import frc.robot.subsystems.VisionSubsystem;
-import frc.robot.subsystems.TurretSubsystem.STATE;
 
 public class ManualTurretControlCommand extends CommandBase {
     TurretSubsystem mTurretSubsystem = TurretSubsystem.getInstance();
@@ -34,7 +26,7 @@ public class ManualTurretControlCommand extends CommandBase {
     public void execute() {
         if (Math.abs(x.getAsDouble()) > 0.1 && Math.abs(y.getAsDouble()) > 0.1) {
             double angle = new Rotation2d(x.getAsDouble(), y.getAsDouble()).getDegrees() - 90.0;
-            this.mTurretSubsystem.lockAngle(angle);
+            this.mTurretSubsystem.lockAngle(-angle);
         }
 
     }

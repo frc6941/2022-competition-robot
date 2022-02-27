@@ -1,14 +1,8 @@
 package frc.robot.commands;
 
-import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
-
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.coordinators.LauncherMechanismCoordinator;
 import frc.robot.subsystems.BallPathSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
-import frc.robot.subsystems.TurretSubsystem;
-import frc.robot.subsystems.VisionSubsystem;
-import frc.robot.subsystems.TurretSubsystem.STATE;
 
 public class SimpleShootCommand extends CommandBase {
     ShooterSubsystem shooterSubsystem = ShooterSubsystem.getInstance();
@@ -26,10 +20,7 @@ public class SimpleShootCommand extends CommandBase {
 
     @Override
     public void execute() {
-        if(this.shooterSubsystem.isReady()){
-            shoot = true;
-        }
-        if(shoot){
+        if(this.shooterSubsystem.isHighReady()){
             this.ballPathSubsystem.setState(BallPathSubsystem.STATE.EXPELLING);
         }
     }

@@ -6,6 +6,41 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Launch Constants",
+      "request": "launch",
+      "mainClass": "frc.robot.Constants",
+      "projectName": "2022CompetitionRobot"
+    },
+    {
+      "type": "java",
+      "name": "Launch ColorConversions",
+      "request": "launch",
+      "mainClass": "org.frcteam6941.utils.ColorConversions",
+      "projectName": "2022CompetitionRobot"
+    },
+    {
+      "type": "java",
+      "name": "Launch ColorConversion",
+      "request": "launch",
+      "mainClass": "org.frcteam6941.utils.ColorConversion",
+      "projectName": "2022CompetitionRobot"
+    },
+    {
+      "type": "java",
+      "name": "Launch CTRETest",
+      "request": "launch",
+      "mainClass": "org.frcteam6941.swerve.CTRETest",
+      "projectName": "2022CompetitionRobot"
+    },
+    {
+      "type": "java",
+      "name": "Launch CircleFitterTest",
+      "request": "launch",
+      "mainClass": "org.frcteam6328.utils.CircleFitterTest",
+      "projectName": "2022CompetitionRobot"
+    },
+    {
+      "type": "java",
       "name": "Launch SimpleTestTrajectories",
       "request": "launch",
       "mainClass": "org.frcteam6941.utils.SimpleTestTrajectories",
