@@ -28,7 +28,6 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
     private static BallPathSubsystem instance;
     private STATE state = STATE.PROCESSING;
     private TimeDelayedBoolean expelBoolean = new TimeDelayedBoolean();
-    private TimeDelayedBoolean reverseBoolean = new TimeDelayedBoolean();
     private int feederTarget = 0;
     private boolean intakeFlag = false;
     private boolean expelOverride = false;
@@ -71,8 +70,13 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
         return this.ballAtPositionOne() && this.ballAtPositionTwo();
     }
 
+    /**
+     * Get possible cargo at ballpath position two - at the launch position.
+     * 
+     * @return An optional cargo at position two.
+     */
     public Optional<Cargo> getPossibleCargo() {
-        if (ballAtEntrance()) {
+        if (ballAtPositionTwo()) {
             return Optional.ofNullable(new Cargo(this.ballColorSensor.getRed(), this.ballColorSensor.getBlue()));
         } else {
             return Optional.empty();
