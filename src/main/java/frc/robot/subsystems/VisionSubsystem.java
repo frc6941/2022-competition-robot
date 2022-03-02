@@ -9,12 +9,15 @@ import org.frcteam2910.common.robot.UpdateManager.Updatable;
 import org.frcteam2910.common.util.InterpolatingDouble;
 import org.frcteam2910.common.util.InterpolatingTreeMap;
 import org.frcteam6328.utils.CircleFitter;
+import org.frcteam6941.utils.VisionTargetCalculations;
+import org.photonvision.PhotonUtils;
 import org.photonvision.targeting.PhotonTrackedTarget;
 import org.photonvision.targeting.TargetCorner;
 
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -100,7 +103,7 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
                 TargetCorner targetAverage = new TargetCorner(totalX / 4.0, totalY / 4.0);
                 corners = sortCorners(corners, targetAverage);
                 for (int i = 0; i < corners.size(); i++) {
-                    Translation2d translation = solveCameraToTargetTranslation(
+                    Translation2d translation = solveCameraToTargetTranslationPhotonLib(
                             corners.get(i), i < 2 ? FieldConstants.visionTargetHeightUpper
                                     : FieldConstants.visionTargetHeightLower);
                     if (translation != null) {
@@ -182,7 +185,7 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
         }
         return newCorners;
     }
-
+    
     private Translation2d solveCameraToTargetTranslation(TargetCorner corner,
             double goalHeight) {
         double yPixels = corner.x;
@@ -209,6 +212,23 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
                     distance * angle.getSin());
         }
         return null;
+    }
+
+    private Translation2d solveCameraToTargetTranslationPhotonLib(TargetCorner corner, double goalHeight) {
+        double x = corner.x;
+        double y = corner.y;
+
+        double range = PhotonUtils.calculateDistanceToTargetMeters(
+                Constants.VisionConstants.Turret.VISION_LENS_HEIGHT,
+                goalHeight,
+                Units.degreesToRadians(Constants.VisionConstants.Turret.VISION_LENS_ANGLE_TO_HORIZONTAL),
+                Units.degreesToRadians(
+                        VisionTargetCalculations.calculatePitch(y, Constants.VisionConstants.Turret.FRAME_HEIGHT / 2.0,
+                                Constants.VisionConstants.Turret.VERTICAL_FOCAL_LENGTH)));
+        return PhotonUtils.estimateCameraToTargetTranslation(range,
+                Rotation2d.fromDegrees(
+                        VisionTargetCalculations.calculateYaw(x, Constants.VisionConstants.Turret.FRAME_WIDTH / 2.0,
+                                Constants.VisionConstants.Turret.HORIZONTAL_FOCAL_LENGTH)));
     }
 
     @Override

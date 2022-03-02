@@ -113,6 +113,10 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
         setState(STATE.LOCK_ANGLE);
     }
 
+    public void lockMaximumAngle(){
+        this.lockAngle(Constants.TURRET_MAX_ROTATION_DEGREE);
+    }
+
     public void stopLock() {
         setState(STATE.IDLE);
     }
@@ -135,6 +139,16 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
 
     public boolean reverseSafe() {
         return getTurretAngle() >= -Constants.TURRET_MAX_ROTATION_DEGREE;
+    }
+
+    public boolean forwardSafeWithZone(double zone){
+        zone = Math.abs(zone);
+        return getTurretAngle() <= Constants.TURRET_MAX_ROTATION_DEGREE - zone;
+    }
+
+    public boolean reverseSafeWithZone(double zone){
+        zone = Math.abs(zone);
+        return getTurretAngle() >= - Constants.TURRET_MAX_ROTATION_DEGREE + zone;
     }
 
     @Override

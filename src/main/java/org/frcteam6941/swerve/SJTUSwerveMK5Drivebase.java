@@ -8,6 +8,7 @@ import com.pathplanner.lib.PathPlannerTrajectory;
 import org.frcteam2910.common.math.RigidTransform2;
 import org.frcteam2910.common.math.Rotation2;
 import org.frcteam2910.common.robot.drivers.Pigeon;
+import org.frcteam2910.common.robot.drivers.Pigeon.Axis;
 import org.frcteam2910.common.util.InterpolatingDouble;
 import org.frcteam2910.common.util.InterpolatingTreeMap;
 import org.frcteam6941.control.HolonomicDriveSignal;
@@ -305,7 +306,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         }
     }
 
-    public void setModuleStatesBrake() {
+    private void setModuleStatesBrake() {
         for (SJTUSwerveModuleMK5 mod : mSwerveMods) {
             Translation2d modulePosition = this.swerveModulePositions[mod.moduleNumber];
             Rotation2d antiAngle = new Rotation2d(-modulePosition.getX(), -modulePosition.getY());

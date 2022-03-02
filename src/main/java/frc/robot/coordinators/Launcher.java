@@ -4,6 +4,7 @@ import org.frcteam2910.common.robot.UpdateManager.Updatable;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 import org.frcteam6941.utils.AngleNormalization;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -11,18 +12,20 @@ import frc.robot.Constants;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
-import frc.robot.subsystems.VisionSubsystem.VISION_STATE;
+import frc.robot.subsystems.ShooterSubsystem.STATE;
 
 public class Launcher extends SubsystemBase implements Updatable {
     private ShooterSubsystem shooter = ShooterSubsystem.getInstance();
     private TurretSubsystem turret = TurretSubsystem.getInstance();
-    private VisionSubsystem vision = VisionSubsystem.getInstance();
     private SJTUSwerveMK5Drivebase drivebase = SJTUSwerveMK5Drivebase.getInstance();
+    private VisionSubsystem vision = VisionSubsystem.getInstance();
 
-    private STATE state = STATE.OFF;
+    private PIDController angleDeltaController = new PIDController(0.7, 0.0001, 0.0);
 
+    private STATE state = STATE.LOSS_TARGET;
     private double targetAngle;
     private boolean isLimited = true;
+    private boolean isDrivebaseFirst = true;
 
     private static Launcher instance;
 
@@ -34,6 +37,16 @@ public class Launcher extends SubsystemBase implements Updatable {
     }
 
     private Launcher() {
+        this.angleDeltaController.setSetpoint(0.0);
+    }
+
+    public double getFieldOrientedDrivetrainHeading() {
+        return AngleNormalization.getAbsoluteAngleDegree(this.drivebase.getFieldOrientedHeading());
+    }
+
+    public double getFieldOrientedTurretHeading() {
+        return AngleNormalization
+                .getAbsoluteAngleDegree(this.turret.getTurretAngle() + this.getFieldOrientedDrivetrainHeading());
     }
 
     /**
@@ -45,12 +58,12 @@ public class Launcher extends SubsystemBase implements Updatable {
      */
     // TODO: NEED A LOT OF TESTING
     // TODO: Passed basic logic test, need to see implementation on field.
-    // TODO: It seems to be OK with only the turret working and out put the angle that need to be adjusted by the drivetrain.
+    // TODO: It seems to be OK with only the turret working and out put the angle
+    // that need to be adjusted by the drivetrain.
     private double[] calculateTurretDrivetrainAngle(double desiredAngle, boolean isLimited) {
-        double currentDrivetrainAngle = AngleNormalization.getAbsoluteAngleDegree(drivebase.getFieldOrientedHeading());
-        double currentTurretAngle = currentDrivetrainAngle + turret.getTurretAngle();
-        double delta = AngleNormalization.placeInAppropriate0To360Scope(currentTurretAngle, desiredAngle)
-                - currentTurretAngle;
+        double delta = AngleNormalization.placeInAppropriate0To360Scope(this.getFieldOrientedTurretHeading(),
+                desiredAngle)
+                - this.getFieldOrientedTurretHeading();
         double availableTurretDelta;
         if (isLimited) {
             availableTurretDelta = Math.copySign(Constants.TURRET_SAFE_ZONE_DEGREE, delta) - turret.getTurretAngle();
@@ -62,31 +75,29 @@ public class Launcher extends SubsystemBase implements Updatable {
             return new double[] { delta + turret.getTurretAngle(), 0 };
         } else {
             return new double[] { availableTurretDelta + turret.getTurretAngle(),
-                    delta - availableTurretDelta + currentDrivetrainAngle };
+                    delta - availableTurretDelta + this.getFieldOrientedDrivetrainHeading() };
         }
     }
-
 
     private void aimAtFieldOrientedAngleOnce(double angle, boolean isLimited) {
         double[] targetArray = this.calculateTurretDrivetrainAngle(angle, isLimited);
         if (targetArray[1] == 0.0) { // In this case, the drivebase does not need to be turned. So lockHeading is
                                      // not needed.
             this.turret.lockAngle(targetArray[0]);
-        } else { // Or, both the drivebase and the turret need to be rotated.
+        } else if (!this.isDrivebaseFirst) { // Or, both the drivebase and the turret need to be rotated.
             this.turret.lockAngle(targetArray[0]);
             this.drivebase.setHeadingTarget(targetArray[1]);
+        } else {
+            this.turret.lockAngle(targetArray[0]);
         }
     }
 
-    public void aimAtFieldOrientedAngle(double angle, boolean isLimited){
+    public void aimAtFieldOrientedAngle(double angle, boolean isLimited) {
         this.targetAngle = angle;
         this.isLimited = isLimited;
-        if(this.getState() == STATE.OFF){
-            this.setState(STATE.LOCKING);
-        }
     }
 
-    public void aimAtTurretOrientedAngle(double turretAngle){
+    public void aimAtTurretOrientedAngle(double turretAngle) {
         this.aimAtFieldOrientedAngle(this.drivebase.getFieldOrientedHeading() + turretAngle, isLimited);
     }
 
@@ -101,59 +112,86 @@ public class Launcher extends SubsystemBase implements Updatable {
         this.aimAtFieldOrientedAngle(new Rotation2d(travel.getX(), travel.getY()).getDegrees(), isLimited);
     }
 
-    public void aimAtVisionTarget(){
-        System.out.println(this.vision.getUpperhubState());
-        if(this.vision.getUpperhubState() == VISION_STATE.HAS_TARGET){
-            this.aimAtTurretOrientedAngleDelta(this.vision.getUpperHubDeltaAngleDegrees(), isLimited);
-        } else{
-            this.exitLocking();
+    public void aimAtVisionTarget(double time) {
+        if (this.vision.getUpperhubState().equals(VisionSubsystem.VISION_STATE.HAS_TARGET)) {
+            this.aimAtTurretOrientedAngleDelta(
+                    -angleDeltaController
+                            .calculate(this.vision.getCompensatedUpperHubDeltaAngleDegreesAtTime(time, false)),
+                    isLimited);
         }
     }
 
-    public void exitLocking(){
-        this.setState(STATE.OFF);
+    /**
+     * An enhanced method in order to coordinate turret and drivetrain movement.
+     * 
+     * @param translation      Translation, x and y ranging from -1 to 1.
+     * @param rotation         Rotation velocity. No specific range, but recommended
+     *                         to have it in -1 to 1.
+     * @param isFieldOriented  Is the drive field oriented.
+     * @param isDrivebaseFirst Is drivebase able to rotate fully.
+     */
+    public void driveCoordinated(Translation2d translation, double rotation, boolean isFieldOriented) {
+        if (!isDrivebaseFirst) {
+            if ((rotation >= 0 && this.turret.forwardSafeWithZone(Constants.TURRET_MANUAL_ROTATION_GAP_ZONE))
+                    || (rotation <= 0 && this.turret.reverseSafeWithZone(Constants.TURRET_MANUAL_ROTATION_GAP_ZONE))) {
+                rotation = 0;
+            }
+        }
+        drivebase.drive(translation, rotation, isFieldOriented);
+    }
+
+    public void switchDrivebaseFirst(boolean isDrivebaseFirst) {
+        this.isDrivebaseFirst = isDrivebaseFirst;
     }
 
     @Override
     public void update(double time, double dt) {
-        if(getState() != STATE.OFF){
-            if(this.shooter.isHighReady() && this.turret.isOnTarget()){
-                this.setState(STATE.READY);
-            } else if(this.shooter.isHighReady() && !this.turret.isOnTarget()){
-                this.setState(STATE.ON_SPEED);
-            } else if(!this.shooter.isHighReady() && this.turret.isOnTarget()){
-                this.setState(STATE.ON_TARGET);
-            } else if (!this.shooter.isHighReady() && !this.turret.isOnTarget()){
-                this.setState(STATE.LOCKING);
-            }
-                
-        }
 
-        switch(state){
-            case LOCKING:
-                this.aimAtFieldOrientedAngleOnce(this.targetAngle, this.isLimited);
+        // State Transition
+        switch (state) {
+            case LOSS_TARGET:
+                if (this.vision.getUpperhubState().equals(VisionSubsystem.VISION_STATE.HAS_TARGET)) {
+                    this.setState(STATE.HAS_TARGET);
+                }
                 break;
-            case ON_TARGET:
-                this.aimAtFieldOrientedAngleOnce(this.targetAngle, this.isLimited);
-                break;
-            case ON_SPEED:
-                this.aimAtFieldOrientedAngleOnce(this.targetAngle, this.isLimited);
+            case HAS_TARGET:
+                if (this.vision.getUpperhubState().equals(VisionSubsystem.VISION_STATE.LOSS_TARGET)) {
+                    this.setState(STATE.LOSS_TARGET);
+                }
+                if (this.shooter.isHighReady()){
+                    this.setState(STATE.READY);
+                }
                 break;
             case READY:
-                this.aimAtFieldOrientedAngleOnce(this.targetAngle, false);
-                break;
-            case OFF:
-                this.turret.turnOff();
+                if (this.vision.getUpperhubState().equals(VisionSubsystem.VISION_STATE.LOSS_TARGET)) {
+                    this.setState(STATE.LOSS_TARGET);
+                }
+                if (!this.shooter.isHighReady()){
+                    this.setState(STATE.HAS_TARGET);
+                }
                 break;
         }
+
+        switch (state) {
+            case LOSS_TARGET:
+                this.shooter.setState(ShooterSubsystem.STATE.LOW_SPEED);
+                break;
+            case HAS_TARGET:
+                this.aimAtVisionTarget(time);
+                this.shooter.setState(ShooterSubsystem.STATE.HIGH_SPEED);
+                break;
+            case READY:
+                this.aimAtVisionTarget(time);
+                break;
+        }
+
+        this.aimAtFieldOrientedAngleOnce(this.targetAngle, this.isLimited);
     }
 
     public static enum STATE {
-        LOCKING,
-        ON_TARGET,
-        ON_SPEED,
-        READY,
-        OFF
+        LOSS_TARGET,
+        HAS_TARGET,
+        READY
     }
 
     public STATE getState() {

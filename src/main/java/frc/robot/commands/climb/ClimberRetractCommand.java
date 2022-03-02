@@ -1,18 +1,18 @@
-package frc.robot.commands;
+package frc.robot.commands.climb;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.ClimberSubsystem;
 
-public class ClimberExtendCommand extends CommandBase {
+public class ClimberRetractCommand extends CommandBase {
     ClimberSubsystem mClimberSubsystem = ClimberSubsystem.getInstance();
 
-    public ClimberExtendCommand() {
+    public ClimberRetractCommand() {
         addRequirements(mClimberSubsystem);
     }
 
     @Override
     public void initialize() {
-        this.mClimberSubsystem.extendClimber();
+        this.mClimberSubsystem.retractClimber();
     }
 
     @Override

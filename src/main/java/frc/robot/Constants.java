@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
+
 import org.frcteam1678.lib.math.Conversions;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
@@ -173,7 +175,9 @@ public final class Constants {
     public static final double SHOOTER_KP = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_FREE_SPEED_RPM, 1.0) * 16.0;
     public static final double SHOOTER_KD = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_FREE_SPEED_RPM, 1.0) * 15.0
             * 10.0;
-    public static final double SHOOTER_ERROR_TOLERANCE = 50.0;
+    public static final double SHOOTER_ERROR_TOLERANCE = 40.0;
+    public static final double SHOOTER_RAMP = 0.5;
+
 
     // Turret Constants
     public static final double TURRET_GEAR_RATIO = 7.0 * 181.0 / 18.0;
@@ -182,6 +186,7 @@ public final class Constants {
     public static final double TURRET_FORWARD_MAX_POSITION = 0.0;
     public static final double TURRET_REVERSE_MAX_POSITION = 0.0;
     public static final double TURRET_ERROR_TOLERANCE = 1.0;
+    public static final double TURRET_MANUAL_ROTATION_GAP_ZONE = 1.0;
 
     // If in the range between +- 180 degrees, the encoder units traveled should
     // theoretically be:
@@ -260,19 +265,20 @@ public final class Constants {
     public static final class VisionConstants {
         public static final class Turret {
             public static final String TURRET_PHOTON_NAME = "photonvision-turret";
-            public static final double VISION_LENS_HEIGHT = 1.20; // FIXME: on chair. higher than normal
-            public static final double VISION_LENS_ANGLE_TO_HORIZONTAL = 36.5;
+            public static final double VISION_LENS_HEIGHT = 0.85; // FIXME: bad measurement data
+            public static final double VISION_LENS_ANGLE_TO_HORIZONTAL = 90.0 - 36.5;
             public static final Translation2d TURRET_RING_CENTER_TO_ROBOT_CENTER = new Translation2d(0.0, -0.1);
             public static final double TURRET_RING_RADIUS = Units.inchesToMeters(10.0);
 
             public static final double TARGET_CIRCLE_FIT_PRECISION = 0.01;
             public static final int MIN_TARGET_COUNT = 2;
 
-            public static final double VISION_ANGLE_HORIZONTAL = 2.0 * Math.tan(Math.toRadians(59.6 / 2.0));
-            public static final double VISION_ANGLE_VERTICAL = 2.0 * Math.tan(Math.toRadians(49.7 / 2.0));
-            public static final double FRAME_HEIGHT = 720;
-            public static final double FRAME_WIDTH = 960;
-
+            public static final double VISION_ANGLE_HORIZONTAL = Math.toRadians(59.6);
+            public static final double VISION_ANGLE_VERTICAL = Math.toRadians(49.7);
+            public static final double FRAME_HEIGHT = 480;
+            public static final double FRAME_WIDTH = 640;
+            public static final double HORIZONTAL_FOCAL_LENGTH = FRAME_WIDTH / (2 * Math.tan(VISION_ANGLE_HORIZONTAL / 2));
+            public static final double VERTICAL_FOCAL_LENGTH = FRAME_HEIGHT / (2 * Math.tan(VISION_ANGLE_VERTICAL / 2));
         }
 
         public static final class Ball {

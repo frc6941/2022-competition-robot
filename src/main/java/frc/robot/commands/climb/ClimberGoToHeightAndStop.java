@@ -1,4 +1,4 @@
-package frc.robot.commands;
+package frc.robot.commands.climb;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.ClimberSubsystem;
@@ -17,7 +17,7 @@ public class ClimberGoToHeightAndStop extends CommandBase{
 
     @Override
     public void initialize() {
-        this.mClimberSubsystem.setState(ClimberSubsystem.STATE.MANUAL_CONTROL);
+        this.mClimberSubsystem.setState(ClimberSubsystem.STATE.PERCENTAGE);
         if(this.height < this.mClimberSubsystem.getClimberHeight()){
             this.inverse = true;
         } else {

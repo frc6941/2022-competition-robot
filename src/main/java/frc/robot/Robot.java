@@ -45,8 +45,8 @@ public class Robot extends TimedRobot {
         m_robotContainer.returnShooter(),
         m_robotContainer.returnVision(),
         m_robotContainer.returnClimber(),
-        m_robotContainer.returnAlerts()
-        // m_robotContainer.returnRobotStateEstimator()
+        m_robotContainer.returnAlerts(),
+        m_robotContainer.returnSuperCoodinator()
         );
     this.updateManager.startLoop(Constants.kLooperDt);
   }

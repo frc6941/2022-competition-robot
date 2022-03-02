@@ -55,6 +55,7 @@ public class ClimberSubsystem extends SubsystemBase implements Updatable {
     private double manualControlPower = 0.0;
     private boolean isLoaded = false;
     private boolean isExtended = false;
+    private boolean tryToExtend = false;
 
     private STATE state = STATE.WAITING;
 
@@ -67,7 +68,7 @@ public class ClimberSubsystem extends SubsystemBase implements Updatable {
 
     public void setClimberPercentage(double power) {
         this.manualControlPower = power;
-        this.setState(STATE.MANUAL_CONTROL);
+        this.setState(STATE.PERCENTAGE);
     }
 
     public void setClimberPercentageRaw(double power){
@@ -80,7 +81,7 @@ public class ClimberSubsystem extends SubsystemBase implements Updatable {
 
     public void extendClimber() {
         // Make sure that the climber is at a state that is suitable to extend
-        if (this.getState() == STATE.MANUAL_CONTROL || this.getState() == STATE.LOCK_HEIGHT) {
+        if (this.getState() == STATE.PERCENTAGE || this.getState() == STATE.LOCK_HEIGHT) {
             if (this.freeToExtend() && this.isClimberCalibrated) {
                 this.isExtended = true;
             }
@@ -91,6 +92,10 @@ public class ClimberSubsystem extends SubsystemBase implements Updatable {
 
     public void retractClimber() {
         this.isExtended = false;
+    }
+
+    public void tryToExtend(){
+        this.tryToExtend = true;
     }
 
     /**
@@ -160,10 +165,18 @@ public class ClimberSubsystem extends SubsystemBase implements Updatable {
             this.isClimberCalibrated = true;
         }
 
-        if (this.state != STATE.MANUAL_CONTROL) {
+        if (this.state != STATE.PERCENTAGE) {
             this.manualControlPower = 0.0;
         }
-        if(this.isExtended && this.isClimberCalibrated){
+
+        if(this.tryToExtend){
+            if(this.freeToExtend()){
+                this.isExtended = true;
+                this.tryToExtend = false;
+            }
+        }
+
+        if(this.isExtended && this.isClimberCalibrated && this.freeToExtend()){
             this.climberExtender.set(Value.kForward);
         } else {
             this.climberExtender.set(Value.kReverse);
@@ -179,7 +192,7 @@ public class ClimberSubsystem extends SubsystemBase implements Updatable {
                     this.setClimberHeight(0.05);
                     this.retractClimber();
                     break;
-                case MANUAL_CONTROL:
+                case PERCENTAGE:
                     this.setClimberPercentageRaw(this.manualControlPower);
                     break;
                 case LOCK_HEIGHT:
@@ -197,7 +210,7 @@ public class ClimberSubsystem extends SubsystemBase implements Updatable {
     public static enum STATE {
         OFF,
         WAITING,
-        MANUAL_CONTROL,
+        PERCENTAGE,
         LOCK_HEIGHT
     }
 
