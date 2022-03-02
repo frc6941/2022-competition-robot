@@ -55,7 +55,8 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
     }
 
     public boolean ballAtEntrance() {
-        return this.ballEntranceDetector.getVoltage() > 2.0 && (this.mIntaker.getState() == IntakerSubsystem.STATE.EXTENDED);
+        return this.ballEntranceDetector.getVoltage() > 2.0
+                && (this.mIntaker.getState() == IntakerSubsystem.STATE.EXTENDED);
     }
 
     public boolean ballAtPositionOne() {
@@ -66,7 +67,7 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
         return this.ballPositionTwoDetector.getVoltage() < 2.0;
     }
 
-    public boolean isFull(){
+    public boolean isFull() {
         return this.ballAtPositionOne() && this.ballAtPositionTwo();
     }
 
@@ -134,6 +135,12 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
                 }
                 break;
             case EXPELLING:
+                // If a ball passes, reupdate the boolean
+                if (ballAtPositionTwo()) {
+                    this.expelBoolean.update(false, 0.0);
+                }
+                // When there's no ball passing for a certain period of time, consider the ball
+                // path is empty and automatically enter PROCESSING state.
                 if (!ballAtPositionTwo() && !expelOverride
                         && !expelBoolean.update(true, Constants.BALLPATH_EXPEL_TIME)) {
                     setState(STATE.PROCESSING);
@@ -142,15 +149,6 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
                     this.feederTarget = 0;
                 }
                 break;
-            case REVERSE:
-                if (!reverseBoolean.update(true, Constants.BALLPATH_REVERSE_TIME) && !ballAtEntrance()
-                        && mIntaker.getState() == IntakerSubsystem.STATE.EXTENDED) {
-                    setState(STATE.PROCESSING);
-                } else {
-                    setFeederPercent(0.0);
-                    mIntaker.setState(IntakerSubsystem.STATE.REVERSE);
-                }
-
         }
 
         SmartDashboard.putBoolean("Entrance", this.ballAtEntrance());
@@ -163,8 +161,7 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
     public static enum STATE {
         IDLE,
         PROCESSING,
-        EXPELLING,
-        REVERSE
+        EXPELLING
     }
 
     public STATE getState() {

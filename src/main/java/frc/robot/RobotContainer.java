@@ -85,17 +85,13 @@ public class RobotContainer {
         SwerveBrakeCommand brakeCommand = new SwerveBrakeCommand();
         ZeroGyroCommand zeroGyroCommand = new ZeroGyroCommand(mDrivebase, 0.0);
         SimpleShootCommand simpleShootCommand = new SimpleShootCommand();
-        VisionAimCommand visionAimCommand = new VisionAimCommand();
-        ManualTurretControlCommand manualTurretControlCommand = new ManualTurretControlCommand(() -> driveController.getLeftXAxis().get(), () -> driveController.getLeftYAxis().get());
         ReadyForIntakeCommand readyForIntakeCommand = new ReadyForIntakeCommand();
 
         mLauncher.setDefaultCommand(coordinatedDriveCommand);
         driveController.getLeftJoystickButton().whileActiveOnce(brakeCommand);
         driveController.getStartButton().whenActive(zeroGyroCommand);
         driveController.getRightBumperButton().whileActiveOnce(readyForIntakeCommand);
-        driveController.getBButton().whileActiveOnce(simpleShootCommand);
-        driveController.getYButton().whileActiveContinuous(manualTurretControlCommand);
-        driveController.getLeftBumperButton().whileActiveOnce(visionAimCommand);
+        driveController.getXButton().whileActiveOnce(simpleShootCommand);
     }
 
     /**
@@ -137,6 +133,10 @@ public class RobotContainer {
 
     public Updatable returnAlerts(){
         return this.mAlert;
+    }
+
+    public Updatable returnLauncher(){
+        return this.mLauncher;
     }
 
     public Updatable returnSuperCoodinator(){

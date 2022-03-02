@@ -146,7 +146,6 @@ public class Launcher extends SubsystemBase implements Updatable {
 
     @Override
     public void update(double time, double dt) {
-
         // State Transition
         switch (state) {
             case LOSS_TARGET:

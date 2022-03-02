@@ -8,7 +8,6 @@ import com.pathplanner.lib.PathPlannerTrajectory;
 import org.frcteam2910.common.math.RigidTransform2;
 import org.frcteam2910.common.math.Rotation2;
 import org.frcteam2910.common.robot.drivers.Pigeon;
-import org.frcteam2910.common.robot.drivers.Pigeon.Axis;
 import org.frcteam2910.common.util.InterpolatingDouble;
 import org.frcteam2910.common.util.InterpolatingTreeMap;
 import org.frcteam6941.control.HolonomicDriveSignal;
@@ -200,7 +199,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         synchronized (statusLock) {
             SwerveModuleState[] swerveModuleStates = swerveKinematics.toSwerveModuleStates(chassisSpeeds);
             SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, 1.0);
-
             for (SJTUSwerveModuleMK5 mod : mSwerveMods) {
                 mod.setDesiredState(swerveModuleStates[mod.moduleNumber], true, false);
             }
