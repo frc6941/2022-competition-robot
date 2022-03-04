@@ -44,6 +44,9 @@ public final class Constants {
     // Looper Configurations
     public static final double kLooperDt = 1.0 / 200.0; // The robot is running at 200Hz
 
+    // State Estimator Configurations
+    public static final int kUniBufferSize = 100;
+
     // CAN ID Configurations
     public static final class CANID {
         public static final int DRIVETRAIN_FRONTLEFT_DRIVE_MOTOR = 0;

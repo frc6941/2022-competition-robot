@@ -1,12 +1,20 @@
 package frc.robot.coordinators;
 
+import java.util.Optional;
+
+import org.frcteam2910.common.math.RigidTransform2;
+import org.frcteam2910.common.math.Vector2;
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
+import org.frcteam2910.common.util.InterpolatingDouble;
+import org.frcteam2910.common.util.InterpolatingTreeMap;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 import org.frcteam6941.utils.AngleNormalization;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -20,12 +28,14 @@ public class Launcher extends SubsystemBase implements Updatable {
     private SJTUSwerveMK5Drivebase drivebase = SJTUSwerveMK5Drivebase.getInstance();
     private VisionSubsystem vision = VisionSubsystem.getInstance();
 
-    private PIDController angleDeltaController = new PIDController(0.7, 0.0001, 0.0);
+    private PIDController angleDeltaController = new PIDController(0.75, 0.0001, 0.0);
 
     private STATE state = STATE.LOSS_TARGET;
     private double targetAngle;
+    private double guessAimAngle;
     private boolean isLimited = true;
     private boolean isDrivebaseFirst = true;
+    private boolean enableMotionCompensation = false;
 
     private static Launcher instance;
 
@@ -97,6 +107,11 @@ public class Launcher extends SubsystemBase implements Updatable {
         this.isLimited = isLimited;
     }
 
+    public void aimAtFieldOrientedAngleManual(double angle) {
+        this.guessAimAngle = angle;
+        this.isLimited = true;
+    }
+
     public void aimAtTurretOrientedAngle(double turretAngle) {
         this.aimAtFieldOrientedAngle(this.drivebase.getFieldOrientedHeading() + turretAngle, isLimited);
     }
@@ -121,8 +136,12 @@ public class Launcher extends SubsystemBase implements Updatable {
         }
     }
 
+    public void changeLimited(boolean status) {
+        this.isLimited = status;
+    }
+
     /**
-     * An enhanced method in order to coordinate turret and drivetrain movement.
+     * An enhanced method in order to coordinate turret and drivetrain movement. Called through commands.
      * 
      * @param translation      Translation, x and y ranging from -1 to 1.
      * @param rotation         Rotation velocity. No specific range, but recommended
@@ -140,8 +159,13 @@ public class Launcher extends SubsystemBase implements Updatable {
         drivebase.drive(translation, rotation, isFieldOriented);
     }
 
-    public void switchDrivebaseFirst(boolean isDrivebaseFirst) {
+    public void changeDrivebaseFirst(boolean isDrivebaseFirst) {
         this.isDrivebaseFirst = isDrivebaseFirst;
+    }
+
+    private double calculateMotionCompensationFeedforward(double time, double dt){
+        Translation2d fieldVelocity = RobotStateEstimator.getInstance().getFieldOrientedVelocity(time, dt);
+        return 0.0;
     }
 
     @Override
@@ -157,7 +181,7 @@ public class Launcher extends SubsystemBase implements Updatable {
                 if (this.vision.getUpperhubState().equals(VisionSubsystem.VISION_STATE.LOSS_TARGET)) {
                     this.setState(STATE.LOSS_TARGET);
                 }
-                if (this.shooter.isHighReady()){
+                if (this.shooter.isHighReady()) {
                     this.setState(STATE.READY);
                 }
                 break;
@@ -165,26 +189,31 @@ public class Launcher extends SubsystemBase implements Updatable {
                 if (this.vision.getUpperhubState().equals(VisionSubsystem.VISION_STATE.LOSS_TARGET)) {
                     this.setState(STATE.LOSS_TARGET);
                 }
-                if (!this.shooter.isHighReady()){
+                if (!this.shooter.isHighReady()) {
                     this.setState(STATE.HAS_TARGET);
                 }
                 break;
         }
 
+        // Launcher Actions
         switch (state) {
             case LOSS_TARGET:
                 this.shooter.setState(ShooterSubsystem.STATE.LOW_SPEED);
+                this.aimAtFieldOrientedAngleOnce(guessAimAngle, isLimited);
+                this.changeLimited(true);
                 break;
             case HAS_TARGET:
                 this.aimAtVisionTarget(time);
                 this.shooter.setState(ShooterSubsystem.STATE.HIGH_SPEED);
+                this.aimAtFieldOrientedAngleOnce(targetAngle, isLimited);
+                this.changeLimited(true);
                 break;
             case READY:
                 this.aimAtVisionTarget(time);
+                this.shooter.setState(ShooterSubsystem.STATE.HIGH_SPEED);
+                this.changeLimited(true);
                 break;
         }
-
-        this.aimAtFieldOrientedAngleOnce(this.targetAngle, this.isLimited);
     }
 
     public static enum STATE {

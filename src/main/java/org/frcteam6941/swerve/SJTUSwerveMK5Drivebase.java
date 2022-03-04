@@ -169,17 +169,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         this.setHeadingTarget(this.getFieldOrientedHeading());
     }
 
-    // TODO: Underwork
-    private void addLatencyCompensationMapEntry(Pose2d pose2d, double time) {
-        synchronized (statusLock) {
-            if (poseHistoryMap.size() > MAX_LATENCY_COMPENSATION_MAP_ENTRIES) {
-                poseHistoryMap.remove(poseHistoryMap.firstKey());
-            }
-            poseHistoryMap.put(new InterpolatingDouble(time),
-                    MasterKey.transform(pose2d, RigidTransform2.class));
-        }
-    }
-
     private void updateModules(HolonomicDriveSignal driveSignal, double dt) {
         ChassisSpeeds chassisSpeeds;
 
@@ -210,20 +199,8 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         ChassisSpeeds chassisSpeeds = swerveKinematics.toChassisSpeeds(moduleStates);
         synchronized (statusLock) {
             this.pose = poseEstimator.updateWithTime(time, getYaw(), moduleStates);
-            addLatencyCompensationMapEntry(this.pose, time);
             this.translation = new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
             this.angularVelocity = chassisSpeeds.omegaRadiansPerSecond;
-        }
-    }
-
-    public Optional<Pose2d> getPoseAtTime(double timestamp) {
-        synchronized (statusLock) {
-            if (poseHistoryMap.isEmpty()) {
-                return Optional.empty();
-            }
-            RigidTransform2 requiredPose = poseHistoryMap.getInterpolated(new InterpolatingDouble(timestamp));
-            return Optional.ofNullable(new Pose2d(requiredPose.translation.x, requiredPose.translation.y,
-                    Rotation2d.fromDegrees(requiredPose.rotation.toDegrees())));
         }
     }
 
