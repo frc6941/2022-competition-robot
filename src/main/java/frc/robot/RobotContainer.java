@@ -10,8 +10,8 @@ import org.frcteam2910.common.robot.input.DPadButton.Direction;
 import org.frcteam6941.commands.basic.SwerveBrakeCommand;
 import org.frcteam6941.commands.basic.SwerveDriveCommand;
 import org.frcteam6941.commands.basic.ZeroGyroCommand;
+import org.frcteam6941.input.XboxControllerExtended;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
-import org.frcteam6941.utils.XboxControllerExtended;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;

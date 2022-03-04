@@ -1,8 +1,8 @@
 package org.frcteam6941.commands.basic;
 
+import org.frcteam6941.input.XboxControllerExtended;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase.STATE;
-import org.frcteam6941.utils.XboxControllerExtended;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Constants;

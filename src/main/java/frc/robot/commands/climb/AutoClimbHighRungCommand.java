@@ -2,7 +2,7 @@ package frc.robot.commands.climb;
 
 import org.frcteam2910.common.robot.input.DPadButton.Direction;
 import org.frcteam6941.commands.help.WaitForButtonConfirmation;
-import org.frcteam6941.utils.XboxControllerExtended;
+import org.frcteam6941.input.XboxControllerExtended;
 
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;

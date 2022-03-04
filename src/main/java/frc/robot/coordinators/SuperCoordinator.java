@@ -54,10 +54,10 @@ public class SuperCoordinator implements Updatable {
             case PIT:
                 break;
             case CHASING:
-                this.mLauncher.switchDrivebaseFirst(true);
+                this.mLauncher.changeDrivebaseFirst(true);
                 break;
             case AIMING:
-                this.mLauncher.switchDrivebaseFirst(false);
+                this.mLauncher.changeDrivebaseFirst(false);
                 break;
             case CLIMBING:
                 this.mTurret.lockMaximumAngle();
