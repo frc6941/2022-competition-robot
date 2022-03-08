@@ -2,13 +2,14 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.coordinators.Launcher;
+import frc.robot.coordinators.Launcher.STATE;
 import frc.robot.subsystems.BallPathSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 
 public class SimpleShootCommand extends CommandBase {
     ShooterSubsystem shooterSubsystem = ShooterSubsystem.getInstance();
     BallPathSubsystem ballPathSubsystem = BallPathSubsystem.getInstance();
-    Launcher launcher = Launcher.getInstance();
+    boolean shoot;
 
     public SimpleShootCommand() {
         addRequirements(shooterSubsystem, ballPathSubsystem);
@@ -21,13 +22,19 @@ public class SimpleShootCommand extends CommandBase {
 
     @Override
     public void execute() {
-        if(this.launcher.getState() == Launcher.STATE.READY){
+        if(this.shooterSubsystem.isHighReady()){
+            this.shoot = true;
+        }
+        if(shoot){
             this.ballPathSubsystem.setState(BallPathSubsystem.STATE.EXPELLING);
         }
     }
 
     @Override
     public void end(boolean iterrupted) {
+        this.ballPathSubsystem.setState(BallPathSubsystem.STATE.PROCESSING);
+        this.shooterSubsystem.setState(ShooterSubsystem.STATE.OFF);
+        this.shoot = false;
     }
 
     @Override

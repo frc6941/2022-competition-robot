@@ -9,7 +9,7 @@ public class LEDState {
     public LEDState() {
     }
 
-    public LEDState(double b, double g, double r) {
+    public LEDState(double r, double g, double b) {
         blue = b;
         green = g;
         red = r;

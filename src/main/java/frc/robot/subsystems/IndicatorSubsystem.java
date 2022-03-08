@@ -42,16 +42,17 @@ public class IndicatorSubsystem extends SubsystemBase implements Updatable {
 
     @Override
     public void update(double time, double dt) {
-        LEDState current = new LEDState(0, 0, 0);
-        this.currentState.getCurrentLEDState(current, time);
-        switch (state) {
-            case OFF:
-                this.setLEDs(new LEDState(0, 0, 0));
-                break;
-            case ON:
-                this.setLEDs(current);
-                break;
-        }
+        // LEDState current = new LEDState(0, 0, 0);
+        // this.currentState.getCurrentLEDState(current, time);
+        // switch (state) {
+        //     case OFF:
+        //         this.setLEDs(new LEDState(0, 0, 0));
+        //         break;
+        //     case ON:
+        //         this.setLEDs(current);
+        //         break;
+        // }
+        this.setLEDs(new LEDState(1.0, 1.0, 1.0));
     }
 
     public static enum STATE {

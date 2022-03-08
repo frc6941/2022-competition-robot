@@ -107,7 +107,7 @@ public class Launcher extends SubsystemBase implements Updatable {
         this.isLimited = isLimited;
     }
 
-    public void aimAtFieldOrientedAngleManual(double angle) {
+    public void aimAtFieldOrientedAngleGuess(double angle) {
         this.guessAimAngle = angle;
         this.isLimited = true;
     }

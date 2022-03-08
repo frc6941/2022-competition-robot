@@ -6,6 +6,20 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Launch VisionTargetCalculations",
+      "request": "launch",
+      "mainClass": "org.frcteam6941.utils.VisionTargetCalculations",
+      "projectName": "2022CompetitionRobot"
+    },
+    {
+      "type": "java",
+      "name": "Launch Test",
+      "request": "launch",
+      "mainClass": "frc.robot.commands.auto.Test",
+      "projectName": "2022CompetitionRobot"
+    },
+    {
+      "type": "java",
       "name": "Launch Constants",
       "request": "launch",
       "mainClass": "frc.robot.Constants",

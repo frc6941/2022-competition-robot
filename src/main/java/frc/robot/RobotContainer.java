@@ -26,12 +26,14 @@ import frc.robot.commands.climb.ClimberGoToHeightAndStop;
 import frc.robot.commands.climb.ClimberLockHeightCommand;
 import frc.robot.commands.climb.ClimberRetractCommand;
 import frc.robot.commands.climb.ClimberTestCommand;
-import frc.robot.commands.swerve.CoordinatedDriveCommand;
+import frc.robot.commands.launcher.AimAtGuessAngle;
+import frc.robot.commands.launcher.CoordinatedDriveCommand;
 import frc.robot.coordinators.Alerts;
 import frc.robot.coordinators.Launcher;
 import frc.robot.coordinators.SuperCoordinator;
 import frc.robot.subsystems.BallPathSubsystem;
 import frc.robot.subsystems.ClimberSubsystem;
+import frc.robot.subsystems.IndicatorSubsystem;
 import frc.robot.subsystems.IntakerSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
@@ -46,20 +48,23 @@ import frc.robot.subsystems.VisionSubsystem;
  */
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
-    SJTUSwerveMK5Drivebase mDrivebase = SJTUSwerveMK5Drivebase.getInstance();
-    ShooterSubsystem mShooter = ShooterSubsystem.getInstance();
-    TurretSubsystem mTurret = TurretSubsystem.getInstance();
+    // SJTUSwerveMK5Drivebase mDrivebase = SJTUSwerveMK5Drivebase.getInstance();
+    // ShooterSubsystem mShooter = ShooterSubsystem.getInstance();
+    // TurretSubsystem mTurret = TurretSubsystem.getInstance();
     VisionSubsystem mVision = VisionSubsystem.getInstance();
-    IntakerSubsystem mIntaker = IntakerSubsystem.getInstance();
-    BallPathSubsystem mBallPath = BallPathSubsystem.getInstance();
-    ClimberSubsystem mClimber = ClimberSubsystem.getInstance();
+    // IntakerSubsystem mIntaker = IntakerSubsystem.getInstance();
+    // BallPathSubsystem mBallPath = BallPathSubsystem.getInstance();
+    // ClimberSubsystem mClimber = ClimberSubsystem.getInstance();
+    IndicatorSubsystem mIndicator = IndicatorSubsystem.getInstance();
 
-    Alerts mAlert = Alerts.getInstance();
+    // Alerts mAlert = Alerts.getInstance();
     Launcher mLauncher = Launcher.getInstance();
-    SuperCoordinator mCoordinator = SuperCoordinator.getInstance();
+    // SuperCoordinator mCoordinator = SuperCoordinator.getInstance();
 
     // Controller Definitions
     XboxControllerExtended driveController = XboxControllerExtended.getController(Constants.DRIVER_CONTROLLER_PORT);
+    XboxControllerExtended operatorController = XboxControllerExtended
+            .getController(Constants.OPERATOR_CONTROLLER_PORT);
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -67,6 +72,7 @@ public class RobotContainer {
     public RobotContainer() {
         // Configure the button bindings
         configureButtonBindings();
+        Constants.initPreferences();
     }
 
     /**
@@ -77,21 +83,31 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         // SwerveDriveCommand swerveDriveCommand = new SwerveDriveCommand(mDrivebase,
-        //         () -> driveController.getLeftYAxis().get(), () -> driveController.getLeftXAxis().get(),
-        //         () -> driveController.getRightTriggerAxis().get(), () -> driveController.getRightXAxis().get(), true);
-        CoordinatedDriveCommand coordinatedDriveCommand = new CoordinatedDriveCommand(mLauncher,
-                () -> driveController.getLeftYAxis().get(), () -> driveController.getLeftXAxis().get(),
-                () -> driveController.getRightTriggerAxis().get(), () -> driveController.getRightXAxis().get(), true);
-        SwerveBrakeCommand brakeCommand = new SwerveBrakeCommand();
-        ZeroGyroCommand zeroGyroCommand = new ZeroGyroCommand(mDrivebase, 0.0);
-        SimpleShootCommand simpleShootCommand = new SimpleShootCommand();
-        ReadyForIntakeCommand readyForIntakeCommand = new ReadyForIntakeCommand();
+        // () -> driveController.getLeftYAxis().get(), () ->
+        // driveController.getLeftXAxis().get(),
+        // () -> driveController.getRightTriggerAxis().get(), () ->
+        // driveController.getRightXAxis().get(), true);
+        // CoordinatedDriveCommand coordinatedDriveCommand = new
+        // CoordinatedDriveCommand(mLauncher,
+        // () -> driveController.getLeftYAxis().get(), () ->
+        // driveController.getLeftXAxis().get(),
+        // () -> driveController.getRightTriggerAxis().get(), () ->
+        // driveController.getRightXAxis().get(), true);
+        // SwerveBrakeCommand brakeCommand = new SwerveBrakeCommand();
+        // ZeroGyroCommand zeroGyroCommand = new ZeroGyroCommand(mDrivebase, 0.0);
+        // SimpleShootCommand simpleShootCommand = new SimpleShootCommand();
+        // ReadyForIntakeCommand readyForIntakeCommand = new ReadyForIntakeCommand();
 
-        mLauncher.setDefaultCommand(coordinatedDriveCommand);
-        driveController.getLeftJoystickButton().whileActiveOnce(brakeCommand);
-        driveController.getStartButton().whenActive(zeroGyroCommand);
-        driveController.getRightBumperButton().whileActiveOnce(readyForIntakeCommand);
-        driveController.getXButton().whileActiveOnce(simpleShootCommand);
+        // mDrivebase.setDefaultCommand(swerveDriveCommand);
+        // // mLauncher.setDefaultCommand(coordinatedDriveCommand);
+        // driveController.getLeftJoystickButton().whileActiveOnce(brakeCommand);
+        // driveController.getStartButton().whenActive(zeroGyroCommand);
+        // driveController.getRightBumperButton().whileActiveOnce(readyForIntakeCommand);
+        // driveController.getXButton().whileActiveOnce(simpleShootCommand);
+
+        AimAtGuessAngle aimAtGuessAngleCommand = new AimAtGuessAngle(mLauncher,
+                () -> operatorController.getLeftXAxis().get(), () -> operatorController.getLeftYAxis().get());
+        mLauncher.setDefaultCommand(aimAtGuessAngleCommand);
     }
 
     /**
@@ -103,43 +119,47 @@ public class RobotContainer {
         return null;
     }
 
-    public Updatable returnDrivetrain() {
-        return this.mDrivebase;
-    }
+    // public Updatable returnDrivetrain() {
+    // return this.mDrivebase;
+    // }
 
-    public Updatable returnIntaker(){
-        return this.mIntaker;
-    }
+    // public Updatable returnIntaker(){
+    // return this.mIntaker;
+    // }
 
-    public Updatable returnBallPath(){
-        return this.mBallPath;
-    }
+    // public Updatable returnBallPath() {
+    // return this.mBallPath;
+    // }
 
-    public Updatable returnShooter() {
-        return this.mShooter;
-    }
+    // public Updatable returnShooter() {
+    // return this.mShooter;
+    // }
 
-    public Updatable returnTurret(){
-        return this.mTurret;
-    }
+    // public Updatable returnTurret() {
+    // return this.mTurret;
+    // }
 
-    public Updatable returnVision(){
+    public Updatable returnVision() {
         return this.mVision;
     }
 
-    public Updatable returnClimber(){
-        return this.mClimber;
+    // public Updatable returnClimber(){
+    // return this.mClimber;
+    // }
+
+    public Updatable returnIndicator() {
+        return this.mIndicator;
     }
 
-    public Updatable returnAlerts(){
-        return this.mAlert;
-    }
+    // public Updatable returnAlerts(){
+    // return this.mAlert;
+    // }
 
-    public Updatable returnLauncher(){
-        return this.mLauncher;
-    }
+    // public Updatable returnLauncher(){
+    // return this.mLauncher;
+    // }
 
-    public Updatable returnSuperCoodinator(){
-        return this.mCoordinator;
-    }
+    // public Updatable returnSuperCoodinator() {
+    // return this.mCoordinator;
+    // }
 }

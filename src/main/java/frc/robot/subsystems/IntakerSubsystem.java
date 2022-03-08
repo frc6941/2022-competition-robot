@@ -20,7 +20,7 @@ public class IntakerSubsystem extends SubsystemBase implements Updatable {
     private DoubleSolenoid feederExtender = new DoubleSolenoid(PneumaticsModuleType.REVPH,
             Constants.PNEUMATICS_ID.FEEDER_EXTENDER_FORWARD, Constants.PNEUMATICS_ID.FEEDER_EXTENDER_REVERSE);
 
-    private CANSparkMax intakerMotor = new CANSparkMax(Constants.CANID.INTAKER_MOTOR, MotorType.kBrushed);
+    private CANSparkMax intakerMotor = new CANSparkMax(Constants.CANID.INTAKER_MOTOR, MotorType.kBrushless);
 
     private static IntakerSubsystem instance;
     private TimeDelayedBoolean tBoolean = new TimeDelayedBoolean();
