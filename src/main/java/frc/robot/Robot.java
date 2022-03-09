@@ -9,7 +9,6 @@ import org.frcteam2910.common.robot.UpdateManager;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.commands.auto.FiveBallAuto;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -39,7 +38,7 @@ public class Robot extends TimedRobot {
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
     this.updateManager = new UpdateManager(
-        // m_robotContainer.returnDrivetrain(),
+        m_robotContainer.returnDrivetrain(),
         // m_robotContainer.returnIntaker(),
         // m_robotContainer.returnBallPath(),
         // m_robotContainer.returnTurret(),

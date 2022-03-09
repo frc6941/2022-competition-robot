@@ -112,7 +112,8 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
                     }
                 }
                 /** Data for translation fitting and vision tuning. */
-                Translation2d testTranslation = solveCameraToTargetTranslationPhotonLib(targetAverage, 0.5 * (FieldConstants.visionTargetHeightLower + FieldConstants.visionTargetHeightUpper));
+                Translation2d testTranslation = solveCameraToTargetTranslationPhotonLib(targetAverage,
+                        0.5 * (FieldConstants.visionTargetHeightLower + FieldConstants.visionTargetHeightUpper));
                 SmartDashboard.putNumber("Vision Fitting Corner X", targetAverage.x);
                 SmartDashboard.putNumber("Vision Fitting Corner Y", targetAverage.y);
                 SmartDashboard.putNumber("Fitting X", testTranslation.getX());
@@ -311,6 +312,14 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
 
     private void setBallState(VISION_STATE state) {
         this.ballState = state;
+    }
+
+    public void setLEDState(boolean isOn) {
+        if (isOn) {
+            this.ledState = LED_STATE.ON;
+        } else {
+            this.ledState = LED_STATE.OFF;
+        }
     }
 
     public VISION_STATE getUpperhubState() {

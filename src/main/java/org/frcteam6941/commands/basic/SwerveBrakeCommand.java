@@ -16,7 +16,7 @@ public class SwerveBrakeCommand extends CommandBase{
     @Override
     public void initialize(){
         this.drivebase.setState(STATE.BRAKE);
-        XboxControllerExtended.getController(Constants.DRIVER_CONTROLLER_PORT).rumble(1.0, 1.0);
+        XboxControllerExtended.getController(Constants.DRIVER_CONTROLLER_PORT).rumble(0.5, 0.5);
     }
 
     @Override

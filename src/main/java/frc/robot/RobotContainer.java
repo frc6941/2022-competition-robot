@@ -4,39 +4,18 @@
 
 package frc.robot;
 
-import org.frcteam2910.common.robot.UpdateManager;
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
 import org.frcteam2910.common.robot.input.DPadButton.Direction;
-import org.frcteam6941.commands.basic.SwerveBrakeCommand;
 import org.frcteam6941.commands.basic.SwerveDriveCommand;
-import org.frcteam6941.commands.basic.ZeroGyroCommand;
 import org.frcteam6941.input.XboxControllerExtended;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
 import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.commands.AimAtAngle;
-import frc.robot.commands.ManualTurretControlCommand;
-import frc.robot.commands.ReadyForIntakeCommand;
-import frc.robot.commands.SimpleShootCommand;
-import frc.robot.commands.VisionAimCommand;
-import frc.robot.commands.climb.ClimberExtendCommand;
-import frc.robot.commands.climb.ClimberGoToHeightAndStop;
-import frc.robot.commands.climb.ClimberLockHeightCommand;
-import frc.robot.commands.climb.ClimberRetractCommand;
-import frc.robot.commands.climb.ClimberTestCommand;
 import frc.robot.commands.launcher.AimAtGuessAngle;
-import frc.robot.commands.launcher.CoordinatedDriveCommand;
-import frc.robot.coordinators.Alerts;
+import frc.robot.commands.launcher.LockHeading;
 import frc.robot.coordinators.Launcher;
-import frc.robot.coordinators.SuperCoordinator;
-import frc.robot.subsystems.BallPathSubsystem;
-import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.IndicatorSubsystem;
-import frc.robot.subsystems.IntakerSubsystem;
-import frc.robot.subsystems.ShooterSubsystem;
-import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
 /**
@@ -48,7 +27,7 @@ import frc.robot.subsystems.VisionSubsystem;
  */
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
-    // SJTUSwerveMK5Drivebase mDrivebase = SJTUSwerveMK5Drivebase.getInstance();
+    SJTUSwerveMK5Drivebase mDrivebase = SJTUSwerveMK5Drivebase.getInstance();
     // ShooterSubsystem mShooter = ShooterSubsystem.getInstance();
     // TurretSubsystem mTurret = TurretSubsystem.getInstance();
     VisionSubsystem mVision = VisionSubsystem.getInstance();
@@ -62,7 +41,8 @@ public class RobotContainer {
     // SuperCoordinator mCoordinator = SuperCoordinator.getInstance();
 
     // Controller Definitions
-    XboxControllerExtended driveController = XboxControllerExtended.getController(Constants.DRIVER_CONTROLLER_PORT);
+    XboxControllerExtended driveController = XboxControllerExtended
+            .getController(Constants.DRIVER_CONTROLLER_PORT);
     XboxControllerExtended operatorController = XboxControllerExtended
             .getController(Constants.OPERATOR_CONTROLLER_PORT);
 
@@ -78,15 +58,13 @@ public class RobotContainer {
     /**
      * Use this method to define your button->command mappings. Buttons can be
      * created by instantiating a {@link GenericHID} or one of its subclasses
-     * ({@link edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then
+     * ({@link edu.wpi.first.wpilibj.Joystick} or {@link XboxContrller}), and then
      * passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
-        // SwerveDriveCommand swerveDriveCommand = new SwerveDriveCommand(mDrivebase,
-        // () -> driveController.getLeftYAxis().get(), () ->
-        // driveController.getLeftXAxis().get(),
-        // () -> driveController.getRightTriggerAxis().get(), () ->
-        // driveController.getRightXAxis().get(), true);
+        SwerveDriveCommand swerveDriveCommand = new SwerveDriveCommand(mDrivebase,
+                () -> driveController.getLeftYAxis().get(), () -> driveController.getLeftXAxis().get(),
+                () -> driveController.getRightTriggerAxis().get(), () -> driveController.getRightXAxis().get(), true);
         // CoordinatedDriveCommand coordinatedDriveCommand = new
         // CoordinatedDriveCommand(mLauncher,
         // () -> driveController.getLeftYAxis().get(), () ->
@@ -98,16 +76,19 @@ public class RobotContainer {
         // SimpleShootCommand simpleShootCommand = new SimpleShootCommand();
         // ReadyForIntakeCommand readyForIntakeCommand = new ReadyForIntakeCommand();
 
-        // mDrivebase.setDefaultCommand(swerveDriveCommand);
-        // // mLauncher.setDefaultCommand(coordinatedDriveCommand);
+        mDrivebase.setDefaultCommand(swerveDriveCommand);
+        // mLauncher.setDefaultCommand(coordinatedDriveCommand);
         // driveController.getLeftJoystickButton().whileActiveOnce(brakeCommand);
         // driveController.getStartButton().whenActive(zeroGyroCommand);
         // driveController.getRightBumperButton().whileActiveOnce(readyForIntakeCommand);
         // driveController.getXButton().whileActiveOnce(simpleShootCommand);
 
+        LockHeading lockHeadingTest = new LockHeading(mDrivebase, 90.0);
         AimAtGuessAngle aimAtGuessAngleCommand = new AimAtGuessAngle(mLauncher,
                 () -> operatorController.getLeftXAxis().get(), () -> operatorController.getLeftYAxis().get());
         mLauncher.setDefaultCommand(aimAtGuessAngleCommand);
+        driveController.getDPadButton(Direction.RIGHT).whileActiveOnce(lockHeadingTest);
+
     }
 
     /**
@@ -119,9 +100,9 @@ public class RobotContainer {
         return null;
     }
 
-    // public Updatable returnDrivetrain() {
-    // return this.mDrivebase;
-    // }
+    public Updatable returnDrivetrain() {
+        return this.mDrivebase;
+    }
 
     // public Updatable returnIntaker(){
     // return this.mIntaker;

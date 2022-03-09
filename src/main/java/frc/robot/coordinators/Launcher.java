@@ -1,26 +1,17 @@
 package frc.robot.coordinators;
 
-import java.util.Optional;
-
-import org.frcteam2910.common.math.RigidTransform2;
-import org.frcteam2910.common.math.Vector2;
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
-import org.frcteam2910.common.util.InterpolatingDouble;
-import org.frcteam2910.common.util.InterpolatingTreeMap;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 import org.frcteam6941.utils.AngleNormalization;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
-import frc.robot.subsystems.ShooterSubsystem.STATE;
 
 public class Launcher extends SubsystemBase implements Updatable {
     private ShooterSubsystem shooter = ShooterSubsystem.getInstance();
@@ -91,12 +82,15 @@ public class Launcher extends SubsystemBase implements Updatable {
 
     private void aimAtFieldOrientedAngleOnce(double angle, boolean isLimited) {
         double[] targetArray = this.calculateTurretDrivetrainAngle(angle, isLimited);
-        if (targetArray[1] == 0.0) { // In this case, the drivebase does not need to be turned. So lockHeading is
-                                     // not needed.
+        // In this case, the drivebase does not need to be turned. So lockHeading is not needed.
+        if (targetArray[1] == 0.0) { 
             this.turret.lockAngle(targetArray[0]);
-        } else if (!this.isDrivebaseFirst) { // Or, both the drivebase and the turret need to be rotated.
+        // Or, both the drivebase and the turret need to be rotated.
+        // If the system is not in drivebase first mode, turn freely.
+        } else if (!this.isDrivebaseFirst) { 
             this.turret.lockAngle(targetArray[0]);
             this.drivebase.setHeadingTarget(targetArray[1]);
+        // Else, limit the change of launcher to only turn the turret.
         } else {
             this.turret.lockAngle(targetArray[0]);
         }
@@ -140,6 +134,10 @@ public class Launcher extends SubsystemBase implements Updatable {
         this.isLimited = status;
     }
 
+    public void changeDrivebaseFirst(boolean isDrivebaseFirst) {
+        this.isDrivebaseFirst = isDrivebaseFirst;
+    }
+
     /**
      * An enhanced method in order to coordinate turret and drivetrain movement. Called through commands.
      * 
@@ -147,7 +145,6 @@ public class Launcher extends SubsystemBase implements Updatable {
      * @param rotation         Rotation velocity. No specific range, but recommended
      *                         to have it in -1 to 1.
      * @param isFieldOriented  Is the drive field oriented.
-     * @param isDrivebaseFirst Is drivebase able to rotate fully.
      */
     public void driveCoordinated(Translation2d translation, double rotation, boolean isFieldOriented) {
         if (!isDrivebaseFirst) {
@@ -157,10 +154,6 @@ public class Launcher extends SubsystemBase implements Updatable {
             }
         }
         drivebase.drive(translation, rotation, isFieldOriented);
-    }
-
-    public void changeDrivebaseFirst(boolean isDrivebaseFirst) {
-        this.isDrivebaseFirst = isDrivebaseFirst;
     }
 
     private double calculateMotionCompensationFeedforward(double time, double dt){
@@ -211,7 +204,6 @@ public class Launcher extends SubsystemBase implements Updatable {
             case READY:
                 this.aimAtVisionTarget(time);
                 this.shooter.setState(ShooterSubsystem.STATE.HIGH_SPEED);
-                this.changeLimited(true);
                 break;
         }
     }

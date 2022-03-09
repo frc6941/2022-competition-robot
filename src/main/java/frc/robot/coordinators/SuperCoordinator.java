@@ -1,12 +1,8 @@
 package frc.robot.coordinators;
 
-import java.sql.Driver;
-
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
-import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase.STATE;
 
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.robot.subsystems.BallPathSubsystem;
@@ -50,6 +46,7 @@ public class SuperCoordinator implements Updatable {
             this.setState(STATE.CHASING);
         }
 
+        // Corresponding Actions
         switch (state) {
             case PIT:
                 break;
@@ -82,7 +79,6 @@ public class SuperCoordinator implements Updatable {
                     }
                 }
                 break;
-
             case CHASING:
                 if (this.mBallPath.isFull()) {
                     this.mIndicator.setIndicatorState(Lights.BALLPATH_FULL);
@@ -90,7 +86,6 @@ public class SuperCoordinator implements Updatable {
                     this.mIndicator.setIndicatorState(Lights.NORMAL);
                 }
                 break;
-
             case AIMING:
                 if (this.mLauncher.getState() == Launcher.STATE.LOSS_TARGET) {
                     this.mIndicator.setIndicatorState(Lights.WARNING);
@@ -105,6 +100,7 @@ public class SuperCoordinator implements Updatable {
                 break;
             case END:
                 this.mIndicator.setIndicatorState(Lights.RAINBOW);
+                break;
         }
 
     }
