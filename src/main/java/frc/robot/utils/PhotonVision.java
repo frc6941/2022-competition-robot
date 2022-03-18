@@ -51,4 +51,12 @@ public class PhotonVision {
     public void turnOffLED() {
         this.camera.setLED(VisionLEDMode.kOff);
     }
+
+    public void switchPipeline(int index){
+        this.camera.setPipelineIndex(index);
+    }
+
+    public void swtichDriverMode(boolean isDriverMode){
+        this.camera.setDriverMode(isDriverMode);
+    }
 }

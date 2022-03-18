@@ -7,12 +7,13 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.TurretSubsystem;
 
 public class ManualTurretControlCommand extends CommandBase {
-    TurretSubsystem mTurretSubsystem = TurretSubsystem.getInstance();
+    TurretSubsystem mTurretSubsystem;
     DoubleSupplier x;
     DoubleSupplier y;
 
-    public ManualTurretControlCommand(DoubleSupplier x, DoubleSupplier y) {
+    public ManualTurretControlCommand(TurretSubsystem turret, DoubleSupplier x, DoubleSupplier y) {
         addRequirements(mTurretSubsystem);
+        this.mTurretSubsystem = turret;
         this.x = x;
         this.y = y;
     }

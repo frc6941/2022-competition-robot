@@ -8,8 +8,13 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 
-public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<HolonomicDriveSignal> {
+public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<HolonomicDriveSignal>
+        implements Sendable {
     private PIDController xController;
     private PIDController yController;
     private ProfiledPIDController thetaController;
@@ -38,36 +43,39 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
             return new HolonomicDriveSignal(new Translation2d(0, 0), 0.0, true);
         }
 
-        PathPlannerState target = (PathPlannerState) trajectory.sample(time);
-        double x = xController.calculate(currentPose.getX(), target.poseMeters.getX());
-        double y = yController.calculate(currentPose.getY(), target.poseMeters.getY());
+        lastState = (PathPlannerState) trajectory.sample(time);
+        double x = xController.calculate(currentPose.getX(), lastState.poseMeters.getX());
+        double y = yController.calculate(currentPose.getY(), lastState.poseMeters.getY());
         double rotation = 0.0;
         Translation2d translationVector = new Translation2d(x, y);
 
-        if(this.lastState != null){
-            Translation2d targetDisplacement = target.poseMeters.getTranslation().minus(this.lastState.poseMeters.getTranslation());
-            double feedForwardGain = feedforward.calculate(target.velocityMetersPerSecond, target.accelerationMetersPerSecondSq) / 12.0;
+        if (this.lastState != null) {
+            Translation2d targetDisplacement = lastState.poseMeters.getTranslation()
+                    .minus(this.lastState.poseMeters.getTranslation());
+            double feedForwardGain = feedforward.calculate(lastState.velocityMetersPerSecond,
+                    lastState.accelerationMetersPerSecondSq) / 12.0;
             Translation2d feedForwardVector = targetDisplacement.times(feedForwardGain / targetDisplacement.getNorm());
             translationVector = translationVector.plus(feedForwardVector);
         }
 
-        if(this.lockAngle){
-            // As we take clockwise as positive, the value provided by PathPlanner need to be converted.
-            rotation = this.thetaController.calculate(360.0 - currentPose.getRotation().getDegrees(), target.holonomicRotation.getDegrees());
+        if (this.lockAngle) {
+            // TODO: As we take clockwise as positive, the value provided by PathPlanner need to
+            // be converted.
+            rotation = this.thetaController.calculate(360.0 - currentPose.getRotation().getDegrees(),
+                    lastState.holonomicRotation.getDegrees());
         }
 
         return new HolonomicDriveSignal(
                 translationVector,
                 rotation,
-                true
-        );
+                true);
     }
 
     public PathPlannerTrajectory.PathPlannerState getLastState() {
         return lastState;
     }
 
-    public void setLockAngle(boolean lock){
+    public void setLockAngle(boolean lock) {
         this.lockAngle = lock;
     }
 
@@ -76,9 +84,44 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
         return finished;
     }
 
+    public boolean isPathFollowing() {
+        return this.getCurrentTrajectory().isPresent();
+    }
+
     @Override
     protected void reset() {
         this.xController.reset();
         this.yController.reset();
+        this.finished = false;
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        builder.addBooleanProperty("Finished",
+                () -> this.isFinished(),
+                null);
+        builder.addBooleanProperty("Is PathFollowing",
+                () -> this.isPathFollowing(),
+                null);
+        builder.addDoubleArrayProperty("Current Position",
+                () -> this.lastState != null
+                        ? new double[] { lastState.poseMeters.getX(),
+                                lastState.poseMeters.getY(),
+                                lastState.poseMeters.getRotation().getDegrees() }
+                        : new double[] { -6941.0, -6941.0, -6941.0 },
+                null);
+        builder.addDoubleArrayProperty("Starting Position",
+                () -> getCurrentTrajectory().isPresent()
+                        ? new double[] { getCurrentTrajectory().get().getInitialPose().getX(),
+                                getCurrentTrajectory().get().getInitialPose().getY(),
+                                getCurrentTrajectory().get().getInitialPose().getRotation().getDegrees() }
+                        : new double[] { -6941.0, -6941.0, -6941.0 },
+                null);
+        builder.addDoubleArrayProperty("Ending Position", () -> getCurrentTrajectory().isPresent()
+                ? new double[] { getCurrentTrajectory().get().getEndState().poseMeters.getX(),
+                        getCurrentTrajectory().get().getEndState().poseMeters.getY(),
+                        getCurrentTrajectory().get().getEndState().poseMeters.getRotation().getDegrees() }
+                : new double[] { -6941.0, -6941.0, -6941.0 },
+                null);
     }
 }

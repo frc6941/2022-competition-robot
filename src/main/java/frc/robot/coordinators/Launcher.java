@@ -157,7 +157,6 @@ public class Launcher extends SubsystemBase implements Updatable {
     }
 
     private double calculateMotionCompensationFeedforward(double time, double dt){
-        Translation2d fieldVelocity = RobotStateEstimator.getInstance().getFieldOrientedVelocity(time, dt);
         return 0.0;
     }
 

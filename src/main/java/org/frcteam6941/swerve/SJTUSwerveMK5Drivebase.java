@@ -13,6 +13,7 @@ import org.frcteam2910.common.util.InterpolatingTreeMap;
 import org.frcteam6941.control.HolonomicDriveSignal;
 import org.frcteam6941.control.HolonomicTrajectoryFollower;
 import org.frcteam6941.utils.AngleNormalization;
+import org.frcteam6941.utils.PulseHUD;
 
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Nat;
@@ -207,6 +208,12 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     public void update(double time, double dt) {
         updateOdometry(time, dt);
         HolonomicDriveSignal driveSignal = this.driveSignal;
+        Optional<HolonomicDriveSignal> trajectorySignal = trajectoryFollower.update(getPose(), getTranslation(),
+                getAngularVelocity(), time, dt);
+        if (trajectorySignal.isPresent()) {
+            setState(STATE.PATH_FOLLOWING);
+        }
+        
 
         if (isLockHeading) {
             headingTarget = AngleNormalization.placeInAppropriate0To360Scope(getFieldOrientedHeading(), headingTarget);
@@ -219,15 +226,8 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
             driveSignal = new HolonomicDriveSignal(driveSignal.getTranslation(), rotation, true);
         }
 
-        Optional<HolonomicDriveSignal> trajectorySignal = trajectoryFollower.update(getPose(), getTranslation(),
-                getAngularVelocity(), time, dt);
-
-        if (trajectorySignal.isPresent()) {
-            setState(STATE.PATH_FOLLOWING);
-        }
-
         synchronized (signalLock) {
-            switch (getState()) {
+            switch (state) {
                 case BRAKE:
                     this.setModuleStatesBrake();
                     break;
@@ -335,6 +335,12 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         gyro.getPigeonIMU().setYaw(degree);
     }
 
+    public void forceResetModules(){
+        for(SJTUSwerveModuleMK5 module: mSwerveMods){
+            module.mAngleMotor.setSelectedSensorPosition(0.0);
+        }
+    }
+
     @Override
     public SwerveModuleState[] getStates() {
         SwerveModuleState[] states = new SwerveModuleState[4];
@@ -387,10 +393,8 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         for (SJTUSwerveModuleMK5 mod : this.mSwerveMods) {
             SmartDashboard.putNumber("Mod " + mod.moduleNumber, mod.getEncoderUnbound().getDegrees());
         }
-        SmartDashboard.putNumber("Pose X", this.pose.getX());
-        SmartDashboard.putNumber("Pose Y", this.pose.getY());
-        SmartDashboard.putNumber("Field Oriented Heading", this.getFieldOrientedHeading());
-        SmartDashboard.putNumber("Pitch Angle", this.getPitch().getDegrees());
+        PulseHUD.putNumberArray("Robot Pose", new double[] {this.pose.getX(), this.pose.getY(), this.pose.getRotation().getDegrees()});
+        PulseHUD.putData("PathFollower", this.trajectoryFollower);
     }
 
     public enum STATE {

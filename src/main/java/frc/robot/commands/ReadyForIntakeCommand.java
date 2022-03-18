@@ -4,10 +4,11 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.IntakerSubsystem;
 
 public class ReadyForIntakeCommand extends CommandBase{
-    IntakerSubsystem intakerSubsystem = IntakerSubsystem.getInstance();
+    IntakerSubsystem intakerSubsystem;
 
-    public ReadyForIntakeCommand() {
+    public ReadyForIntakeCommand(IntakerSubsystem intaker) {
         addRequirements(intakerSubsystem);
+        this.intakerSubsystem = intaker;
     }
 
     @Override

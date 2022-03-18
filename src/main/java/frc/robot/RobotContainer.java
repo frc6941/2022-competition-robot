@@ -6,16 +6,18 @@ package frc.robot;
 
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
 import org.frcteam2910.common.robot.input.DPadButton.Direction;
+import org.frcteam6941.commands.basic.ForceResetModulesCommand;
+import org.frcteam6941.commands.basic.SwerveBrakeCommand;
 import org.frcteam6941.commands.basic.SwerveDriveCommand;
 import org.frcteam6941.input.XboxControllerExtended;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.commands.launcher.AimAtGuessAngle;
-import frc.robot.commands.launcher.LockHeading;
-import frc.robot.coordinators.Launcher;
-import frc.robot.subsystems.IndicatorSubsystem;
+import frc.robot.commands.launcher.SetHeadingTargetCommand;
 import frc.robot.subsystems.VisionSubsystem;
 
 /**
@@ -34,17 +36,21 @@ public class RobotContainer {
     // IntakerSubsystem mIntaker = IntakerSubsystem.getInstance();
     // BallPathSubsystem mBallPath = BallPathSubsystem.getInstance();
     // ClimberSubsystem mClimber = ClimberSubsystem.getInstance();
-    IndicatorSubsystem mIndicator = IndicatorSubsystem.getInstance();
+    // IndicatorSubsystem mIndicator = IndicatorSubsystem.getInstance();
 
     // Alerts mAlert = Alerts.getInstance();
-    Launcher mLauncher = Launcher.getInstance();
+    // Launcher mLauncher = Launcher.getInstance();
     // SuperCoordinator mCoordinator = SuperCoordinator.getInstance();
+
+    boolean reparingMode = false;
 
     // Controller Definitions
     XboxControllerExtended driveController = XboxControllerExtended
             .getController(Constants.DRIVER_CONTROLLER_PORT);
     XboxControllerExtended operatorController = XboxControllerExtended
             .getController(Constants.OPERATOR_CONTROLLER_PORT);
+    XboxControllerExtended emergencyReparingController;
+    
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -53,6 +59,9 @@ public class RobotContainer {
         // Configure the button bindings
         configureButtonBindings();
         Constants.initPreferences();
+        if(reparingMode){
+            this.emergencyReparingController = XboxControllerExtended.getController(Constants.EMERGENCY_REPARING_PORT);
+        }
     }
 
     /**
@@ -71,23 +80,33 @@ public class RobotContainer {
         // driveController.getLeftXAxis().get(),
         // () -> driveController.getRightTriggerAxis().get(), () ->
         // driveController.getRightXAxis().get(), true);
-        // SwerveBrakeCommand brakeCommand = new SwerveBrakeCommand();
+        SwerveBrakeCommand brakeCommand = new SwerveBrakeCommand();
         // ZeroGyroCommand zeroGyroCommand = new ZeroGyroCommand(mDrivebase, 0.0);
+        ForceResetModulesCommand resetModulesCommand = new ForceResetModulesCommand(mDrivebase);
         // SimpleShootCommand simpleShootCommand = new SimpleShootCommand();
         // ReadyForIntakeCommand readyForIntakeCommand = new ReadyForIntakeCommand();
 
         mDrivebase.setDefaultCommand(swerveDriveCommand);
         // mLauncher.setDefaultCommand(coordinatedDriveCommand);
-        // driveController.getLeftJoystickButton().whileActiveOnce(brakeCommand);
+        driveController.getLeftJoystickButton().whileActiveOnce(brakeCommand);
+        
         // driveController.getStartButton().whenActive(zeroGyroCommand);
         // driveController.getRightBumperButton().whileActiveOnce(readyForIntakeCommand);
         // driveController.getXButton().whileActiveOnce(simpleShootCommand);
 
-        LockHeading lockHeadingTest = new LockHeading(mDrivebase, 90.0);
-        AimAtGuessAngle aimAtGuessAngleCommand = new AimAtGuessAngle(mLauncher,
-                () -> operatorController.getLeftXAxis().get(), () -> operatorController.getLeftYAxis().get());
-        mLauncher.setDefaultCommand(aimAtGuessAngleCommand);
+        SetHeadingTargetCommand lockHeadingTest = new SetHeadingTargetCommand(mDrivebase, 90.0);
+        // AimAtGuessAngle aimAtGuessAngleCommand = new AimAtGuessAngle(mLauncher,
+        //         () -> operatorController.getLeftXAxis().get(), () -> operatorController.getLeftYAxis().get());
+        // mLauncher.setDefaultCommand(aimAtGuessAngleCommand);
+
+
         driveController.getDPadButton(Direction.RIGHT).whileActiveOnce(lockHeadingTest);
+
+
+        if(reparingMode){
+            driveController.getDPadButton(Direction.DOWN).whenActive(resetModulesCommand);
+        }
+        
 
     }
 
@@ -128,9 +147,9 @@ public class RobotContainer {
     // return this.mClimber;
     // }
 
-    public Updatable returnIndicator() {
-        return this.mIndicator;
-    }
+    // public Updatable returnIndicator() {
+    //     return this.mIndicator;
+    // }
 
     // public Updatable returnAlerts(){
     // return this.mAlert;

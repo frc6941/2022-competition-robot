@@ -67,7 +67,7 @@ public final class Constants {
 
         public static final int POWER_DISTRIBUTION_HUB = 21;
         public static final int PNEUMATICS_HUB = 1;
-        public static final int LED_CANIFIER = 0;
+        public static final int LED_CANIFIER = 22;
     }
 
     // Analog ID Configurations
@@ -123,10 +123,10 @@ public final class Constants {
      * turning at the correct direction. If not, add or minus 180 and the problem
      * would be solved.
      */
-    public static final double FRONT_LEFT_OFFSET = -45.0 + 66.09375 + 45.0 + 180.0;
-    public static final double FRONT_RIGHT_OFFSET = 225.0 + 134.736328125 + 45.0 + 90.0 + 180.0;
-    public static final double BACK_LEFT_OFFSET = 225.0 + 75.849609375 + 45.0 + 90.0 + 180.0;
-    public static final double BACK_RIGHT_OFFSET = -45.0 + 61.34965625 + 45.0 + 180.0;
+    public static final double FRONT_LEFT_OFFSET = 0.0;
+    public static final double FRONT_RIGHT_OFFSET = 0.0;
+    public static final double BACK_LEFT_OFFSET = 0.0;
+    public static final double BACK_RIGHT_OFFSET = 0.0;
 
     public static final double DRIVE_MAX_VELOCITY = 4.0; // FIXME: Need remeasurement for more accurate data.
     public static final double DRIVE_MAX_ANGULAR_VELOCITY = 220; // FIXME: Need remeasurement for more accurate data.
@@ -237,6 +237,7 @@ public final class Constants {
     /* Controller Constants */
     public static final int DRIVER_CONTROLLER_PORT = 0;
     public static final int OPERATOR_CONTROLLER_PORT = 1;
+    public static final int EMERGENCY_REPARING_PORT = 4;
 
     // Strange: the deadband is really large
     // Well... We should seriously consider swapping Xbox Elite Controller to

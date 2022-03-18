@@ -3,14 +3,12 @@ package frc.robot.commands.launcher;
 import java.util.function.DoubleSupplier;
 
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
-import org.frcteam6941.swerve.SwerveDrivetrainBase;
+
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Constants;
 import frc.robot.coordinators.Launcher;
-import frc.robot.coordinators.SuperCoordinator;
 import frc.robot.subsystems.TurretSubsystem;
-import frc.robot.subsystems.ShooterSubsystem.STATE;
 
 public class CoordinatedDriveCommand extends CommandBase {
     private final double pedal = 0.45;

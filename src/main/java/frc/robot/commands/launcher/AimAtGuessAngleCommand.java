@@ -8,12 +8,12 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.coordinators.Launcher;
 
-public class AimAtGuessAngle extends CommandBase {
+public class AimAtGuessAngleCommand extends CommandBase {
     Launcher mLauncher;
     DoubleSupplier rotationX;
     DoubleSupplier rotationY;
 
-    public AimAtGuessAngle(Launcher launcher, DoubleSupplier rotationAxisX, DoubleSupplier rotationAxisY) {
+    public AimAtGuessAngleCommand(Launcher launcher, DoubleSupplier rotationAxisX, DoubleSupplier rotationAxisY) {
         this.mLauncher = launcher;
         this.rotationX = rotationAxisX;
         this.rotationY = rotationAxisY;

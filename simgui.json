@@ -45,9 +45,6 @@
     }
   },
   "NetworkTables": {
-    "FMSInfo": {
-      "open": true
-    },
     "LiveWindow": {
       ".status": {
         "open": true
@@ -57,10 +54,18 @@
       },
       "Ungrouped": {
         "open": true
+      }
+    },
+    "PulseHUD": {
+      "PathFollower": {
+        "open": true
       },
       "open": true
     },
     "SmartDashboard": {
+      "PathFollower": {
+        "open": true
+      },
       "open": true
     }
   }
