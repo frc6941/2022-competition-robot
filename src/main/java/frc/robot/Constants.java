@@ -159,7 +159,7 @@ public final class Constants {
     public static final double BALLPATH_NORMAL_PERCENTAGE = 0.4;
     public static final double BALLPATH_EXPELLING_PERCENTAGE = 0.5;
 
-    public static final double BALLPATH_EXPEL_TIME = 0.5; // Time wait to turn back to normal if a ball with incorrect
+    public static final double BALLPATH_EXPEL_TIME = 2.0; // Time wait to turn back to normal if a ball with incorrect
                                                           // color is expelled.
     public static final double BALLPATH_REVERSE_TIME = 1.0; // Time wait to turn back to normal if a ball with
                                                             // incorrect color is reversed out of the intaker.

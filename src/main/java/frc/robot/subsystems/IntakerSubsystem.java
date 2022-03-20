@@ -24,6 +24,7 @@ public class IntakerSubsystem extends SubsystemBase implements Updatable {
 
     private static IntakerSubsystem instance;
     private TimeDelayedBoolean tBoolean = new TimeDelayedBoolean();
+    private boolean spin = false;
     private STATE state = STATE.OFF;
 
     public static IntakerSubsystem getInstance() {
@@ -63,7 +64,11 @@ public class IntakerSubsystem extends SubsystemBase implements Updatable {
         return this.feederExtender.get().equals(DoubleSolenoid.Value.kForward);
     }
 
-    public void setIntakerPercent(double power) {
+    public void spinIntaker(boolean spin){
+        this.spin = spin;
+    }
+
+    private void setIntakerPercent(double power) {
         this.intakerMotor.set(power);
     }
 
@@ -74,6 +79,7 @@ public class IntakerSubsystem extends SubsystemBase implements Updatable {
                 retractIntaker();
                 retractFeeder();
                 tBoolean.update(false, 0.0);
+                this.spin = false;
                 SmartDashboard.putNumber("State", 0);
                 break;
             case EXTENDING:
@@ -88,7 +94,9 @@ public class IntakerSubsystem extends SubsystemBase implements Updatable {
             case EXTENDED:
                 extendIntaker();
                 extendFeeder();
-                setIntakerPercent(Constants.INTAKER_FAST_INTAKE_PERCENTAGE);
+                if(this.spin){
+                    setIntakerPercent(Constants.INTAKER_FAST_INTAKE_PERCENTAGE);
+                }
                 tBoolean.update(false, 0.0);
                 SmartDashboard.putNumber("State", 2);
                 break;

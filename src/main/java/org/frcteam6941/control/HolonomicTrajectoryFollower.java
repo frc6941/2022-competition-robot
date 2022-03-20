@@ -23,8 +23,11 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
     private PathPlannerTrajectory.PathPlannerState lastState = null;
 
     private boolean finished = false;
-
+    private boolean requiredOnTarget = false;
     private boolean lockAngle = true;
+
+    private double TARGET_DISTANCE_ACCURACY_REQUIREMENT = 0.03;
+    private double TARGET_VELOCITY_ACCURACY_REQUIREMENT = 0.10;
 
     public HolonomicTrajectoryFollower(PIDController xController, PIDController yController,
             ProfiledPIDController thetaController, SimpleMotorFeedforward feedforward) {
@@ -32,6 +35,9 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
         this.yController = yController;
         this.thetaController = thetaController;
         this.feedforward = feedforward;
+
+        this.xController.setTolerance(TARGET_DISTANCE_ACCURACY_REQUIREMENT, TARGET_VELOCITY_ACCURACY_REQUIREMENT);
+        this.yController.setTolerance(TARGET_DISTANCE_ACCURACY_REQUIREMENT, TARGET_VELOCITY_ACCURACY_REQUIREMENT);
     }
 
     @Override
@@ -39,8 +45,15 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
             double rotationalVelocity, PathPlannerTrajectory trajectory, double time,
             double dt) {
         if (time > trajectory.getTotalTimeSeconds()) {
-            finished = true;
-            return new HolonomicDriveSignal(new Translation2d(0, 0), 0.0, true);
+            if (this.requiredOnTarget) {
+                if(this.xController.atSetpoint() && this.yController.atSetpoint()){
+                    finished = true;
+                    return new HolonomicDriveSignal(new Translation2d(0, 0), 0.0, true);
+                }
+            } else {
+                finished = true;
+                return new HolonomicDriveSignal(new Translation2d(0, 0), 0.0, true);
+            }
         }
 
         lastState = (PathPlannerState) trajectory.sample(time);
@@ -59,8 +72,9 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
         }
 
         if (this.lockAngle) {
-            // TODO: As we take clockwise as positive, the value provided by PathPlanner need to
-            // be converted.
+            // TODO: As we take clockwise as positive, the value provided by PathPlanner
+            // need to be converted.
+            // Well, now it seems like the drivetrain is under ccw positive... very bad
             rotation = this.thetaController.calculate(360.0 - currentPose.getRotation().getDegrees(),
                     lastState.holonomicRotation.getDegrees());
         }
@@ -77,6 +91,15 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
 
     public void setLockAngle(boolean lock) {
         this.lockAngle = lock;
+    }
+
+    public void setRequiredOnTarget(boolean requiredOnTarget){
+        this.requiredOnTarget = requiredOnTarget;
+    }
+
+    public void setTolerance(double distance, double velocity){
+        this.TARGET_DISTANCE_ACCURACY_REQUIREMENT = distance;
+        this.TARGET_VELOCITY_ACCURACY_REQUIREMENT = velocity;
     }
 
     @Override

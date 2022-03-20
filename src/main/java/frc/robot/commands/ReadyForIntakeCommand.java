@@ -14,6 +14,7 @@ public class ReadyForIntakeCommand extends CommandBase{
     @Override
     public void initialize() {
         this.intakerSubsystem.setState(IntakerSubsystem.STATE.EXTENDING);
+        this.intakerSubsystem.spinIntaker(true);
     }
 
     @Override

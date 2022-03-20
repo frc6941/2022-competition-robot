@@ -27,6 +27,7 @@ public class Launcher extends SubsystemBase implements Updatable {
     private boolean isLimited = true;
     private boolean isDrivebaseFirst = true;
     private boolean enableMotionCompensation = false;
+    private boolean forceMaintain = false;
 
     private static Launcher instance;
 
@@ -82,15 +83,16 @@ public class Launcher extends SubsystemBase implements Updatable {
 
     private void aimAtFieldOrientedAngleOnce(double angle, boolean isLimited) {
         double[] targetArray = this.calculateTurretDrivetrainAngle(angle, isLimited);
-        // In this case, the drivebase does not need to be turned. So lockHeading is not needed.
-        if (targetArray[1] == 0.0) { 
+        // In this case, the drivebase does not need to be turned. So lockHeading is not
+        // needed.
+        if (targetArray[1] == 0.0) {
             this.turret.lockAngle(targetArray[0]);
-        // Or, both the drivebase and the turret need to be rotated.
-        // If the system is not in drivebase first mode, turn freely.
-        } else if (!this.isDrivebaseFirst) { 
+            // Or, both the drivebase and the turret need to be rotated.
+            // If the system is not in drivebase first mode, turn freely.
+        } else if (!this.isDrivebaseFirst) {
             this.turret.lockAngle(targetArray[0]);
             this.drivebase.setHeadingTarget(targetArray[1]);
-        // Else, limit the change of launcher to only turn the turret.
+            // Else, limit the change of launcher to only turn the turret.
         } else {
             this.turret.lockAngle(targetArray[0]);
         }
@@ -138,13 +140,18 @@ public class Launcher extends SubsystemBase implements Updatable {
         this.isDrivebaseFirst = isDrivebaseFirst;
     }
 
+    public void changeMaintain(boolean forceMaintain) {
+        this.forceMaintain = forceMaintain;
+    }
+
     /**
-     * An enhanced method in order to coordinate turret and drivetrain movement. Called through commands.
+     * An enhanced method in order to coordinate turret and drivetrain movement.
+     * Called through commands.
      * 
-     * @param translation      Translation, x and y ranging from -1 to 1.
-     * @param rotation         Rotation velocity. No specific range, but recommended
-     *                         to have it in -1 to 1.
-     * @param isFieldOriented  Is the drive field oriented.
+     * @param translation     Translation, x and y ranging from -1 to 1.
+     * @param rotation        Rotation velocity. No specific range, but recommended
+     *                        to have it in -1 to 1.
+     * @param isFieldOriented Is the drive field oriented.
      */
     public void driveCoordinated(Translation2d translation, double rotation, boolean isFieldOriented) {
         if (!isDrivebaseFirst) {
@@ -156,7 +163,7 @@ public class Launcher extends SubsystemBase implements Updatable {
         drivebase.drive(translation, rotation, isFieldOriented);
     }
 
-    private double calculateMotionCompensationFeedforward(double time, double dt){
+    private double calculateMotionCompensationFeedforward(double time, double dt) {
         return 0.0;
     }
 
@@ -190,7 +197,11 @@ public class Launcher extends SubsystemBase implements Updatable {
         // Launcher Actions
         switch (state) {
             case LOSS_TARGET:
-                this.shooter.setState(ShooterSubsystem.STATE.LOW_SPEED);
+                if (!forceMaintain) {
+                    this.shooter.setState(ShooterSubsystem.STATE.LOW_SPEED);
+                } else {
+                    this.shooter.setState(ShooterSubsystem.STATE.HIGH_SPEED);
+                }
                 this.aimAtFieldOrientedAngleOnce(guessAimAngle, isLimited);
                 this.changeLimited(true);
                 break;

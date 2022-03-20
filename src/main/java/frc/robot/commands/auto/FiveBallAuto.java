@@ -14,22 +14,51 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants;
-import frc.robot.commands.auto.utils.FollowTrajectory;
+import frc.robot.FieldConstants;
+import frc.robot.commands.SimpleActions;
 import frc.robot.subsystems.IntakerSubsystem;
 
 public class FiveBallAuto extends SequentialCommandGroup {
     SJTUSwerveMK5Drivebase mDrivebase = SJTUSwerveMK5Drivebase.getInstance();
     IntakerSubsystem mIntaker = IntakerSubsystem.getInstance();
 
-    PathPlannerTrajectory targetTrajectory = PathPlanner.loadPath("5 Ball Auto",
-            Constants.AutoConstants.AUTO_MAX_VELOCITY,
-            Constants.AutoConstants.AUTO_MAX_ACCELERATION);
+    PathPlannerTrajectory takeOneThenShoot = PathPlanner.loadPath("D - 5 Ball Pt 1", 4.0, 2.0);
+    PathPlannerTrajectory backToTerminal = PathPlanner.loadPath("D - 5 Ball Pt 2", 4.0, 2.0);
+    PathPlannerTrajectory backFromTerminalThenShoot = PathPlanner.loadPath("D - 5 Ball Pt 3", 4.0, 2.0);
+    PathPlannerTrajectory endMove = PathPlanner.loadPath("D - 5 Ball Pt 4", 4.0, 2.0);
 
     public FiveBallAuto(){
         addCommands(
-            new ZeroPositionCommand(mDrivebase, targetTrajectory.getInitialPose()),
-            new InstantCommand(()->mIntaker.setState(IntakerSubsystem.STATE.EXTENDING)),
-            new FollowTrajectory(targetTrajectory, true)
+            SimpleActions.switchForceMaintain,
+            SimpleActions.extendIntaker,
+            SimpleActions.switchDrivebaseFirst,
+            new WaitCommand(0.5),
+
+            new SequentialCommandGroup(
+                new WaitToNearPoint(mDrivebase, FieldConstants.cargoE.getTranslation(), 0.2),
+                new WaitCommand(0.5),
+                SimpleActions.retractIntaker
+            ).deadlineWith(
+                new FollowTrajectory(mDrivebase, takeOneThenShoot, true, true, true)
+            ),
+
+            new ParallelCommandGroup(
+                SimpleActions.shoot,
+                new SequentialCommandGroup(
+                    new WaitCommand(0.2),
+                    SimpleActions.extendIntaker
+                )
+            ).withTimeout(5.0),
+
+            SimpleActions.stopShoot,
+            new FollowTrajectory(mDrivebase, backToTerminal, true, true, true),
+            new WaitCommand(5.0),
+            new FollowTrajectory(mDrivebase, backFromTerminalThenShoot, true, true, true),
+
+            SimpleActions.shoot.withTimeout(5.0),
+            SimpleActions.retractIntaker,
+            SimpleActions.stopShoot,
+            new FollowTrajectory(mDrivebase, endMove, true, true, true)
         );
     }
 }
