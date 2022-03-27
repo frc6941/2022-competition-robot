@@ -51,6 +51,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     private double headingFeedforward = 0.0;
 
     // Path Following Controller
+    @GuardedBy("statusLock")
     private final HolonomicTrajectoryFollower trajectoryFollower = new HolonomicTrajectoryFollower(
             new PIDController(1.0, 0.0, 0.0),
             new PIDController(1.0, 0.0, 0.0),
@@ -61,7 +62,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     @GuardedBy("statusLock")
     private SwerveDriveKinematics swerveKinematics;
     @GuardedBy("statusLock")
-
     private SwerveDrivePoseEstimator poseEstimator;
     private Translation2d[] swerveModulePositions;
     private SJTUSwerveModuleMK5[] mSwerveMods;
@@ -168,6 +168,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     public void lockCurrentHeading() {
         this.setHeadingTarget(this.getFieldOrientedHeading());
     }
+
 
     private void updateModules(HolonomicDriveSignal driveSignal, double dt) {
         ChassisSpeeds chassisSpeeds;
@@ -324,6 +325,12 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     public SwerveDriveKinematics getKinematics() {
         synchronized (statusLock) {
             return this.swerveKinematics;
+        }
+    }
+
+    public HolonomicTrajectoryFollower getFollower(){
+        synchronized (statusLock){
+            return this.trajectoryFollower;
         }
     }
 

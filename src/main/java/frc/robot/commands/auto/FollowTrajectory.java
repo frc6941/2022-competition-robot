@@ -2,7 +2,6 @@ package frc.robot.commands.auto;
 
 import com.pathplanner.lib.PathPlannerTrajectory;
 
-import org.checkerframework.checker.units.qual.m;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
 import edu.wpi.first.wpilibj.Timer;
@@ -28,7 +27,6 @@ public class FollowTrajectory extends CommandBase{
     @Override
     public void initialize() {
         mDrivebase.follow(trajectory, angleLock, reset, onTarget);
-        this.timer.start();
     }
 
     @Override
@@ -41,6 +39,6 @@ public class FollowTrajectory extends CommandBase{
 
     @Override
     public boolean isFinished() {
-        return timer.get() > trajectory.getTotalTimeSeconds();
+        return !this.mDrivebase.getFollower().isPathFollowing();
     }
 }

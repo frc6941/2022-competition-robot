@@ -1,5 +1,8 @@
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.coordinators.Launcher;
 import frc.robot.subsystems.BallPathSubsystem;
@@ -42,10 +45,24 @@ public final class SimpleActions {
     public static final InstantCommand shoot = new InstantCommand(() -> {
         mBallPath.setState(BallPathSubsystem.STATE.EXPELLING);
     });
+
     public static final InstantCommand stopShoot = new InstantCommand(() -> {
         if(mBallPath.getState() == BallPathSubsystem.STATE.EXPELLING){
             mBallPath.setState(STATE.PROCESSING);
         }
     });
+
+    public static final class shootIfReady extends CommandBase{
+        @Override
+        public void initialize(){
+           
+        }
+
+        @Override
+        public void end(boolean isInterrupted){
+            CommandScheduler.getInstance().schedule(stopShoot);
+        }
+    }
+    
 
 }
