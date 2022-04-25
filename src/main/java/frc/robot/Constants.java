@@ -81,10 +81,10 @@ public final class Constants {
     public static final class PNEUMATICS_ID {
         public static final int FEEDER_EXTENDER_FORWARD = 10;
         public static final int FEEDER_EXTENDER_REVERSE = 11;
-        public static final int INTAKER_EXTENDER_FORWARD = 8;
-        public static final int INTAKER_EXTENDER_REVERSE = 9;
-        public static final int CLIMBER_EXTENDER_FORWARD = 13;
-        public static final int CLIMBER_EXTENDER_REVERSE = 12;
+        public static final int INTAKER_EXTENDER_FORWARD = 13;//8，9
+        public static final int INTAKER_EXTENDER_REVERSE = 12;
+        public static final int CLIMBER_EXTENDER_FORWARD = 8;//13，12
+        public static final int CLIMBER_EXTENDER_REVERSE = 9;
     }
 
     /**
@@ -123,10 +123,10 @@ public final class Constants {
      * turning at the correct direction. If not, add or minus 180 and the problem
      * would be solved.
      */
-    public static final double FRONT_LEFT_OFFSET = 0.0;
+    public static final double FRONT_LEFT_OFFSET = 0.0 +180.0;
     public static final double FRONT_RIGHT_OFFSET = 0.0;
-    public static final double BACK_LEFT_OFFSET = 0.0;
-    public static final double BACK_RIGHT_OFFSET = 0.0;
+    public static final double BACK_LEFT_OFFSET = 0.0 +180.0;
+    public static final double BACK_RIGHT_OFFSET = 0.0 +180.0;
 
     public static final double DRIVE_MAX_VELOCITY = 4.0; // FIXME: Need remeasurement for more accurate data.
     public static final double DRIVE_MAX_ANGULAR_VELOCITY = 220; // FIXME: Need remeasurement for more accurate data.
@@ -167,8 +167,8 @@ public final class Constants {
     public static final double BALLPATH_COLOR_SENSING_THRESHOLD_BLUE = 250; // TODO: Implement red and blue cargo
 
     // Shooter Constants
-    public static final double SHOOTER_LOW_SPEED_RPM = 1000;
-    public static final double SHOOTER_HIGH_SPEED_RPM = 2800;
+    public static final double SHOOTER_LOW_SPEED_RPM = 400;
+    public static final double SHOOTER_HIGH_SPEED_RPM = 800;
     public static final double SHOOTER_GEAR_RATIO = 24.0 / 15.0;
     public static final double SHOOTER_MAX_FREE_SPEED_RPM = 6380;
 
@@ -266,11 +266,11 @@ public final class Constants {
     public static final class VisionConstants {
         public static final class Turret {
             public static final String TURRET_PHOTON_NAME = "photonvision-turret";
-            public static final double VISION_LENS_HEIGHT = 1.53; // FIXME: bad measurement data
+            public static final double VISION_LENS_HEIGHT = 0.81; // FIXME: bad measurement data
             public static final double VISION_LENS_HEIGHT(){
                 return Preferences.getDouble("Vision Height", VISION_LENS_HEIGHT);
             }
-            public static final double VISION_LENS_ANGLE_TO_HORIZONTAL = 45.0;
+            public static final double VISION_LENS_ANGLE_TO_HORIZONTAL = 30.0;
             public static final double VISION_LENS_ANGLE_TO_HORIZONTAL(){
                 return Preferences.getDouble("Vision Horizontal Degrees", VISION_LENS_ANGLE_TO_HORIZONTAL);
             }

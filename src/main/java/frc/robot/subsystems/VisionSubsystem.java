@@ -112,12 +112,6 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
                     }
                 }
                 /** Data for translation fitting and vision tuning. */
-                Translation2d testTranslation = solveCameraToTargetTranslationPhotonLib(targetAverage,
-                        0.5 * (FieldConstants.visionTargetHeightLower + FieldConstants.visionTargetHeightUpper));
-                SmartDashboard.putNumber("Vision Fitting Corner X", targetAverage.x);
-                SmartDashboard.putNumber("Vision Fitting Corner Y", targetAverage.y);
-                SmartDashboard.putNumber("Fitting X", testTranslation.getX());
-                SmartDashboard.putNumber("Fitting Y", testTranslation.getY());
             }
 
             if (cameraToTargetTranslations.size() >= Constants.VisionConstants.Turret.MIN_TARGET_COUNT * 4) {
@@ -256,6 +250,22 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
         turretVision.updateVision();
         if (turretVision.hasTargets()) {
             this.setUpperHubState(VISION_STATE.HAS_TARGET);
+
+            // Testing Vision Fitting: Using Custom Testing Vision Target
+            double totalX = 0.0;
+            double totalY = 0.0;
+            for (TargetCorner corner : turretVision.getBestTarget().get().getCorners()) {
+                totalX += corner.x;
+                totalY += corner.y;
+            }
+
+            TargetCorner targetAverage = new TargetCorner(totalX / 4.0, totalY / 4.0);
+            Translation2d testTranslation = solveCameraToTargetTranslationPhotonLib(targetAverage, 1.70);
+            SmartDashboard.putNumber("Vision Fitting Corner X", targetAverage.x);
+            SmartDashboard.putNumber("Vision Fitting Corner Y", targetAverage.y);
+            SmartDashboard.putNumber("Fitting X", testTranslation.getX());
+            SmartDashboard.putNumber("Fitting Y", testTranslation.getY());
+
             double latencySeconds = turretVision.getLatencySeconds();
             Optional<Translation2d> translation = this.getCameraToTargetTranslation2d();
             Translation2d pointTarget = solveCameraToTargetTranslationPhotonLib(this.turretVision.getBestTarget().get(),

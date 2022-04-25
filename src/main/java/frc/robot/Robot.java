@@ -39,10 +39,10 @@ public class Robot extends TimedRobot {
     m_robotContainer = new RobotContainer();
     this.updateManager = new UpdateManager(
         m_robotContainer.returnDrivetrain(),
-        // m_robotContainer.returnIntaker(),
-        // m_robotContainer.returnBallPath(),
-        // m_robotContainer.returnTurret(),
-        // m_robotContainer.returnShooter(),
+        m_robotContainer.returnIntaker(),
+        m_robotContainer.returnBallPath(),
+        m_robotContainer.returnTurret(),
+        m_robotContainer.returnShooter(),
         m_robotContainer.returnVision()
         // m_robotContainer.returnClimber(),
         // m_robotContainer.returnIndicator()

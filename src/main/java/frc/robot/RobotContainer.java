@@ -17,7 +17,14 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.commands.AimAtAngle;
+import frc.robot.commands.ReadyForIntakeCommand;
+import frc.robot.commands.SimpleShootCommand;
 import frc.robot.commands.launcher.SetHeadingTargetCommand;
+import frc.robot.subsystems.BallPathSubsystem;
+import frc.robot.subsystems.IntakerSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
 /**
@@ -30,11 +37,11 @@ import frc.robot.subsystems.VisionSubsystem;
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     SJTUSwerveMK5Drivebase mDrivebase = SJTUSwerveMK5Drivebase.getInstance();
-    // ShooterSubsystem mShooter = ShooterSubsystem.getInstance();
-    // TurretSubsystem mTurret = TurretSubsystem.getInstance();
+    ShooterSubsystem mShooter = ShooterSubsystem.getInstance();
+    TurretSubsystem mTurret = TurretSubsystem.getInstance();
     VisionSubsystem mVision = VisionSubsystem.getInstance();
-    // IntakerSubsystem mIntaker = IntakerSubsystem.getInstance();
-    // BallPathSubsystem mBallPath = BallPathSubsystem.getInstance();
+    IntakerSubsystem mIntaker = IntakerSubsystem.getInstance();
+    BallPathSubsystem mBallPath = BallPathSubsystem.getInstance();
     // ClimberSubsystem mClimber = ClimberSubsystem.getInstance();
     // IndicatorSubsystem mIndicator = IndicatorSubsystem.getInstance();
 
@@ -83,21 +90,24 @@ public class RobotContainer {
         SwerveBrakeCommand brakeCommand = new SwerveBrakeCommand();
         // ZeroGyroCommand zeroGyroCommand = new ZeroGyroCommand(mDrivebase, 0.0);
         ForceResetModulesCommand resetModulesCommand = new ForceResetModulesCommand(mDrivebase);
-        // SimpleShootCommand simpleShootCommand = new SimpleShootCommand();
-        // ReadyForIntakeCommand readyForIntakeCommand = new ReadyForIntakeCommand();
+        SimpleShootCommand simpleShootCommand = new SimpleShootCommand();
+        ReadyForIntakeCommand readyForIntakeCommand = new ReadyForIntakeCommand(mIntaker);
 
         mDrivebase.setDefaultCommand(swerveDriveCommand);
         // mLauncher.setDefaultCommand(coordinatedDriveCommand);
         driveController.getLeftJoystickButton().whileActiveOnce(brakeCommand);
         
         // driveController.getStartButton().whenActive(zeroGyroCommand);
-        // driveController.getRightBumperButton().whileActiveOnce(readyForIntakeCommand);
-        // driveController.getXButton().whileActiveOnce(simpleShootCommand);
+        driveController.getRightBumperButton().whileActiveOnce(readyForIntakeCommand);
+        driveController.getXButton().whileActiveOnce(simpleShootCommand);
 
         SetHeadingTargetCommand lockHeadingTest = new SetHeadingTargetCommand(mDrivebase, 90.0);
         // AimAtGuessAngle aimAtGuessAngleCommand = new AimAtGuessAngle(mLauncher,
         //         () -> operatorController.getLeftXAxis().get(), () -> operatorController.getLeftYAxis().get());
         // mLauncher.setDefaultCommand(aimAtGuessAngleCommand);
+        
+        AimAtAngle aimAtAngleCommand = new AimAtAngle(45);
+        operatorController.getRightBumperButton().whileActiveOnce(aimAtAngleCommand);
 
 
         driveController.getDPadButton(Direction.RIGHT).whileActiveOnce(lockHeadingTest);
@@ -123,21 +133,21 @@ public class RobotContainer {
         return this.mDrivebase;
     }
 
-    // public Updatable returnIntaker(){
-    // return this.mIntaker;
-    // }
+    public Updatable returnIntaker(){
+    return this.mIntaker;
+    }
 
-    // public Updatable returnBallPath() {
-    // return this.mBallPath;
-    // }
+    public Updatable returnBallPath() {
+    return this.mBallPath;
+    }
 
-    // public Updatable returnShooter() {
-    // return this.mShooter;
-    // }
+    public Updatable returnShooter() {
+    return this.mShooter;
+    }
 
-    // public Updatable returnTurret() {
-    // return this.mTurret;
-    // }
+    public Updatable returnTurret() {
+    return this.mTurret;
+    }
 
     public Updatable returnVision() {
         return this.mVision;

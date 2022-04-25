@@ -7,8 +7,9 @@ public class ReadyForIntakeCommand extends CommandBase{
     IntakerSubsystem intakerSubsystem;
 
     public ReadyForIntakeCommand(IntakerSubsystem intaker) {
-        addRequirements(intakerSubsystem);
+        
         this.intakerSubsystem = intaker;
+        addRequirements(intakerSubsystem);
     }
 
     @Override

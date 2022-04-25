@@ -55,7 +55,7 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
 
     public boolean ballAtEntrance() {
         return this.ballEntranceDetector.getVoltage() > 2.0;
-                // && (this.mIntaker.getState() == IntakerSubsystem.STATE.EXTENDED); // TODO: IMPORTANT! Remember to uncomment this when intake is ready!
+                // && (this.mIntaker.getState() == IntakerSubsystem.STATE.EXTENDED); 
     }
 
     public boolean ballAtPositionOne() {
