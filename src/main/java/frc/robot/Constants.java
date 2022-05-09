@@ -4,16 +4,23 @@
 
 package frc.robot;
 
+import com.team254.frc2020.limelight.CameraResolution;
+import com.team254.frc2020.limelight.undistort.CameraConstants;
+
 import org.frcteam1678.lib.math.Conversions;
+import org.frcteam6941.vision.VisionConfiguration;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import frc.robot.subsystems.VisionSubsystem.CameraState;
 import edu.wpi.first.wpilibj.Preferences;
 
 /**
@@ -29,7 +36,7 @@ import edu.wpi.first.wpilibj.Preferences;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-    
+
     // FMS Related Informations
     public static final class FMS {
         public static Alliance ALLIANCE() {
@@ -81,9 +88,9 @@ public final class Constants {
     public static final class PNEUMATICS_ID {
         public static final int FEEDER_EXTENDER_FORWARD = 10;
         public static final int FEEDER_EXTENDER_REVERSE = 11;
-        public static final int INTAKER_EXTENDER_FORWARD = 13;//8，9
+        public static final int INTAKER_EXTENDER_FORWARD = 13;// 8，9
         public static final int INTAKER_EXTENDER_REVERSE = 12;
-        public static final int CLIMBER_EXTENDER_FORWARD = 8;//13，12
+        public static final int CLIMBER_EXTENDER_FORWARD = 8;// 13，12
         public static final int CLIMBER_EXTENDER_REVERSE = 9;
     }
 
@@ -123,10 +130,10 @@ public final class Constants {
      * turning at the correct direction. If not, add or minus 180 and the problem
      * would be solved.
      */
-    public static final double FRONT_LEFT_OFFSET = 0.0 +180.0;
+    public static final double FRONT_LEFT_OFFSET = 0.0 + 180.0;
     public static final double FRONT_RIGHT_OFFSET = 0.0;
-    public static final double BACK_LEFT_OFFSET = 0.0 +180.0;
-    public static final double BACK_RIGHT_OFFSET = 0.0 +180.0;
+    public static final double BACK_LEFT_OFFSET = 0.0 + 180.0;
+    public static final double BACK_RIGHT_OFFSET = 0.0 + 180.0;
 
     public static final double DRIVE_MAX_VELOCITY = 4.0; // FIXME: Need remeasurement for more accurate data.
     public static final double DRIVE_MAX_ANGULAR_VELOCITY = 220; // FIXME: Need remeasurement for more accurate data.
@@ -267,38 +274,61 @@ public final class Constants {
         public static final class Turret {
             public static final String TURRET_PHOTON_NAME = "photonvision-turret";
             public static final double VISION_LENS_HEIGHT = 0.81; // FIXME: bad measurement data
-            public static final double VISION_LENS_HEIGHT(){
+
+            public static final double VISION_LENS_HEIGHT() {
                 return Preferences.getDouble("Vision Height", VISION_LENS_HEIGHT);
             }
+
             public static final double VISION_LENS_ANGLE_TO_HORIZONTAL = 30.0;
-            public static final double VISION_LENS_ANGLE_TO_HORIZONTAL(){
+
+            public static final double VISION_LENS_ANGLE_TO_HORIZONTAL() {
                 return Preferences.getDouble("Vision Horizontal Degrees", VISION_LENS_ANGLE_TO_HORIZONTAL);
             }
+
             public static final Translation2d TURRET_RING_CENTER_TO_ROBOT_CENTER = new Translation2d(0.0, -0.1);
             public static final double TURRET_RING_RADIUS = Units.inchesToMeters(10.0);
 
             public static final double TARGET_CIRCLE_FIT_PRECISION = 0.01;
             public static final int MIN_TARGET_COUNT = 2;
 
-            public static final double VISION_ANGLE_DIAGONAL = 56.0629;
             public static final double FRAME_HEIGHT = 480;
             public static final double FRAME_WIDTH = 640;
 
-            public static final double diagonalView = Math.toRadians(VISION_ANGLE_DIAGONAL);
-            public static final double diagonalAspect = Math.hypot(FRAME_WIDTH, FRAME_HEIGHT);
-            public static final double horizontalView = Math.atan(Math.tan(diagonalView / 2) * (FRAME_WIDTH / diagonalAspect)) * 2;
-            public static final double verticalView = Math.atan(Math.tan(diagonalView / 2) * (FRAME_HEIGHT / diagonalAspect)) * 2;
+            public static final Rotation2d FOV_HORIZONTAL = Rotation2d.fromDegrees(59.6);
+            public static final Rotation2d FOV_VERTICAL = Rotation2d.fromDegrees(49.7);
+            public static final double VPW = 2.0 * Math.tan(FOV_HORIZONTAL.getRadians() / 2.0);
+            public static final double VPH = 2.0 * Math.tan(FOV_VERTICAL.getRadians() / 2.0);
+            public static final double FOCAL_LENGTH = 640.0 / (2 * Math.tan(Math.toRadians(59.6) / 2.0));
+            public static final double CX = 640.0 / 2 - 0.5;
+            public static final double CY = 480.0 / 2 - 0.5;
+            public static final CameraState CAMERA_STATE = new CameraState(0.83, Rotation2d.fromDegrees(60.0));
 
-            public static final double HORIZONTAL_FOCAL_LENGTH = FRAME_WIDTH/ (2 * Math.tan(horizontalView / 2));
-            public static final double VERTICAL_FOCAL_LENGTH = FRAME_HEIGHT / (2 * Math.tan(verticalView / 2));
+            public static final VisionConfiguration VISION_CONFIGURATION = new VisionConfiguration(0,
+                "photonvision-turret",
+                0.86,
+                new Pose2d(),
+                Rotation2d.fromDegrees(30),
+                CameraResolution.F_960x720,
+                new CameraConstants(
+                    new double[] { -0.3580226107916401, 3.1574617019213114, 0.02323167066358097, -0.013430391090519293, -8.016922034682826 },
+                    new double[][] {
+                        { 729.2205288939331, 0.0, 484.20682264918315 },
+                        { 0.0, 728.0294742172647, 324.54740828467595 },
+                        { 0.0, 0.0, 1.0 }
+                    }
+                ));
         }
 
         public static final class Ball {
             public static final String BALL_PHOTON_NAME = "photonvision-ball";
         }
+
+        public static void main(String[] args) {
+            System.out.println(VisionConstants.Turret.VPH);
+        }
     }
 
-    public static void initPreferences(){
+    public static void initPreferences() {
         Preferences.initDouble("Vision Horizontal Degrees", VisionConstants.Turret.VISION_LENS_ANGLE_TO_HORIZONTAL);
         Preferences.initDouble("Vision Height", VisionConstants.Turret.VISION_LENS_HEIGHT);
     }

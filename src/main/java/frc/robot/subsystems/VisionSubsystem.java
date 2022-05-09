@@ -26,8 +26,7 @@ import frc.robot.FieldConstants;
 import frc.robot.utils.PhotonVision;
 
 public class VisionSubsystem extends SubsystemBase implements Updatable {
-    private PhotonVision turretVision = new PhotonVision(Constants.VisionConstants.Turret.TURRET_PHOTON_NAME);
-    private PhotonVision ballVision = new PhotonVision(Constants.VisionConstants.Ball.BALL_PHOTON_NAME);
+    private PhotonVision turretVision = new PhotonVision(Constants.VisionConstants.Turret.VISION_CONFIGURATION);
 
     private VISION_STATE upperhubState = VISION_STATE.LOSS_TARGET;
     private VISION_STATE ballState = VISION_STATE.LOSS_TARGET;
@@ -104,11 +103,12 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
                 TargetCorner targetAverage = new TargetCorner(totalX / 4.0, totalY / 4.0);
                 corners = sortCorners(corners, targetAverage);
                 for (int i = 0; i < corners.size(); i++) {
-                    Translation2d translation = solveCameraToTargetTranslationPhotonLib(
-                            corners.get(i), i < 2 ? FieldConstants.visionTargetHeightUpper
-                                    : FieldConstants.visionTargetHeightLower);
-                    if (translation != null) {
-                        cameraToTargetTranslations.add(translation);
+                    Optional<Translation2d> translation = solveCameraToTargetTranslation(
+                            corners.get(i),
+                            i < 2 ? FieldConstants.visionTargetHeightUpper : FieldConstants.visionTargetHeightLower,
+                            Constants.VisionConstants.Turret.CAMERA_STATE);
+                    if (translation.isPresent()) {
+                        cameraToTargetTranslations.add(translation.get());
                     }
                 }
                 /** Data for translation fitting and vision tuning. */
@@ -188,61 +188,29 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
         return newCorners;
     }
 
-    // private Translation2d solveCameraToTargetTranslation(TargetCorner corner,
-    // double goalHeight) {
-    // double yPixels = corner.x;
-    // double zPixels = corner.y;
+    private Optional<Translation2d> solveCameraToTargetTranslation(TargetCorner corner, double goalHeight,
+            CameraState cameraState) {
+        double nY = -((corner.x - Constants.VisionConstants.Turret.FRAME_WIDTH / 2.0 - 0.0)
+                / (Constants.VisionConstants.Turret.FRAME_WIDTH / 2.0));
+        double nZ = -((corner.y - Constants.VisionConstants.Turret.FRAME_HEIGHT / 2.0 - 0.0)
+                / (Constants.VisionConstants.Turret.FRAME_HEIGHT / 2.0));
+        Translation2d xzPlaneTranslation = new Translation2d(1.0, Constants.VisionConstants.Turret.VPH / 2.0 * nZ)
+                .rotateBy(cameraState.angleToHorizontal);
 
-    // // Robot frame of reference
-    // double nY = -((yPixels - Constants.VisionConstants.Turret.FRAME_WIDTH / 2.0)
-    // / Constants.VisionConstants.Turret.FRAME_WIDTH / 2.0);
-    // double nZ = -((zPixels - Constants.VisionConstants.Turret.FRAME_HEIGHT / 2.0)
-    // / Constants.VisionConstants.Turret.FRAME_HEIGHT / 2.0);
-    // Translation2d xzPlaneTranslation = new Translation2d(1.0,
-    // Constants.VisionConstants.Turret.VISION_ANGLE_VERTICAL / 2.0 * nZ).rotateBy(
-    // Rotation2d.fromDegrees(Constants.VisionConstants.Turret.VISION_LENS_ANGLE_TO_HORIZONTAL));
-    // double x = xzPlaneTranslation.getX();
-    // double y = Constants.VisionConstants.Turret.VISION_ANGLE_HORIZONTAL / 2.0 *
-    // nY;
-    // double z = xzPlaneTranslation.getY();
+        double x = xzPlaneTranslation.getX();
+        double y = Constants.VisionConstants.Turret.VPH / 2.0 * nY;
+        double z = xzPlaneTranslation.getY();
 
-    // double differentialHeight =
-    // Constants.VisionConstants.Turret.VISION_LENS_HEIGHT - goalHeight;
-    // if ((z < 0.0) == (differentialHeight > 0.0)) {
-    // double scaling = differentialHeight / -z;
-    // double distance = Math.hypot(x, y) * scaling;
-    // Rotation2d angle = new Rotation2d(x, y);
-    // return new Translation2d(distance * angle.getCos(),
-    // distance * angle.getSin());
-    // }
-    // return null;
-    // }
-
-    private Translation2d solveCameraToTargetTranslationPhotonLib(TargetCorner corner, double goalHeight) {
-        double x = corner.x;
-        double y = corner.y;
-
-        double range = PhotonUtils.calculateDistanceToTargetMeters(
-                Constants.VisionConstants.Turret.VISION_LENS_HEIGHT(),
-                goalHeight,
-                Units.degreesToRadians(Constants.VisionConstants.Turret.VISION_LENS_ANGLE_TO_HORIZONTAL()),
-                Units.degreesToRadians(
-                        VisionTargetCalculations.calculatePitch(y, Constants.VisionConstants.Turret.FRAME_HEIGHT / 2.0,
-                                Constants.VisionConstants.Turret.VERTICAL_FOCAL_LENGTH)));
-
-        return PhotonUtils.estimateCameraToTargetTranslation(range,
-                Rotation2d.fromDegrees(
-                        VisionTargetCalculations.calculateYaw(x, Constants.VisionConstants.Turret.FRAME_WIDTH / 2.0,
-                                Constants.VisionConstants.Turret.HORIZONTAL_FOCAL_LENGTH)));
-    }
-
-    private Translation2d solveCameraToTargetTranslationPhotonLib(PhotonTrackedTarget target, double goalHeight) {
-        double range = PhotonUtils.calculateDistanceToTargetMeters(
-                Constants.VisionConstants.Turret.VISION_LENS_HEIGHT(),
-                goalHeight, Units.degreesToRadians(Constants.VisionConstants.Turret.VISION_LENS_ANGLE_TO_HORIZONTAL()),
-                target.getPitch());
-
-        return PhotonUtils.estimateCameraToTargetTranslation(range, Rotation2d.fromDegrees(target.getYaw()));
+        double differentialHeight = cameraState.height - goalHeight;
+        if ((z < 0.0) == (differentialHeight > 0.0)) {
+            double scaling = differentialHeight / -z;
+            double distance = Math.hypot(x, y) * scaling;
+            Rotation2d differentialAngle = new Rotation2d(x, y);
+            return Optional.ofNullable(
+                    new Translation2d(distance * differentialAngle.getCos(), distance * differentialAngle.getSin()));
+        } else {
+            return Optional.empty();
+        }
     }
 
     @Override
@@ -260,11 +228,9 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
             }
 
             TargetCorner targetAverage = new TargetCorner(totalX / 4.0, totalY / 4.0);
-            Translation2d testTranslation = solveCameraToTargetTranslationPhotonLib(targetAverage, 1.70);
+            
             SmartDashboard.putNumber("Vision Fitting Corner X", targetAverage.x);
             SmartDashboard.putNumber("Vision Fitting Corner Y", targetAverage.y);
-            SmartDashboard.putNumber("Fitting X", testTranslation.getX());
-            SmartDashboard.putNumber("Fitting Y", testTranslation.getY());
 
             double latencySeconds = turretVision.getLatencySeconds();
             Optional<Translation2d> translation = this.getCameraToTargetTranslation2d();
@@ -349,4 +315,44 @@ public class VisionSubsystem extends SubsystemBase implements Updatable {
         OFF,
         ON
     }
+
+    public static class CameraState {
+        public double height;
+        public Rotation2d angleToHorizontal;
+
+        public CameraState(double height, Rotation2d angleToHorizontal) {
+            this.height = height;
+            this.angleToHorizontal = angleToHorizontal;
+        }
+    }
+
+    @Deprecated
+    private Translation2d solveCameraToTargetTranslationPhotonLib(TargetCorner corner, double goalHeight) {
+        double x = corner.x;
+        double y = corner.y;
+
+        double range = PhotonUtils.calculateDistanceToTargetMeters(
+                Constants.VisionConstants.Turret.VISION_LENS_HEIGHT(),
+                goalHeight,
+                Units.degreesToRadians(Constants.VisionConstants.Turret.VISION_LENS_ANGLE_TO_HORIZONTAL()),
+                Units.degreesToRadians(
+                        VisionTargetCalculations.calculatePitch(y, Constants.VisionConstants.Turret.FRAME_HEIGHT / 2.0,
+                                751.2954296909647)));
+
+        return PhotonUtils.estimateCameraToTargetTranslation(range,
+                Rotation2d.fromDegrees(
+                        VisionTargetCalculations.calculateYaw(x, Constants.VisionConstants.Turret.FRAME_WIDTH / 2.0,
+                                751.2954296909647)));
+    }
+
+    @Deprecated
+    private Translation2d solveCameraToTargetTranslationPhotonLib(PhotonTrackedTarget target, double goalHeight) {
+        double range = PhotonUtils.calculateDistanceToTargetMeters(
+                Constants.VisionConstants.Turret.VISION_LENS_HEIGHT(),
+                goalHeight, Units.degreesToRadians(Constants.VisionConstants.Turret.VISION_LENS_ANGLE_TO_HORIZONTAL()),
+                target.getPitch());
+
+        return PhotonUtils.estimateCameraToTargetTranslation(range, Rotation2d.fromDegrees(target.getYaw()));
+    }
+
 }

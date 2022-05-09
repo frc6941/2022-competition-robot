@@ -6,6 +6,20 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Launch Constants$VisionConstants",
+      "request": "launch",
+      "mainClass": "frc.robot.Constants$VisionConstants",
+      "projectName": "2022competitionrobot"
+    },
+    {
+      "type": "java",
+      "name": "Launch VisionTest",
+      "request": "launch",
+      "mainClass": "VisionTest",
+      "projectName": "2022competitionrobot"
+    },
+    {
+      "type": "java",
       "name": "Launch RobotStateEstimator",
       "request": "launch",
       "mainClass": "frc.robot.coordinators.RobotStateEstimator",

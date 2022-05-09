@@ -145,7 +145,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         this.headingFeedforward = feedForward;
     }
 
-    public synchronized void setHeadingTargetContinuously(double heading) {
+    private synchronized void setHeadingTargetContinuously(double heading) {
         double target = heading;
         double position = getFieldOrientedHeading();
 
