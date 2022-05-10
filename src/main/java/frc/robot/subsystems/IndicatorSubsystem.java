@@ -5,6 +5,7 @@ import com.ctre.phoenix.CANifier.LEDChannel;
 
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.utils.LEDState;
@@ -42,17 +43,17 @@ public class IndicatorSubsystem extends SubsystemBase implements Updatable {
 
     @Override
     public void update(double time, double dt) {
-        // LEDState current = new LEDState(0, 0, 0);
-        // this.currentState.getCurrentLEDState(current, time);
-        // switch (state) {
-        //     case OFF:
-        //         this.setLEDs(new LEDState(0, 0, 0));
-        //         break;
-        //     case ON:
-        //         this.setLEDs(current);
-        //         break;
-        // }
-        this.setLEDs(new LEDState(1.0, 1.0, 1.0));
+        LEDState current = new LEDState(0, 0, 0);
+        this.currentState.getCurrentLEDState(current, time);
+        switch (state) {
+            case OFF:
+                this.setLEDs(new LEDState(0, 0, 0));
+                break;
+            case ON:
+                this.setLEDs(current);
+                break;
+        }
+        SmartDashboard.putNumberArray("LED Color", new double[] {current.red, current.green, current.blue});
     }
 
     public static enum STATE {

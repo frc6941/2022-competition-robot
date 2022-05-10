@@ -59,8 +59,7 @@
     "PulseHUD": {
       "PathFollower": {
         "open": true
-      },
-      "open": true
+      }
     },
     "SmartDashboard": {
       "PathFollower": {

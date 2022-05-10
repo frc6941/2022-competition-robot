@@ -43,9 +43,9 @@ public class Robot extends TimedRobot {
         m_robotContainer.returnBallPath(),
         m_robotContainer.returnTurret(),
         m_robotContainer.returnShooter(),
-        m_robotContainer.returnVision()
+        m_robotContainer.returnVision(),
         // m_robotContainer.returnClimber(),
-        // m_robotContainer.returnIndicator()
+        m_robotContainer.returnIndicator()
         // m_robotContainer.returnAlerts(),
         // m_robotContainer.returnLauncher(),
         // m_robotContainer.returnSuperCoodinator()

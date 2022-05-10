@@ -20,8 +20,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.commands.AimAtAngle;
 import frc.robot.commands.ReadyForIntakeCommand;
 import frc.robot.commands.SimpleShootCommand;
+import frc.robot.commands.launcher.AimAtGuessAngleCommand;
 import frc.robot.commands.launcher.SetHeadingTargetCommand;
+import frc.robot.coordinators.Launcher;
 import frc.robot.subsystems.BallPathSubsystem;
+import frc.robot.subsystems.IndicatorSubsystem;
 import frc.robot.subsystems.IntakerSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
@@ -43,7 +46,7 @@ public class RobotContainer {
     IntakerSubsystem mIntaker = IntakerSubsystem.getInstance();
     BallPathSubsystem mBallPath = BallPathSubsystem.getInstance();
     // ClimberSubsystem mClimber = ClimberSubsystem.getInstance();
-    // IndicatorSubsystem mIndicator = IndicatorSubsystem.getInstance();
+    IndicatorSubsystem mIndicator = IndicatorSubsystem.getInstance();
 
     // Alerts mAlert = Alerts.getInstance();
     // Launcher mLauncher = Launcher.getInstance();
@@ -102,7 +105,9 @@ public class RobotContainer {
         driveController.getXButton().whileActiveOnce(simpleShootCommand);
 
         SetHeadingTargetCommand lockHeadingTest = new SetHeadingTargetCommand(mDrivebase, 90.0);
-        // AimAtGuessAngle aimAtGuessAngleCommand = new AimAtGuessAngle(mLauncher,
+        driveController.getDPadButton(Direction.RIGHT).whileActiveOnce(lockHeadingTest);
+
+        // AimAtGuessAngleCommand aimAtGuessAngleCommand = new AimAtGuessAngleCommand(mLauncher,
         //         () -> operatorController.getLeftXAxis().get(), () -> operatorController.getLeftYAxis().get());
         // mLauncher.setDefaultCommand(aimAtGuessAngleCommand);
         
@@ -110,7 +115,7 @@ public class RobotContainer {
         operatorController.getRightBumperButton().whileActiveOnce(aimAtAngleCommand);
 
 
-        driveController.getDPadButton(Direction.RIGHT).whileActiveOnce(lockHeadingTest);
+        
 
 
         if(reparingMode){
@@ -157,9 +162,9 @@ public class RobotContainer {
     // return this.mClimber;
     // }
 
-    // public Updatable returnIndicator() {
-    //     return this.mIndicator;
-    // }
+    public Updatable returnIndicator() {
+        return this.mIndicator;
+    }
 
     // public Updatable returnAlerts(){
     // return this.mAlert;
