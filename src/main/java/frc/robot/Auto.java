@@ -4,11 +4,11 @@ import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import frc.robot.commands.SimpleActions;
 import frc.robot.commands.auto.D1TakeOneShoot;
 import frc.robot.commands.auto.D1TakeTwoShoot;
 import frc.robot.commands.auto.D2ToTerminalWithBounceTakeTwoBackThenShoot;
 import frc.robot.commands.auto.D2ToTerminalWithoutBounceTakeTwoBackThenShoot;
+import frc.robot.commands.auto.SimpleActions;
 
 public class Auto {
     private Command defaultAction = new SequentialCommandGroup(

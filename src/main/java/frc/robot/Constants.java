@@ -72,9 +72,8 @@ public final class Constants {
         public static final int CLIMBER_MOTOR = 12;
         public static final int INTAKER_MOTOR = 15;
 
-        public static final int POWER_DISTRIBUTION_HUB = 21;
         public static final int PNEUMATICS_HUB = 1;
-        public static final int LED_CANIFIER = 22;
+        public static final int LED_CANIFIER = 16;
     }
 
     // Analog ID Configurations

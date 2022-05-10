@@ -60,22 +60,17 @@ public interface TimedLEDState {
 
     class BreathingLEDState implements TimedLEDState{
         double mCycleTime;
-        double mMaxValue;
-        double h;
-        double s;
+        LEDState targetState;
 
         public BreathingLEDState(LEDState state, double cycleTime) {
             mCycleTime = cycleTime;
-            double[] hsvTarget = ColorConversions.fromRGBtoHSV(new Color(state.red, state.green, state.blue));
-            h = hsvTarget[0];
-            s = hsvTarget[1];
-            mMaxValue = hsvTarget[2];
+            targetState = state;
         }
 
         @Override
         public void getCurrentLEDState(LEDState desiredState, double timestamp) {
             double value = Math.abs(Math.sin(Math.PI / mCycleTime * (timestamp % mCycleTime)));
-            desiredState.copyFrom(LEDState.createFromHSV(h, s, value));
+            desiredState.copyFrom(LEDState.createFromColor(new Color(targetState.red * value, targetState.green * value, targetState.blue * value)));
         }
     }
 }

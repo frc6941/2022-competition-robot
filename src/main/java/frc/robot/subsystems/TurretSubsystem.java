@@ -59,6 +59,10 @@ public class TurretSubsystem extends SubsystemBase implements Updatable {
                 Constants.TURRET_GEAR_RATIO);
     }
 
+    public double getTurretTargetAngle(){
+        return this.angleLockTarget;
+    }
+
     public Translation2d getTurretToDrivetrainTranslation(){
         Rotation2d turretRotation = Rotation2d.fromDegrees(getTurretAngle() - 180.0 + 90.0);
         return Constants.VisionConstants.Turret.TURRET_RING_CENTER_TO_ROBOT_CENTER.plus(

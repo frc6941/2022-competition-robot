@@ -69,7 +69,9 @@ public class SuperCoordinator implements Updatable {
         // LED indicators
         switch (state) {
             case PIT:
-                if (!this.mTurret.isCalibrated() || !this.mClimber.isClimberCalibrated()) {
+                // if (!this.mTurret.isCalibrated() || !this.mClimber.isClimberCalibrated()) {
+                // TODO: REMEMBRE TO UNCOMMENT! Only for Testing.
+                if(false) {
                     this.mIndicator.setIndicatorState(Lights.CALIBRATION);
                 } else {
                     if (DriverStation.getAlliance().equals(Alliance.Red)) {

@@ -18,11 +18,13 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.commands.AimAtAngle;
+import frc.robot.commands.ChangeModeCommand;
 import frc.robot.commands.ReadyForIntakeCommand;
 import frc.robot.commands.SimpleShootCommand;
 import frc.robot.commands.launcher.AimAtGuessAngleCommand;
 import frc.robot.commands.launcher.SetHeadingTargetCommand;
 import frc.robot.coordinators.Launcher;
+import frc.robot.coordinators.SuperCoordinator;
 import frc.robot.subsystems.BallPathSubsystem;
 import frc.robot.subsystems.IndicatorSubsystem;
 import frc.robot.subsystems.IntakerSubsystem;
@@ -49,8 +51,8 @@ public class RobotContainer {
     IndicatorSubsystem mIndicator = IndicatorSubsystem.getInstance();
 
     // Alerts mAlert = Alerts.getInstance();
-    // Launcher mLauncher = Launcher.getInstance();
-    // SuperCoordinator mCoordinator = SuperCoordinator.getInstance();
+    Launcher mLauncher = Launcher.getInstance();
+    SuperCoordinator mCoordinator = SuperCoordinator.getInstance();
 
     boolean reparingMode = false;
 
@@ -95,6 +97,7 @@ public class RobotContainer {
         ForceResetModulesCommand resetModulesCommand = new ForceResetModulesCommand(mDrivebase);
         SimpleShootCommand simpleShootCommand = new SimpleShootCommand();
         ReadyForIntakeCommand readyForIntakeCommand = new ReadyForIntakeCommand(mIntaker);
+        ChangeModeCommand changeModeCommand = new ChangeModeCommand(mCoordinator);
 
         mDrivebase.setDefaultCommand(swerveDriveCommand);
         // mLauncher.setDefaultCommand(coordinatedDriveCommand);
@@ -103,13 +106,14 @@ public class RobotContainer {
         // driveController.getStartButton().whenActive(zeroGyroCommand);
         driveController.getRightBumperButton().whileActiveOnce(readyForIntakeCommand);
         driveController.getXButton().whileActiveOnce(simpleShootCommand);
+        driveController.getAButton().toggleWhenActive(changeModeCommand);
 
         SetHeadingTargetCommand lockHeadingTest = new SetHeadingTargetCommand(mDrivebase, 90.0);
         driveController.getDPadButton(Direction.RIGHT).whileActiveOnce(lockHeadingTest);
 
-        // AimAtGuessAngleCommand aimAtGuessAngleCommand = new AimAtGuessAngleCommand(mLauncher,
-        //         () -> operatorController.getLeftXAxis().get(), () -> operatorController.getLeftYAxis().get());
-        // mLauncher.setDefaultCommand(aimAtGuessAngleCommand);
+        AimAtGuessAngleCommand aimAtGuessAngleCommand = new AimAtGuessAngleCommand(mLauncher,
+                () -> driveController.getLeftXAxis().get(), () -> driveController.getLeftYAxis().get());
+        mLauncher.setDefaultCommand(aimAtGuessAngleCommand);
         
         AimAtAngle aimAtAngleCommand = new AimAtAngle(45);
         operatorController.getRightBumperButton().whileActiveOnce(aimAtAngleCommand);
@@ -170,11 +174,11 @@ public class RobotContainer {
     // return this.mAlert;
     // }
 
-    // public Updatable returnLauncher(){
-    // return this.mLauncher;
-    // }
+    public Updatable returnLauncher(){
+    return this.mLauncher;
+    }
 
-    // public Updatable returnSuperCoodinator() {
-    // return this.mCoordinator;
-    // }
+    public Updatable returnSuperCoodinator() {
+    return this.mCoordinator;
+    }
 }

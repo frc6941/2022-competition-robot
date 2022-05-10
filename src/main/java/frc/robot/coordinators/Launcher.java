@@ -7,6 +7,7 @@ import org.frcteam6941.utils.AngleNormalization;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -216,6 +217,12 @@ public class Launcher extends SubsystemBase implements Updatable {
                 this.shooter.setState(ShooterSubsystem.STATE.HIGH_SPEED);
                 break;
         }
+        SmartDashboard.putBoolean("Drivebase First", this.isDrivebaseFirst);
+        SmartDashboard.putNumber("Field Target Angle", this.targetAngle);
+        SmartDashboard.putNumber("Field Guess Angle", this.guessAimAngle);
+        SmartDashboard.putNumber("Turret Target Angle", this.turret.getTurretTargetAngle());
+        SmartDashboard.putBoolean("Drivebase Compensation Enabled", this.drivebase.isLockHeading());
+        SmartDashboard.putNumber("Drivebase Target Angle", this.drivebase.getHeadingTarget());
     }
 
     public static enum STATE {

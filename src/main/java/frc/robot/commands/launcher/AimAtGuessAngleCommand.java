@@ -17,6 +17,7 @@ public class AimAtGuessAngleCommand extends CommandBase {
         this.mLauncher = launcher;
         this.rotationX = rotationAxisX;
         this.rotationY = rotationAxisY;
+        addRequirements(mLauncher);
     }
 
     @Override
@@ -24,7 +25,7 @@ public class AimAtGuessAngleCommand extends CommandBase {
         double x = this.rotationX.getAsDouble();
         double y = this.rotationY.getAsDouble();
         if (new Translation2d(x, y).norm() > 0.15) {
-            this.mLauncher.aimAtFieldOrientedAngleGuess(new Rotation2d(x, y).getDegrees() - 90.0); // TODO: Need to
+            this.mLauncher.aimAtFieldOrientedAngleGuess(-new Rotation2d(x, y).getDegrees() + 90.0); // TODO: Need to
                                                                                                    // determine
                                                                                                    // the direction of
                                                                                                    // the base

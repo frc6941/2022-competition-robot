@@ -1,11 +1,18 @@
 package frc.robot.subsystems;
 
+import java.util.Map;
+
 import com.ctre.phoenix.CANifier;
 import com.ctre.phoenix.CANifier.LEDChannel;
 
 import org.frcteam2910.common.robot.UpdateManager.Updatable;
 
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
+import edu.wpi.first.wpilibj.shuffleboard.SuppliedValueWidget;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.utils.LEDState;
@@ -23,7 +30,6 @@ public class IndicatorSubsystem extends SubsystemBase implements Updatable {
     }
 
     private IndicatorSubsystem() {
-
     }
 
     // Define LED State
@@ -41,6 +47,7 @@ public class IndicatorSubsystem extends SubsystemBase implements Updatable {
         this.currentState = state;
     }
 
+
     @Override
     public void update(double time, double dt) {
         LEDState current = new LEDState(0, 0, 0);
@@ -53,7 +60,7 @@ public class IndicatorSubsystem extends SubsystemBase implements Updatable {
                 this.setLEDs(current);
                 break;
         }
-        SmartDashboard.putNumberArray("LED Color", new double[] {current.red, current.green, current.blue});
+        SmartDashboard.putNumberArray("LED State", new double[] {current.red, current.green, current.blue});
     }
 
     public static enum STATE {
