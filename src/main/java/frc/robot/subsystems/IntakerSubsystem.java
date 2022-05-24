@@ -9,7 +9,6 @@ import org.frcteam2910.common.robot.UpdateManager.Updatable;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -25,6 +24,7 @@ public class IntakerSubsystem extends SubsystemBase implements Updatable {
     private static IntakerSubsystem instance;
     private TimeDelayedBoolean tBoolean = new TimeDelayedBoolean();
     private boolean spin = false;
+    private boolean reverse = false;
     private STATE state = STATE.OFF;
 
     public static IntakerSubsystem getInstance() {
@@ -68,6 +68,10 @@ public class IntakerSubsystem extends SubsystemBase implements Updatable {
         this.spin = spin;
     }
 
+    public void reverseIntaker(boolean reverse){
+        this.reverse = reverse;
+    }
+
     private void setIntakerPercent(double power) {
         this.intakerMotor.set(power);
     }
@@ -80,16 +84,18 @@ public class IntakerSubsystem extends SubsystemBase implements Updatable {
                 retractFeeder();
                 tBoolean.update(false, 0.0);
                 this.spin = false;
-                SmartDashboard.putNumber("State", 0);
                 break;
             case EXTENDING:
                 retractIntaker();
                 extendFeeder();
                 if (tBoolean.update(true, Constants.INTAKER_WAITING_TIME_EXTEND)) {
                     extendIntaker();
-                    setState(STATE.EXTENDED);
+                    if(this.reverse){
+                        setState(STATE.REVERSE);
+                    } else {
+                        setState(STATE.EXTENDED);
+                    }
                 }
-                SmartDashboard.putNumber("State", 1);
                 break;
             case EXTENDED:
                 extendIntaker();
@@ -98,14 +104,12 @@ public class IntakerSubsystem extends SubsystemBase implements Updatable {
                     setIntakerPercent(Constants.INTAKER_FAST_INTAKE_PERCENTAGE);
                 }
                 tBoolean.update(false, 0.0);
-                SmartDashboard.putNumber("State", 2);
                 break;
             case REVERSE:
                 extendIntaker();
                 extendFeeder();
                 setIntakerPercent(-Constants.INTAKER_FAST_INTAKE_PERCENTAGE);
                 tBoolean.update(false, 0.0);
-                SmartDashboard.putNumber("State", 3);
                 break;
             case RETRACTING:
                 retractIntaker();
@@ -115,7 +119,6 @@ public class IntakerSubsystem extends SubsystemBase implements Updatable {
                     retractFeeder();
                     setState(STATE.OFF);
                 }
-                SmartDashboard.putNumber("State", 4);
                 break;
         }
 

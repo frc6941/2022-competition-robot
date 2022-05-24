@@ -293,29 +293,33 @@ public final class Constants {
             public static final double FRAME_HEIGHT = 480;
             public static final double FRAME_WIDTH = 640;
 
-            public static final Rotation2d FOV_HORIZONTAL = Rotation2d.fromDegrees(59.6);
-            public static final Rotation2d FOV_VERTICAL = Rotation2d.fromDegrees(49.7);
+            public static final double FOCAL_LENGTH_X = 505.5321815016914;
+            public static final double FOCAL_LENGTH_Y = 504.69511487917396;
+
+            public static final Rotation2d FOV_HORIZONTAL = new Rotation2d(
+                    2 * Math.atan(FRAME_WIDTH / (2 * FOCAL_LENGTH_X)));
+            public static final Rotation2d FOV_VERTICAL = new Rotation2d(
+                    2 * Math.atan(FRAME_HEIGHT / (2 * FOCAL_LENGTH_Y)));
             public static final double VPW = 2.0 * Math.tan(FOV_HORIZONTAL.getRadians() / 2.0);
             public static final double VPH = 2.0 * Math.tan(FOV_VERTICAL.getRadians() / 2.0);
-            public static final double FOCAL_LENGTH = 640.0 / (2 * Math.tan(Math.toRadians(59.6) / 2.0));
-            public static final double CX = 640.0 / 2 - 0.5;
-            public static final double CY = 480.0 / 2 - 0.5;
+            public static final double CX = 269.2192266946945;
+            public static final double CY = 245.49264677712156;
             public static final CameraState CAMERA_STATE = new CameraState(0.83, Rotation2d.fromDegrees(60.0));
 
             public static final VisionConfiguration VISION_CONFIGURATION = new VisionConfiguration(0,
-                "photonvision-turret",
-                0.86,
-                new Pose2d(),
-                Rotation2d.fromDegrees(30),
-                CameraResolution.F_960x720,
-                new CameraConstants(
-                    new double[] { 0.18060252352042194, -0.5241826257387341, -0.002877771428852056, -0.017668640556835626, 0.21195474367320857 },
-                    new double[][] {
-                        { 505.5321815016914, 0.0, 269.2192266946945 },
-                        { 0.0, 504.69511487917396, 245.49264677712156 },
-                        { 0.0, 0.0, 1.0 }
-                    }
-                ));
+                    "photonvision-turret",
+                    0.86,
+                    new Pose2d(),
+                    Rotation2d.fromDegrees(30),
+                    CameraResolution.F_960x720,
+                    new CameraConstants(
+                            new double[] { 0.18060252352042194, -0.5241826257387341, -0.002877771428852056,
+                                    -0.017668640556835626, 0.21195474367320857 },
+                            new double[][] {
+                                    { 505.5321815016914, 0.0, 269.2192266946945 },
+                                    { 0.0, 504.69511487917396, 245.49264677712156 },
+                                    { 0.0, 0.0, 1.0 }
+                            }));
         }
 
         public static final class Ball {

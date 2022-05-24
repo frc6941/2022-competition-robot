@@ -5,11 +5,8 @@ import java.util.Optional;
 import com.google.errorprone.annotations.concurrent.GuardedBy;
 import com.pathplanner.lib.PathPlannerTrajectory;
 
-import org.frcteam2910.common.math.RigidTransform2;
 import org.frcteam2910.common.math.Rotation2;
 import org.frcteam2910.common.robot.drivers.Pigeon;
-import org.frcteam2910.common.util.InterpolatingDouble;
-import org.frcteam2910.common.util.InterpolatingTreeMap;
 import org.frcteam6941.control.HolonomicDriveSignal;
 import org.frcteam6941.control.HolonomicTrajectoryFollower;
 import org.frcteam6941.utils.AngleNormalization;
@@ -83,8 +80,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     private STATE state = STATE.DRIVE;
 
     // Auxillary Stuffs
-    private final InterpolatingTreeMap<InterpolatingDouble, RigidTransform2> poseHistoryMap = new InterpolatingTreeMap<>(
-            100);
     private final Object sensorLock = new Object();
     private final Object statusLock = new Object();
     private final Object signalLock = new Object();
@@ -366,7 +361,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         return states;
     }
 
-    // TODO: Still need testing: see if this method reduces gyro drift
     @Override
     public Rotation2d getYaw() {
         synchronized (sensorLock) {

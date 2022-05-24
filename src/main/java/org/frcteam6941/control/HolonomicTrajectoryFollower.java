@@ -10,8 +10,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
 
 public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<HolonomicDriveSignal>
         implements Sendable {
@@ -74,7 +72,6 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
         if (this.lockAngle) {
             // TODO: As we take clockwise as positive, the value provided by PathPlanner
             // need to be converted.
-            // Well, now it seems like the drivetrain is under ccw positive... very bad
             rotation = this.thetaController.calculate(360.0 - currentPose.getRotation().getDegrees(),
                     lastState.holonomicRotation.getDegrees());
         }

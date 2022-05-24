@@ -4,7 +4,6 @@ import org.frcteam6941.swerve.SwerveDrivetrainBase;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 public class WaitToNearPoint extends CommandBase {
     private Translation2d point;

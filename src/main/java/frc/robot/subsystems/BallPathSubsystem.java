@@ -33,8 +33,6 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
     private boolean expelOverride = false;
     private boolean ignoreBallColor = true;
 
-    private IntakerSubsystem mIntaker = IntakerSubsystem.getInstance();
-
     private BallPathSubsystem() {
         feederMotor.configFactoryDefault();
         feederMotor.setInverted(InvertType.InvertMotorOutput);
@@ -153,6 +151,10 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
                     this.feederTarget = 0;
                 }
                 break;
+            case REVERSE:
+                setFeederPercent(-Constants.BALLPATH_EXPELLING_PERCENTAGE);
+                this.feederTarget = 0;
+                break;
         }
 
         SmartDashboard.putBoolean("Entrance", this.ballAtEntrance());
@@ -165,7 +167,8 @@ public class BallPathSubsystem extends SubsystemBase implements Updatable {
     public static enum STATE {
         IDLE,
         PROCESSING,
-        EXPELLING
+        EXPELLING,
+        REVERSE
     }
 
     public STATE getState() {

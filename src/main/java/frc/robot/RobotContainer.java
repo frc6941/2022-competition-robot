@@ -13,13 +13,10 @@ import org.frcteam6941.input.XboxControllerExtended;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
 import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.commands.AimAtAngle;
 import frc.robot.commands.ChangeModeCommand;
-import frc.robot.commands.ReadyForIntakeCommand;
+import frc.robot.commands.intake.ReadyForIntakeCommand;
 import frc.robot.commands.SimpleShootCommand;
 import frc.robot.commands.launcher.AimAtGuessAngleCommand;
 import frc.robot.commands.launcher.SetHeadingTargetCommand;
