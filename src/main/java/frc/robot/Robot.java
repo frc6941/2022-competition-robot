@@ -14,6 +14,7 @@ import frc.robot.subsystems.Indicator;
 import frc.robot.subsystems.Intaker;
 import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Turret;
 
 /**
@@ -43,7 +44,8 @@ public class Robot extends TimedRobot {
       Climber.getInstance(),
       ColorSensor.getInstance(),
       Indicator.getInstance(),
-      Limelight.getInstance()
+      Limelight.getInstance(),
+      Superstructure.getInstance()
     );
     this.updateManager.startEnableLoop(Constants.kLooperDt);
   }

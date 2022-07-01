@@ -8,7 +8,6 @@ import frc.robot.commands.auto.D1TakeTwoShoot;
 import frc.robot.commands.auto.D2ToTerminalWithBounceTakeTwoBackThenShoot;
 import frc.robot.commands.auto.D2ToTerminalWithoutBounceTakeTwoBackThenShoot;
 import frc.robot.commands.auto.D3EndMove;
-import frc.robot.commands.auto.SimpleActions;
 
 public class Auto {
 

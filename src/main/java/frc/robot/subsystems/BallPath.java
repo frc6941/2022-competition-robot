@@ -27,6 +27,7 @@ public class BallPath implements Updatable {
     public PeriodicIO mPeriodicIO = new PeriodicIO();
     private boolean readyForWrongBallExpel = false;
     private boolean isEnabled = false;
+    private boolean sawBallAtEntrance = false;
 
     private LazyTalonFX feederMotor = new LazyTalonFX(Constants.CANID.FEEDER_MOTOR);
 
@@ -80,7 +81,7 @@ public class BallPath implements Updatable {
         readyForWrongBallExpel = ready;
     }
     
-    public synchronized void queueBall(boolean correctColor){
+    public synchronized void queueNewBall(boolean correctColor){
         switch(situation){
             case EMPTY:
                 positionOneSlot.queueBall(correctColor);
@@ -163,8 +164,11 @@ public class BallPath implements Updatable {
                 mPeriodicIO.feederDirection = true;
                 break;
             case PROCESSING:
-                if(ballAtEntrance() && colorSensor.seesNewBall()){
-                    queueBall(colorSensor.hasCorrectColor());
+                if(ballAtEntrance() && !sawBallAtEntrance){
+                    queueNewBall(colorSensor.hasCorrectColor());
+                    sawBallAtEntrance = true;
+                } else {
+                    sawBallAtEntrance = false;
                 }
                 updateSetPoint();
                 break;
@@ -220,7 +224,7 @@ public class BallPath implements Updatable {
         }
 
         SmartDashboard.putNumber("Feeder Speed", mPeriodicIO.feederDemand);
-        SmartDashboard.putBoolean("New Ball", colorSensor.seesNewBall());
+        SmartDashboard.putBoolean("Correct Color", colorSensor.hasCorrectColor());
     }
 
     @Override
