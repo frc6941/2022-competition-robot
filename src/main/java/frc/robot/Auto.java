@@ -1,6 +1,5 @@
 package frc.robot;
 
-import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -8,13 +7,10 @@ import frc.robot.commands.auto.D1TakeOneShoot;
 import frc.robot.commands.auto.D1TakeTwoShoot;
 import frc.robot.commands.auto.D2ToTerminalWithBounceTakeTwoBackThenShoot;
 import frc.robot.commands.auto.D2ToTerminalWithoutBounceTakeTwoBackThenShoot;
+import frc.robot.commands.auto.D3EndMove;
 import frc.robot.commands.auto.SimpleActions;
 
 public class Auto {
-    private Command defaultAction = new SequentialCommandGroup(
-        SimpleActions.switchForceMaintain,
-        SimpleActions.switchDrivebaseFirst
-    );
 
     private Command d1TakeOneShoot = new D1TakeOneShoot();
 
@@ -24,29 +20,30 @@ public class Auto {
 
     private Command d2ToTerminalWithoutBouncerTakeTwoBackThenShoot = new D2ToTerminalWithoutBounceTakeTwoBackThenShoot();
 
-    
+    private Command d3EndMove = new D3EndMove();
 
-
-    SendableChooser<AUTO_START_LOCATION> startingLocationChooser = new SendableChooser<>();
     SendableChooser<Command> autonomousStageOneChooser = new SendableChooser<>();
     SendableChooser<Command> autonomousStageTwoChooser = new SendableChooser<>();
     SendableChooser<Command> autonomousStageThreeChooser = new SendableChooser<>();
 
     public Auto(){
-        startingLocationChooser.setDefaultOption("D", AUTO_START_LOCATION.D);
+        autonomousStageOneChooser.setDefaultOption("D Take Two Shoot", d1TakeTwoShoot);
+        autonomousStageOneChooser.addOption("D Take One Shoot", d1TakeOneShoot);
+        autonomousStageOneChooser.addOption("Do Nothing", null);
+
+        autonomousStageTwoChooser.setDefaultOption("D To Terminal Without Bounce, Back Then Shoot", d2ToTerminalWithoutBouncerTakeTwoBackThenShoot);
+        autonomousStageTwoChooser.addOption("D To Terminal With Bounce, Back Then Shoot", d2ToTerminalWithBounceTakeTwoBackThenShoot);
+        autonomousStageTwoChooser.addOption("Do Nothing", null);
+
+        autonomousStageThreeChooser.setDefaultOption("Do Nothing", null);
+        autonomousStageThreeChooser.addOption("D End Move", d3EndMove);
     }
 
-    public enum AUTO_START_LOCATION{
-        A,
-        D
-    }
-
-    public void updateChoosers(){
-        switch (startingLocationChooser.getSelected()) {
-            case A:
-                break;
-            case D:
-                break;
-        }
+    public Command getAutonomousCommand() {
+        return new SequentialCommandGroup(
+            autonomousStageOneChooser.getSelected(),
+            autonomousStageTwoChooser.getSelected(),
+            autonomousStageThreeChooser.getSelected()
+        );
     }
 }

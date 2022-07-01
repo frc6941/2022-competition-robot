@@ -5,10 +5,9 @@ import java.util.Optional;
 import com.google.errorprone.annotations.concurrent.GuardedBy;
 import com.pathplanner.lib.PathPlannerTrajectory;
 
-import org.frcteam2910.common.math.Rotation2;
-import org.frcteam2910.common.robot.drivers.Pigeon;
 import org.frcteam6941.control.HolonomicDriveSignal;
 import org.frcteam6941.control.HolonomicTrajectoryFollower;
+import org.frcteam6941.drivers.Pigeon;
 import org.frcteam6941.utils.AngleNormalization;
 import org.frcteam6941.utils.PulseHUD;
 
@@ -80,7 +79,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     private STATE state = STATE.DRIVE;
 
     // Auxillary Stuffs
-    private final Object sensorLock = new Object();
     private final Object statusLock = new Object();
     private final Object signalLock = new Object();
 
@@ -93,7 +91,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
     public SJTUSwerveMK5Drivebase() {
         gyro = new Pigeon(0);
-        gyro.getPigeonIMU().configFactoryDefault();
         resetGyro(0.0);
 
         mSwerveMods = new SJTUSwerveModuleMK5[] {
@@ -111,7 +108,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         swerveKinematics = new SwerveDriveKinematics(swerveModulePositions);
 
         // Advanced Kalman Filter Swerve Pose Estimator.
-        poseEstimator = new SwerveDrivePoseEstimator(getYaw(), new Pose2d(), swerveKinematics,
+        poseEstimator = new SwerveDrivePoseEstimator(gyro.getYaw(), new Pose2d(), swerveKinematics,
                 new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.05, 0.05, 0.06), // State Error
                 new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.01), // Encoder Error
                 new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.01, 0.01, 0.01), // Vision Error,
@@ -131,7 +128,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
     @Override
     public synchronized void setHeadingTarget(double heading) {
-        headingController.reset(getFieldOrientedHeading(), getAngularVelocity());
+        headingController.reset(gyro.getYaw().getDegrees(), getAngularVelocity());
         this.setHeadingTargetContinuously(heading);
     }
 
@@ -142,7 +139,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
     private synchronized void setHeadingTargetContinuously(double heading) {
         double target = heading;
-        double position = getFieldOrientedHeading();
+        double position = gyro.getYaw().getDegrees();
 
         while (position - target > 180) {
             target += 360;
@@ -161,7 +158,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     }
 
     public void lockCurrentHeading() {
-        this.setHeadingTarget(this.getFieldOrientedHeading());
+        this.setHeadingTarget(gyro.getYaw().getDegrees());
     }
 
 
@@ -176,8 +173,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
             double rotation = driveSignal.getRotation();
 
             if (driveSignal.isFieldOriented()) {
-                chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(x, y, rotation,
-                        Rotation2d.fromDegrees(this.getFieldOrientedHeading()));
+                chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(x, y, rotation, gyro.getYaw());
             } else {
                 chassisSpeeds = new ChassisSpeeds(x, y, rotation);
             }
@@ -195,59 +191,9 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         SwerveModuleState[] moduleStates = getStates();
         ChassisSpeeds chassisSpeeds = swerveKinematics.toChassisSpeeds(moduleStates);
         synchronized (statusLock) {
-            this.pose = poseEstimator.updateWithTime(time, getYaw(), moduleStates);
+            this.pose = poseEstimator.updateWithTime(time, gyro.getYaw(), moduleStates);
             this.translation = new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
             this.angularVelocity = chassisSpeeds.omegaRadiansPerSecond;
-        }
-    }
-
-
-    /**
-     * Main update function for swerve drivebase. Act accordingly under three modes:
-     * 1. BRAKE: Make all the wheels to appear in X shape.
-     * 2. DRIVE: Normal drive mode. The rotation will get overrided if there's lock heading.
-     * 3. PATH_FOLLOWING: Path following mode. The rotation will get overrided if there's lock heading.
-     */
-    @Override
-    public void update(double time, double dt) {
-        updateOdometry(time, dt);
-        HolonomicDriveSignal driveSignal = this.driveSignal;
-        Optional<HolonomicDriveSignal> trajectorySignal = trajectoryFollower.update(getPose(), getTranslation(),
-                getAngularVelocity(), time, dt);
-        if (trajectorySignal.isPresent()) {
-            setState(STATE.PATH_FOLLOWING);
-            driveSignal = trajectorySignal.get();
-            driveSignal = new HolonomicDriveSignal(driveSignal.getTranslation(), driveSignal.getRotation(),
-                    driveSignal.isFieldOriented());
-        }
-
-        if (isLockHeading) {
-            headingTarget = AngleNormalization.placeInAppropriate0To360Scope(getFieldOrientedHeading(), headingTarget);
-            double rotation = headingController.calculate(getFieldOrientedHeading(), headingTarget);
-            if (Math.abs(getFieldOrientedHeading() - headingTarget) > 0.5
-                    && driveSignal.getTranslation().getNorm() < 0.08) {
-                rotation += Math.signum(rotation) * Constants.DRIVETRAIN_STATIC_HEADING_KS;
-            }
-            rotation += headingFeedforward;
-            driveSignal = new HolonomicDriveSignal(driveSignal.getTranslation(), rotation, true);
-        }
-
-        synchronized (signalLock) {
-            switch (state) {
-                case BRAKE:
-                    this.setModuleStatesBrake();
-                    break;
-                case DRIVE:
-                    updateModules(driveSignal, dt);
-                    break;
-                case PATH_FOLLOWING:
-                    if (trajectorySignal.isPresent()) {
-                        updateModules(driveSignal, dt);
-                    } else {
-                        setState(STATE.DRIVE);
-                    }
-                    break;
-            }
         }
     }
 
@@ -331,19 +277,12 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
     @Override
     public void resetOdometry(Pose2d pose) {
-        poseEstimator.resetPosition(pose, getYaw());
-    }
-
-    @Override
-    public void resetGyroAngle(Rotation2 angle) {
-        synchronized (sensorLock) {
-            gyro.setAdjustmentAngle(gyro.getUnadjustedAngle().rotateBy(angle.inverse()));
-        }
+        poseEstimator.resetPosition(pose, pose.getRotation());
     }
 
     @Override
     public void resetGyro(double degree) {
-        gyro.getPigeonIMU().setYaw(degree);
+        gyro.setYaw(degree);
     }
 
     public void forceResetModules() {
@@ -361,35 +300,64 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         return states;
     }
 
-    @Override
-    public Rotation2d getYaw() {
-        synchronized (sensorLock) {
-            boolean isInverted = true; // If field-oriented have something wrong, check this option
-            // cw is taken as positive
-            return (isInverted) ? Rotation2d.fromDegrees(360 - gyro.getPigeonIMU().getYaw())
-                    : Rotation2d.fromDegrees(gyro.getPigeonIMU().getYaw());
-        }
-    }
-
-    public Rotation2d getPitch() {
-        synchronized (sensorLock) {
-            double[] ypr = new double[3];
-            gyro.getPigeonIMU().getYawPitchRoll(ypr);
-            boolean isInverted = false;
-            return (isInverted) ? Rotation2d.fromDegrees(360 - ypr[1]) : Rotation2d.fromDegrees(ypr[1]);
-        }
-    }
-
-    public double getFieldOrientedHeading() {
-        return this.poseEstimator.getEstimatedPosition().getRotation().getDegrees();
-    }
-
     public void updateObservation(Pose2d robotPostion) {
         poseEstimator.addVisionMeasurement(robotPostion, Timer.getFPGATimestamp());
     }
 
     @Override
-    public void periodic() {
+    public void read(double time, double dt) {
+    }
+
+    @Override
+    public void update(double time, double dt) {
+        updateOdometry(time, dt);
+        HolonomicDriveSignal driveSignal = this.driveSignal;
+        Optional<HolonomicDriveSignal> trajectorySignal = trajectoryFollower.update(getPose(), getTranslation(),
+                getAngularVelocity(), time, dt);
+        if (trajectorySignal.isPresent()) {
+            setState(STATE.PATH_FOLLOWING);
+            driveSignal = trajectorySignal.get();
+            driveSignal = new HolonomicDriveSignal(driveSignal.getTranslation(), driveSignal.getRotation(),
+                    driveSignal.isFieldOriented());
+        }
+
+        if (isLockHeading) {
+            headingTarget = AngleNormalization.placeInAppropriate0To360Scope(gyro.getYaw().getDegrees(), headingTarget);
+            double rotation = headingController.calculate(gyro.getYaw().getDegrees(), headingTarget);
+            if (Math.abs(gyro.getYaw().getDegrees() - headingTarget) > 0.5
+                    && driveSignal.getTranslation().getNorm() < 0.08) {
+                rotation += Math.signum(rotation) * Constants.DRIVETRAIN_STATIC_HEADING_KS;
+            }
+            rotation += headingFeedforward;
+            driveSignal = new HolonomicDriveSignal(driveSignal.getTranslation(), rotation, true);
+        }
+
+        synchronized (signalLock) {
+            switch (state) {
+                case BRAKE:
+                    this.setModuleStatesBrake();
+                    break;
+                case DRIVE:
+                    updateModules(driveSignal, dt);
+                    break;
+                case PATH_FOLLOWING:
+                    if (trajectorySignal.isPresent()) {
+                        updateModules(driveSignal, dt);
+                    } else {
+                        setState(STATE.DRIVE);
+                    }
+                    break;
+            }
+        }
+    }
+
+    @Override
+    public void write(double time, double dt){
+
+    }
+
+    @Override
+    public void telemetry() {
         for (SJTUSwerveModuleMK5 mod : this.mSwerveMods) {
             SmartDashboard.putNumber("Mod " + mod.moduleNumber, mod.getEncoderUnbound().getDegrees());
         }
@@ -398,6 +366,23 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         PulseHUD.putData("PathFollower", this.trajectoryFollower);
     }
 
+    @Override
+    public void stop(){
+        
+    }
+
+    @Override
+    public void disabled(double time, double dt){
+        
+    }
+
+
+    /**
+     * Act accordingly under three modes:
+     * 1. BRAKE: Make all the wheels to appear in X shape.
+     * 2. DRIVE: Normal drive mode. The rotation will get overrided if there's lock heading.
+     * 3. PATH_FOLLOWING: Path following mode. The rotation will get overrided if there's lock heading.
+     */
     public enum STATE {
         BRAKE,
         DRIVE,

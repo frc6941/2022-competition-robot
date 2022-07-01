@@ -6,11 +6,11 @@ import com.pathplanner.lib.PathPlannerTrajectory;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import frc.robot.subsystems.IntakerSubsystem;
+import frc.robot.subsystems.Intaker;
 
 public class D1TakeOneShoot extends SequentialCommandGroup {
     SJTUSwerveMK5Drivebase mDrivebase = SJTUSwerveMK5Drivebase.getInstance();
-    IntakerSubsystem mIntaker = IntakerSubsystem.getInstance();
+    Intaker mIntaker = Intaker.getInstance();
 
     PathPlannerTrajectory oneBallThenShoot = PathPlanner.loadPath("D1 - 1 Ball Then Shoot", 4.0, 2.0);
 
