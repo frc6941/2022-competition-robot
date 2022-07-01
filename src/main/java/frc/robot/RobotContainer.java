@@ -116,9 +116,6 @@ public class RobotContainer {
         operatorController.getRightBumperButton().whileActiveOnce(aimAtAngleCommand);
 
 
-        
-
-
         if(reparingMode){
             driveController.getDPadButton(Direction.DOWN).whenActive(resetModulesCommand);
         }

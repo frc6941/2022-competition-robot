@@ -131,7 +131,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
     @Override
     public synchronized void setHeadingTarget(double heading) {
-        headingController.reset(getFieldOrientedHeading(), getAngularVelocity());
+        headingController.reset(getYaw().getDegrees(), getAngularVelocity());
         this.setHeadingTargetContinuously(heading);
     }
 
@@ -142,7 +142,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
     private synchronized void setHeadingTargetContinuously(double heading) {
         double target = heading;
-        double position = getFieldOrientedHeading();
+        double position = getYaw().getDegrees();
 
         while (position - target > 180) {
             target += 360;
@@ -161,7 +161,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     }
 
     public void lockCurrentHeading() {
-        this.setHeadingTarget(this.getFieldOrientedHeading());
+        this.setHeadingTarget(this.getYaw().getDegrees());
     }
 
 
@@ -176,8 +176,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
             double rotation = driveSignal.getRotation();
 
             if (driveSignal.isFieldOriented()) {
-                chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(x, y, rotation,
-                        Rotation2d.fromDegrees(this.getFieldOrientedHeading()));
+                chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(x, y, rotation, getYaw());
             } else {
                 chassisSpeeds = new ChassisSpeeds(x, y, rotation);
             }
@@ -222,9 +221,9 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         }
 
         if (isLockHeading) {
-            headingTarget = AngleNormalization.placeInAppropriate0To360Scope(getFieldOrientedHeading(), headingTarget);
-            double rotation = headingController.calculate(getFieldOrientedHeading(), headingTarget);
-            if (Math.abs(getFieldOrientedHeading() - headingTarget) > 0.5
+            headingTarget = AngleNormalization.placeInAppropriate0To360Scope(getYaw().getDegrees(), headingTarget);
+            double rotation = headingController.calculate(getYaw().getDegrees(), headingTarget);
+            if (Math.abs(getYaw().getDegrees() - headingTarget) > 0.5
                     && driveSignal.getTranslation().getNorm() < 0.08) {
                 rotation += Math.signum(rotation) * Constants.DRIVETRAIN_STATIC_HEADING_KS;
             }
@@ -380,10 +379,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         }
     }
 
-    public double getFieldOrientedHeading() {
-        return this.poseEstimator.getEstimatedPosition().getRotation().getDegrees();
-    }
-
     public void updateObservation(Pose2d robotPostion) {
         poseEstimator.addVisionMeasurement(robotPostion, Timer.getFPGATimestamp());
     }
@@ -393,6 +388,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         for (SJTUSwerveModuleMK5 mod : this.mSwerveMods) {
             SmartDashboard.putNumber("Mod " + mod.moduleNumber, mod.getEncoderUnbound().getDegrees());
         }
+        SmartDashboard.putNumber("Yaw", getYaw().getDegrees());
         PulseHUD.putNumberArray("Robot Pose",
                 new double[] { this.pose.getX(), this.pose.getY(), this.pose.getRotation().getDegrees() });
         PulseHUD.putData("PathFollower", this.trajectoryFollower);

@@ -83,14 +83,14 @@ public class RobotStateEstimator implements Updatable {
 
     // TODO: Need a lot of testing
     private synchronized Pose2d getVisionEstimatedVehicleRelativeToField(double time) {
-        Vector2 visionTargetVector = this.visionRelativeToTarget.getInterpolated(new InterpolatingDouble(time));        double fieldOrientedTargetAngle = this.mDrivebase.getFieldOrientedHeading()
-                + this.mTurretSubsystem.getTurretAngle();
+        Vector2 visionTargetVector = this.visionRelativeToTarget.getInterpolated(new InterpolatingDouble(time));       
+        double fieldOrientedTargetAngle = this.mDrivebase.getYaw().getDegrees() + this.mTurretSubsystem.getTurretAngle();
         return new Pose2d(
                 FieldConstants.hubCenter.minus(
                         new Translation2d(
                                 visionTargetVector.length,
                                 Rotation2d.fromDegrees(fieldOrientedTargetAngle))),
-                Rotation2d.fromDegrees(this.mDrivebase.getFieldOrientedHeading()));
+                Rotation2d.fromDegrees(this.mDrivebase.getYaw().getDegrees()));
     }
 
     public synchronized Transform2d getVehicleRelativeToFieldDelta(double time, double dt) {

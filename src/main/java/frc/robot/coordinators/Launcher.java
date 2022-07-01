@@ -44,7 +44,7 @@ public class Launcher extends SubsystemBase implements Updatable {
     }
 
     public double getFieldOrientedDrivetrainHeading() {
-        return AngleNormalization.getAbsoluteAngleDegree(this.drivebase.getFieldOrientedHeading());
+        return AngleNormalization.getAbsoluteAngleDegree(this.drivebase.getYaw().getDegrees());
     }
 
     public double getFieldOrientedTurretHeading() {
@@ -110,11 +110,11 @@ public class Launcher extends SubsystemBase implements Updatable {
     }
 
     public void aimAtTurretOrientedAngle(double turretAngle) {
-        this.aimAtFieldOrientedAngle(this.drivebase.getFieldOrientedHeading() + turretAngle, isLimited);
+        this.aimAtFieldOrientedAngle(this.drivebase.getYaw().getDegrees() + turretAngle, isLimited);
     }
 
     public void aimAtTurretOrientedAngleDelta(double delta, boolean isLimited) {
-        this.aimAtFieldOrientedAngle(this.drivebase.getFieldOrientedHeading() + this.turret.getTurretAngle() + delta,
+        this.aimAtFieldOrientedAngle(this.drivebase.getYaw().getDegrees() + this.turret.getTurretAngle() + delta,
                 isLimited);
     }
 
