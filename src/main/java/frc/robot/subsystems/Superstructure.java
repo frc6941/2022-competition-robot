@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import javax.naming.directory.DirContext;
-
 import org.frcteam6941.looper.UpdateManager.Updatable;
 
 import edu.wpi.first.wpilibj.XboxController;

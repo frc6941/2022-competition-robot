@@ -129,6 +129,7 @@ public class BallPath implements Updatable {
                     targetSituation = SITUATION.EMPTY;
                     mPeriodicIO.feederDirection = true;
                 } else {
+                    positionTwoSlot.move(positionOneSlot);
                     targetSituation = SITUATION.FIRST;
                     mPeriodicIO.feederDirection = false;
                 }
@@ -136,6 +137,7 @@ public class BallPath implements Updatable {
                 break;
             case FULL:
                 if(wrongBallAtPositionTwo() && readyForWrongBallExpel){
+                    positionOneSlot.move(positionTwoSlot);
                     targetSituation = SITUATION.SECOND;
                     mPeriodicIO.feederDirection = true;
                 }
@@ -167,18 +169,22 @@ public class BallPath implements Updatable {
                 if(ballAtEntrance() && !sawBallAtEntrance){
                     queueNewBall(colorSensor.hasCorrectColor());
                     sawBallAtEntrance = true;
-                } else {
+                    System.out.println("QUEUE NEW");
+                } 
+                if(!ballAtEntrance()) {
                     sawBallAtEntrance = false;
                 }
                 updateSetPoint();
                 break;
             case FEEDING:
                 mPeriodicIO.feederDemand = Constants.BALLPATH_NORMAL_PERCENTAGE;
+                targetSituation = SITUATION.EMPTY;
                 positionOneSlot.clearQueue();
                 positionTwoSlot.clearQueue();
                 break;
             case EJECTING:
                 mPeriodicIO.feederDemand = -Constants.BALLPATH_NORMAL_PERCENTAGE;
+                targetSituation = SITUATION.EMPTY;
                 positionOneSlot.clearQueue();
                 positionTwoSlot.clearQueue();
                 break;
