@@ -54,6 +54,11 @@ public class Alerts implements Updatable {
         turretCalibrationWarning.set(!turretSubsystem.isCalibrated());
         climberCalibrationWarning.set(!climberSubsystem.isClimberCalibrated());
     }
+
+    @Override
+    public synchronized void start(){
+        // Auto Generated Method
+    }
     
     @Override
     public synchronized void stop(){

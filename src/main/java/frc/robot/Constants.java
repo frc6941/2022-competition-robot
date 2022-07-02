@@ -237,19 +237,17 @@ public final class Constants {
     // TODO: Climber loaded constant is not finished
     public static final ElevatorFeedforward CLIMBER_LOADED_FEEDFORWARD = new ElevatorFeedforward(1.0, 1.0, 1.0);
 
-    /* Controller Constants */
+
+    /* Control Board Constants */
     public static final int DRIVER_CONTROLLER_PORT = 0;
     public static final int OPERATOR_CONTROLLER_PORT = 1;
     public static final int EMERGENCY_REPARING_PORT = 4;
 
-    // Strange: the deadband is really large
-    // Well... We should seriously consider swapping Xbox Elite Controller to
-    // something else. It can easily deviate by a shocking 0.08 while static, AND no
-    // extra inputs from back buttons, AND it cost 1000+...
-    public static final double DEADBAND = 0.08;
-    public static final boolean INVERT_X = true;
-    public static final boolean INVERT_Y = true;
-    public static final boolean INVERT_R = false;
+    public static final double CONTROLLER_DEADBAND = 0.05;
+    public static final double CONTROLLER_PEDAL = 0.5;
+    public static final boolean CONTROLLER_INVERT_X = true;
+    public static final boolean CONTROLLER_INVERT_Y = true;
+    public static final boolean CONTROLLER_INVERT_R = false;
 
     /* Auto Constants */
     public static final class AutoConstants {

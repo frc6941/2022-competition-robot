@@ -1,4 +1,4 @@
-package frc.robot.commands.auto;
+package frc.robot.auto.basics;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;

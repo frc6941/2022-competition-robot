@@ -59,6 +59,11 @@ public class Limelight implements Updatable {
     }
 
     @Override
+    public void start(){
+        setLed(LedMode.ON);
+    }
+
+    @Override
     public synchronized void stop(){
         setLed(LedMode.OFF);
     }

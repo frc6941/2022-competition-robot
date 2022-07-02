@@ -65,25 +65,16 @@ public class Turret implements Updatable {
     }
 
     public synchronized double getTurretAngle() {
-        // As cw is the true positive and ccw is what the motor thinks is positive, the
-        // angle read by the sensor need to be reverted again.
-        return -Conversions.falconToDegrees(
+        return Conversions.falconToDegrees(
                 mPeriodicIO.turretPosition - ((forwardMaxPosition + reverseMaxPosition) / 2.0),
                 Constants.TURRET_GEAR_RATIO);
-    }
-
-    public synchronized Translation2d getTurretToDrivetrainTranslation(){
-        Rotation2d turretRotation = Rotation2d.fromDegrees(getTurretAngle() - 180.0 + 90.0);
-        return Constants.VisionConstants.Turret.TURRET_RING_CENTER_TO_ROBOT_CENTER.plus(
-            new Translation2d(Constants.VisionConstants.Turret.TURRET_RING_RADIUS, turretRotation)
-        );
     }
 
     public void setTurretPercentage(double power) {
         if(getState() != STATE.PERCENTAGE){
             setState(STATE.PERCENTAGE);
         }
-        mPeriodicIO.turretDemand = -power;
+        mPeriodicIO.turretDemand = power;
     }
 
     public void setTurretAngle(double angle) {
@@ -200,14 +191,13 @@ public class Turret implements Updatable {
                     // stop the turret from going any further.
                     if ((delta >= 0 && this.forwardSafe())
                             || (delta <= 0 && this.reverseSafe())) {
-                        // As ccw is positive here due to sensor reasons, angle need to be reverted.
                         turretMotor.set(ControlMode.MotionMagic,
-                                Conversions.degreesToFalcon(-angle, Constants.TURRET_GEAR_RATIO)
+                                Conversions.degreesToFalcon(angle, Constants.TURRET_GEAR_RATIO)
                                         + (forwardMaxPosition + reverseMaxPosition) / 2.0);
                     }
                 } else {
                     turretMotor.set(ControlMode.MotionMagic,
-                            Conversions.degreesToFalcon(-Math.copySign(90.0, angle), Constants.TURRET_GEAR_RATIO)
+                            Conversions.degreesToFalcon(Math.copySign(90.0, angle), Constants.TURRET_GEAR_RATIO)
                                     + (forwardMaxPosition + reverseMaxPosition) / 2.0);
                 }
                 break;
@@ -231,6 +221,11 @@ public class Turret implements Updatable {
         SmartDashboard.putBoolean("Reverse Safe", this.reverseSafe());
     }
     
+    @Override
+    public void start(){
+        
+    }
+
     @Override
     public synchronized void stop(){
         turnOff();

@@ -34,7 +34,6 @@ public class TalonFXFactory {
         public int ANALOG_TEMP_VBAT_STATUS_FRAME_RATE_MS = 1000;
         public int PULSE_WIDTH_STATUS_FRAME_RATE_MS = 1000;
 
-        public VelocityMeasPeriod VELOCITY_MEASUREMENT_PERIOD = VelocityMeasPeriod.Period_100Ms;
         public int VELOCITY_MEASUREMENT_ROLLING_AVERAGE_WINDOW = 64;
 
         public StatorCurrentLimitConfiguration STATOR_CURRENT_LIMIT = new StatorCurrentLimitConfiguration(false, 300, 700, 1);
@@ -114,7 +113,6 @@ public class TalonFXFactory {
 
         talon.selectProfileSlot(0, 0);
 
-        talon.configVelocityMeasurementPeriod(config.VELOCITY_MEASUREMENT_PERIOD, kTimeoutMs);
         talon.configVelocityMeasurementWindow(config.VELOCITY_MEASUREMENT_ROLLING_AVERAGE_WINDOW,
                 kTimeoutMs);
 

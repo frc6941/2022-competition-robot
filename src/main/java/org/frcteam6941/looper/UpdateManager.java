@@ -18,6 +18,7 @@ public final class UpdateManager {
 		void update(double time, double dt);
 		void write(double time, double dt);
 		void telemetry();
+		void start();
 		void stop();
 		void disabled(double time, double dt);
 	}
@@ -70,6 +71,7 @@ public final class UpdateManager {
 	}
 
 	public void startEnableLoop(double period) {
+		updatables.forEach(s -> s.start());
 		updaterEnableThread.startPeriodic(period);
 	}
 

@@ -251,6 +251,10 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         }
     }
 
+    public double getYaw(){
+        return this.gyro.getYaw().getDegrees();
+    }
+
     @Override
     public Pose2d getPose() {
         synchronized (statusLock) {
@@ -364,6 +368,11 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         PulseHUD.putNumberArray("Robot Pose",
                 new double[] { this.pose.getX(), this.pose.getY(), this.pose.getRotation().getDegrees() });
         PulseHUD.putData("PathFollower", this.trajectoryFollower);
+    }
+
+    @Override
+    public void start(){
+        
     }
 
     @Override

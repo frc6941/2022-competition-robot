@@ -193,7 +193,6 @@ public class BallPath implements Updatable {
 
     @Override
     public void write(double time, double dt){
-        isEnabled = true;
         feederMotor.set(ControlMode.PercentOutput, mPeriodicIO.feederDemand);
     }
 
@@ -231,6 +230,11 @@ public class BallPath implements Updatable {
 
         SmartDashboard.putNumber("Feeder Speed", mPeriodicIO.feederDemand);
         SmartDashboard.putBoolean("Correct Color", colorSensor.hasCorrectColor());
+    }
+
+    @Override
+    public void start(){
+        isEnabled = true;
     }
 
     @Override

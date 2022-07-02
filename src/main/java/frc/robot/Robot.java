@@ -7,6 +7,7 @@ package frc.robot;
 import org.frcteam6941.looper.UpdateManager;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.BallPath;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.ColorSensor;
@@ -14,7 +15,7 @@ import frc.robot.subsystems.Indicator;
 import frc.robot.subsystems.Intaker;
 import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Shooter;
-import frc.robot.subsystems.Superstructure;
+import frc.robot.coordinators.Superstructure;
 import frc.robot.subsystems.Turret;
 
 /**
@@ -41,7 +42,7 @@ public class Robot extends TimedRobot {
       BallPath.getInstance(),
       Turret.getInstance(),
       Shooter.getInstance(),
-      Climber.getInstance(),
+      // Climber.getInstance(),
       ColorSensor.getInstance(),
       Indicator.getInstance(),
       Limelight.getInstance(),
@@ -78,6 +79,7 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
+    CommandScheduler.getInstance().run();
   }
 
   @Override

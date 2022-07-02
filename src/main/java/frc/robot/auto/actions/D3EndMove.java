@@ -1,4 +1,4 @@
-package frc.robot.commands.auto;
+package frc.robot.auto.actions;
 
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
@@ -6,6 +6,8 @@ import com.pathplanner.lib.PathPlannerTrajectory;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.auto.basics.FollowTrajectory;
+import frc.robot.auto.basics.SimpleActions;
 import frc.robot.subsystems.Intaker;
 
 public class D3EndMove extends SequentialCommandGroup{

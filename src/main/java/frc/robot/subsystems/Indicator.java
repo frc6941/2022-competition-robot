@@ -70,9 +70,15 @@ public class Indicator implements Updatable {
     }
 
     @Override
+    public void start(){
+        
+    }
+
+    @Override
     public synchronized void stop(){
         
     }
+    
     @Override
     public synchronized void disabled(double time, double dt){
         

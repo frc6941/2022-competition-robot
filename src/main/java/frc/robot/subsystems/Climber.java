@@ -199,6 +199,11 @@ public class Climber implements Updatable {
         SmartDashboard.putNumber("Elevator Height", this.getClimberHeight());
         SmartDashboard.putBoolean("Free to Extend", this.freeToExtend());
     }
+
+    @Override
+    public void start(){
+        
+    }
     
     @Override
     public synchronized void stop(){

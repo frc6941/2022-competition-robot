@@ -145,6 +145,11 @@ public class Shooter implements Updatable {
     }
 
     @Override
+    public void start(){
+        
+    }
+
+    @Override
     public void stop() {
         setShooterPercentage(0.0);
     }
