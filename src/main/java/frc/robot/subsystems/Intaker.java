@@ -128,6 +128,11 @@ public class Intaker extends SubsystemBase implements Updatable {
     }
 
     @Override
+    public void start(){
+        
+    }
+
+    @Override
     public void stop(){
     }
 
