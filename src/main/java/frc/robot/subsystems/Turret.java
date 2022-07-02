@@ -220,8 +220,8 @@ public class Turret implements Updatable {
     }
     
     @Override
-    public void start(){
-        
+    public synchronized void start(){
+        setState(STATE.HOMING);
     }
 
     @Override

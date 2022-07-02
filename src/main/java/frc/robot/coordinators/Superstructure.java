@@ -9,6 +9,7 @@ import frc.robot.Constants;
 import frc.robot.controlboard.ControlBoard;
 import frc.robot.controlboard.ControlBoard.SwerveCardinal;
 import frc.robot.subsystems.BallPath;
+import frc.robot.subsystems.Intaker;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
 
@@ -22,9 +23,14 @@ public class Superstructure implements Updatable{
         public boolean swerveBrake = false;
         public double swerveFieldHeadingAngle = 0.0;
         
-        // Turret Varaibles
+        // Turret Variables
         public double turretAngle = 0.0;
         public double turretFieldHeadingAngle = 0.0;
+
+        // Global Variables
+        public boolean SHOOT = false;
+        public boolean INTAKE = false;
+
 
 
         /** OUTPUTS */
@@ -36,6 +42,11 @@ public class Superstructure implements Updatable{
 
         // Turret Variables
         public double turretLockTarget = 0.0;
+
+        //Shooter Variables
+        public double shooterDemand = 600;
+
+
     }
     
     public PeriodicIO mPeriodicIO = new PeriodicIO();
@@ -45,6 +56,7 @@ public class Superstructure implements Updatable{
     private BallPath mBallPath = BallPath.getInstance();
     private Shooter mShooter = Shooter.getInstance();
     private Turret mTurret = Turret.getInstance();
+    private Intaker mIntaker = Intaker.getInstance();
 
     private static Superstructure instance;
     private STATE state = STATE.PIT;
@@ -91,6 +103,9 @@ public class Superstructure implements Updatable{
 
     @Override
     public synchronized void read(double time, double dt){
+        mPeriodicIO.SHOOT = mControlBoard.getShoot();
+        mPeriodicIO.INTAKE = mControlBoard.getIntake();
+
         mPeriodicIO.swerveInputedTranslation = mControlBoard.getSwerveTranslation();
         mPeriodicIO.swerveInputedRotation = mControlBoard.getSwerveRotation();
         mPeriodicIO.swerveSnapRotation = mControlBoard.getSwerveSnapRotation();
@@ -99,6 +114,8 @@ public class Superstructure implements Updatable{
 
         mPeriodicIO.turretAngle = mTurret.getTurretAngle();
         mPeriodicIO.turretFieldHeadingAngle = mPeriodicIO.swerveFieldHeadingAngle - mPeriodicIO.turretAngle;
+
+        
     }
     
     @Override
@@ -143,7 +160,19 @@ public class Superstructure implements Updatable{
             mSwerve.setLockHeading(mPeriodicIO.swerveLockHeading);
             mSwerve.setHeadingTarget(mPeriodicIO.swerveHeadingTarget);
             mSwerve.drive(mPeriodicIO.swerveTranslation, mPeriodicIO.swerveRotation, true);
+            mShooter.setShooterRPM(mPeriodicIO.shooterDemand);
         }
+        if(mPeriodicIO.SHOOT){
+            mBallPath.setState(BallPath.STATE.FEEDING);
+        } else {
+            mBallPath.setState(BallPath.STATE.PROCESSING);
+        }
+        if(mPeriodicIO.INTAKE){
+            mIntaker.extend();
+        } else {
+            mIntaker.retract();
+        }
+        mBallPath.changeIfReadyForWrongBall(true);
     }
     
     @Override

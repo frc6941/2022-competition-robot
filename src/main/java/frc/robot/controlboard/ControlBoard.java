@@ -124,7 +124,7 @@ public class ControlBoard {
     }
 
     public boolean getShoot() {
-        return operator.getController().getYButtonPressed();
+        return driver.getButton(Button.X);
     }
 
 

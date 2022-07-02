@@ -119,7 +119,8 @@ public class Intaker extends SubsystemBase implements Updatable {
     @Override
     public synchronized void write(double time, double dt){
         intakerMotor.set(mPeriodicIO.intakerDemand);
-        intakerExtender.set(mPeriodicIO.intakerExtenderDemand);
+        // intakerExtender.set(mPeriodicIO.intakerExtenderDemand); todo
+        intakerExtender.set(DoubleSolenoid.Value.kReverse);
         feederExtender.set(mPeriodicIO.feederExtenderDemand);
     }
 
@@ -138,6 +139,18 @@ public class Intaker extends SubsystemBase implements Updatable {
 
     @Override
     public void disabled(double time, double dt){
+        
+    }
+
+    public void extend() {
+        if (getState() == STATE.OFF || getState() == STATE.RETRACTING){
+            setState(STATE.EXTENDING);
+        }
+    }
+    public void retract() {
+        if (getState() == STATE.EXTENDED || getState() == STATE.EXTENDING || getState() == STATE.REVERSE){
+            setState(STATE.RETRACTING);
+        }
     }
 
     public static enum STATE {
@@ -155,4 +168,5 @@ public class Intaker extends SubsystemBase implements Updatable {
     public void setState(STATE state) {
         this.state = state;
     }
+
 }

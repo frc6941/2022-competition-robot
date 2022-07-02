@@ -15,13 +15,14 @@ import frc.robot.Constants;
 public class BallPath implements Updatable {
     public static class PeriodicIO {
         // INPUTS
-        private boolean breakEntrance = false;
-        private boolean breakPosition1 = false;
-        private boolean breakPosition2 = false;
+        public boolean breakEntrance = false;
+        public boolean breakPosition1 = false;
+        public boolean breakPosition2 = false;
+        public boolean colorSensorSeesBall = false;
 
         // OUTPUTS
-        private double feederDemand = 0.0;
-        private boolean feederDirection = true; // True means positive power
+        public double feederDemand = 0.0;
+        public boolean feederDirection = true; // True means positive power
     }
 
     public PeriodicIO mPeriodicIO = new PeriodicIO();
@@ -156,6 +157,7 @@ public class BallPath implements Updatable {
         mPeriodicIO.breakEntrance = ballEntranceDetector.getVoltage() > 2.0;
         mPeriodicIO.breakPosition1 = ballPositionOneDetector.getVoltage() < 2.0;
         mPeriodicIO.breakPosition2 = ballPositionTwoDetector.getVoltage() < 2.0;
+        mPeriodicIO.colorSensorSeesBall = colorSensor.seesBall();
     }
 
     @Override
@@ -166,7 +168,8 @@ public class BallPath implements Updatable {
                 mPeriodicIO.feederDirection = true;
                 break;
             case PROCESSING:
-                if(ballAtEntrance() && !sawBallAtEntrance){
+                if(ballAtEntrance() && !sawBallAtEntrance && mPeriodicIO.colorSensorSeesBall && isEnabled && situation != SITUATION.FULL){
+                    
                     queueNewBall(colorSensor.hasCorrectColor());
                     sawBallAtEntrance = true;
                     System.out.println("QUEUE NEW");
@@ -230,6 +233,7 @@ public class BallPath implements Updatable {
 
         SmartDashboard.putNumber("Feeder Speed", mPeriodicIO.feederDemand);
         SmartDashboard.putBoolean("Correct Color", colorSensor.hasCorrectColor());
+        SmartDashboard.putBoolean("Sees Ball", colorSensor.seesBall());
     }
 
     @Override
