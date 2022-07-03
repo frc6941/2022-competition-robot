@@ -101,7 +101,7 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
     private void configAngleMotor() {
         mAngleMotor.configFactoryDefault();
         mAngleMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
-        mAngleMotor.setInverted(true);
+        mAngleMotor.setInverted(false);
         mAngleMotor.setSensorPhase(false);
         mAngleMotor.setNeutralMode(NeutralMode.Brake);
 
@@ -125,7 +125,6 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
         mDriveMotor.configFactoryDefault();
         mDriveMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, 0, 10);
         mDriveMotor.setInverted(true);
-        mAngleMotor.setSensorPhase(true);
         mDriveMotor.setNeutralMode(NeutralMode.Brake);
         mDriveMotor.setSelectedSensorPosition(0);
 
