@@ -1,11 +1,17 @@
 package frc.robot.coordinators;
 
+import java.lang.StackWalker.Option;
+import java.util.Optional;
+
+import com.team254.lib.vision.AimingParameters;
+
 import org.frcteam6941.looper.UpdateManager.Updatable;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 import org.frcteam6941.utils.AngleNormalization;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Constants;
+import frc.robot.RobotState;
 import frc.robot.controlboard.ControlBoard;
 import frc.robot.controlboard.ControlBoard.SwerveCardinal;
 import frc.robot.subsystems.BallPath;
@@ -16,6 +22,12 @@ import frc.robot.subsystems.Turret;
 public class Superstructure implements Updatable{
     public static class PeriodicIO {
         /** INPUTS */
+        // Global Variables
+        public boolean SHOOT = false;
+        public boolean INTAKE = false;
+        public boolean EJECT = false;
+        public boolean SPIT = false;
+
         // Swerve Variables
         public Translation2d swerveInputedTranslation = new Translation2d();
         public double swerveInputedRotation = 0.0;
@@ -26,12 +38,7 @@ public class Superstructure implements Updatable{
         // Turret Variables
         public double turretAngle = 0.0;
         public double turretFieldHeadingAngle = 0.0;
-
-        // Global Variables
-        public boolean SHOOT = false;
-        public boolean INTAKE = false;
-
-
+        
 
         /** OUTPUTS */
         // Swerve Variables
@@ -44,9 +51,7 @@ public class Superstructure implements Updatable{
         public double turretLockTarget = 0.0;
 
         //Shooter Variables
-        public double shooterDemand = 600;
-
-
+        public double shooterRPM = 600;
     }
     
     public PeriodicIO mPeriodicIO = new PeriodicIO();
@@ -57,6 +62,9 @@ public class Superstructure implements Updatable{
     private Shooter mShooter = Shooter.getInstance();
     private Turret mTurret = Turret.getInstance();
     private Intaker mIntaker = Intaker.getInstance();
+
+    private Optional<AimingParameters> realAimingParameters = Optional.empty();
+    private int mTrackId = -1;
 
     private static Superstructure instance;
     private STATE state = STATE.PIT;
@@ -75,7 +83,6 @@ public class Superstructure implements Updatable{
      * @param isLimited If the turret is free to turn over the normal safe position.
      * @return An array showing the target angle of the turret and the drivetrain.
      */
-
     private synchronized double[] calculateTurretDrivetrainAngle(double desiredAngle, boolean isLimited) {
         // Calculate the delta between target and curret angle of the turret, taking the field as the reference
         double delta = AngleNormalization.placeInAppropriate0To360Scope(mPeriodicIO.turretFieldHeadingAngle,
@@ -96,37 +103,18 @@ public class Superstructure implements Updatable{
         }
     }
 
-
-    private Superstructure() {
-    }
-
-
-    @Override
-    public synchronized void read(double time, double dt){
-        mPeriodicIO.SHOOT = mControlBoard.getShoot();
-        mPeriodicIO.INTAKE = mControlBoard.getIntake();
-
-        mPeriodicIO.swerveInputedTranslation = mControlBoard.getSwerveTranslation();
-        mPeriodicIO.swerveInputedRotation = mControlBoard.getSwerveRotation();
-        mPeriodicIO.swerveSnapRotation = mControlBoard.getSwerveSnapRotation();
-        mPeriodicIO.swerveBrake = mControlBoard.getSwerveBrake();
-        mPeriodicIO.swerveFieldHeadingAngle = mSwerve.getYaw();
-
-        mPeriodicIO.turretAngle = mTurret.getTurretAngle();
-        mPeriodicIO.turretFieldHeadingAngle = mPeriodicIO.swerveFieldHeadingAngle - mPeriodicIO.turretAngle;
-
-        
-    }
-    
-    @Override
-    public synchronized void update(double time, double dt){
-        // Swerve Controls
+    /**
+     * Update Swerve and Turret status, with respect to the curret state.
+     */
+    private synchronized void updateSwerveAndTurretCoordination(){
         switch(state){
             case PIT:
                 mPeriodicIO.swerveTranslation = new Translation2d();
                 mPeriodicIO.swerveRotation = 0.0;
                 mPeriodicIO.swerveLockHeading = false;
                 mPeriodicIO.swerveHeadingTarget = 0.0;
+
+                mPeriodicIO.turretLockTarget = 0.0;
                 break;
             case CHASING:
                 mPeriodicIO.swerveTranslation = mPeriodicIO.swerveInputedTranslation;
@@ -140,14 +128,66 @@ public class Superstructure implements Updatable{
                 }
                 break;
             case SHOOTING:
+                mPeriodicIO.swerveTranslation = mPeriodicIO.swerveInputedTranslation;
+                
                 break;
             case CLIMB:
                 mPeriodicIO.swerveTranslation = mPeriodicIO.swerveInputedTranslation;
                 mPeriodicIO.swerveRotation = mPeriodicIO.swerveInputedRotation;
                 mPeriodicIO.swerveLockHeading = false;
                 mPeriodicIO.swerveHeadingTarget = 0.0;
+
+                mPeriodicIO.turretLockTarget = 90.0;
                 break;
         }
+    }
+
+    public Optional<AimingParameters> getRealAimingParameters() {
+        Optional<AimingParameters> aiming_params = RobotState.getInstance().getAimingParameters(mTrackId,
+                Constants.VisionConstants.Turret.MAX_GOAL_TRACK_AGE);
+        if (aiming_params.isPresent()) {
+            return aiming_params;
+        } else {
+            Optional<AimingParameters> default_aiming_params = RobotState.getInstance().getDefaultAimingParameters();
+            return default_aiming_params;
+        }
+    }
+
+     /**
+      * Update parameters from Limelight.
+      */
+     public void updateVisionAimingParameters() {
+        // get aiming parameters from either vision-assisted goal tracking or
+        // odometry-only tracking
+        realAimingParameters = getRealAimingParameters();
+
+        // predicted pose and target
+        com.team254.lib.geometry.Pose2d predictedFieldToVehicle = RobotState.getInstance().getPredictedFieldToVehicle(0.01);
+        com.team254.lib.geometry.Pose2d predictedVehicleToGoal = predictedFieldToVehicle.inverse()
+                .transformBy(realAimingParameters.get().getFieldToGoal());
+    }
+
+
+    private Superstructure() {
+    }
+
+
+    @Override
+    public synchronized void read(double time, double dt){
+        mPeriodicIO.swerveInputedTranslation = mControlBoard.getSwerveTranslation();
+        mPeriodicIO.swerveInputedRotation = mControlBoard.getSwerveRotation();
+        mPeriodicIO.swerveSnapRotation = mControlBoard.getSwerveSnapRotation();
+        mPeriodicIO.swerveBrake = mControlBoard.getSwerveBrake();
+        mPeriodicIO.swerveFieldHeadingAngle = mSwerve.getYaw();
+
+        mPeriodicIO.turretAngle = mTurret.getTurretAngle();
+        mPeriodicIO.turretFieldHeadingAngle = mPeriodicIO.swerveFieldHeadingAngle + mPeriodicIO.turretAngle;
+    }
+    
+    @Override
+    public synchronized void update(double time, double dt){
+        // Swerve and Turret Coordinated Controls
+        
         
     }
     
@@ -160,7 +200,7 @@ public class Superstructure implements Updatable{
             mSwerve.setLockHeading(mPeriodicIO.swerveLockHeading);
             mSwerve.setHeadingTarget(mPeriodicIO.swerveHeadingTarget);
             mSwerve.drive(mPeriodicIO.swerveTranslation, mPeriodicIO.swerveRotation, true);
-            mShooter.setShooterRPM(mPeriodicIO.shooterDemand);
+            mShooter.setShooterRPM(mPeriodicIO.shooterRPM);
         }
         if(mPeriodicIO.SHOOT){
             mBallPath.setState(BallPath.STATE.FEEDING);

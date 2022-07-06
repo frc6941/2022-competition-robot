@@ -153,7 +153,7 @@ public class BallPath implements Updatable {
     }
 
     @Override
-    public void read(double time, double dt){
+    public synchronized void read(double time, double dt){
         mPeriodicIO.breakEntrance = ballEntranceDetector.getVoltage() > 2.0;
         mPeriodicIO.breakPosition1 = ballPositionOneDetector.getVoltage() < 2.0;
         mPeriodicIO.breakPosition2 = ballPositionTwoDetector.getVoltage() < 2.0;
@@ -161,7 +161,7 @@ public class BallPath implements Updatable {
     }
 
     @Override
-    public void update(double time, double dt) {
+    public synchronized void update(double time, double dt) {
         switch(state){
             case OFF:
                 mPeriodicIO.feederDemand = 0.0;
@@ -195,12 +195,12 @@ public class BallPath implements Updatable {
     }
 
     @Override
-    public void write(double time, double dt){
+    public synchronized void write(double time, double dt){
         feederMotor.set(ControlMode.PercentOutput, mPeriodicIO.feederDemand);
     }
 
     @Override
-    public void telemetry(){
+    public synchronized void telemetry(){
         switch(situation){
             case EMPTY:
                 SmartDashboard.putNumber("Feeder State", 0);
@@ -237,17 +237,17 @@ public class BallPath implements Updatable {
     }
 
     @Override
-    public void start(){
+    public synchronized void start(){
         isEnabled = true;
     }
 
     @Override
-    public void stop(){
+    public synchronized void stop(){
         isEnabled = false;
     }
 
     @Override
-    public void disabled(double time, double dt){
+    public synchronized void disabled(double time, double dt){
         targetSituation = situation;
     }
 

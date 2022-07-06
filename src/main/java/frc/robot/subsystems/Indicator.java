@@ -70,7 +70,7 @@ public class Indicator implements Updatable {
     }
 
     @Override
-    public void start(){
+    public synchronized void start(){
         
     }
 

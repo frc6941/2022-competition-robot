@@ -119,26 +119,26 @@ public class Intaker extends SubsystemBase implements Updatable {
     @Override
     public synchronized void write(double time, double dt){
         intakerMotor.set(mPeriodicIO.intakerDemand);
-        // intakerExtender.set(mPeriodicIO.intakerExtenderDemand); todo
+        // intakerExtender.set(mPeriodicIO.intakerExtenderDemand); TODO: Change back when neo550 is working properly
         intakerExtender.set(DoubleSolenoid.Value.kReverse);
         feederExtender.set(mPeriodicIO.feederExtenderDemand);
     }
 
     @Override
-    public void telemetry(){
+    public synchronized void telemetry(){
     }
 
     @Override
-    public void start(){
+    public synchronized void start(){
         
     }
 
     @Override
-    public void stop(){
+    public synchronized void stop(){
     }
 
     @Override
-    public void disabled(double time, double dt){
+    public synchronized void disabled(double time, double dt){
         
     }
 

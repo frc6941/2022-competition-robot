@@ -138,7 +138,7 @@ public class ColorSensor implements Updatable{
     }
 
     @Override
-    public void start(){
+    public synchronized void start(){
         
     }
 

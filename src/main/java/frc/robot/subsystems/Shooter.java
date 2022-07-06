@@ -102,7 +102,7 @@ public class Shooter implements Updatable {
     }
 
     @Override
-    public void read(double time, double dt) {
+    public synchronized void read(double time, double dt) {
         mPeriodicIO.leadCurret = shooterLeadMotor.getSupplyCurrent();
         mPeriodicIO.leadVelocity = shooterLeadMotor.getSelectedSensorVelocity();
         mPeriodicIO.leadVoltage = shooterLeadMotor.getMotorOutputVoltage();
@@ -113,7 +113,7 @@ public class Shooter implements Updatable {
     }
 
     @Override
-    public void update(double time, double dt) {
+    public synchronized void update(double time, double dt) {
         switch (state) {
             case OFF:
                 mPeriodicIO.shooterDemand = 0.0;
@@ -127,7 +127,7 @@ public class Shooter implements Updatable {
     }
 
     @Override
-    public void write(double time, double dt) {
+    public synchronized void write(double time, double dt) {
         if (getState() == STATE.CLOSE_LOOP) {
             shooterLeadMotor.set(ControlMode.Velocity,
                     Conversions.RPMToFalcon(mPeriodicIO.shooterDemand, Constants.SHOOTER_GEAR_RATIO));
@@ -139,23 +139,23 @@ public class Shooter implements Updatable {
     }
 
     @Override
-    public void telemetry() {
+    public synchronized void telemetry() {
         SmartDashboard.putNumber("RPM", getShooterRPM());
         SmartDashboard.putBoolean("Ready", spunUp());
     }
 
     @Override
-    public void start(){
+    public synchronized void start(){
         
     }
 
     @Override
-    public void stop() {
+    public synchronized void stop() {
         setShooterPercentage(0.0);
     }
 
     @Override
-    public void disabled(double time, double dt) {
+    public synchronized void disabled(double time, double dt) {
 
     }
 
