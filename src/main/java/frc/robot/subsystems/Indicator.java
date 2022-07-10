@@ -48,7 +48,6 @@ public class Indicator implements Updatable {
 
     @Override
     public synchronized void update(double time, double dt) {
-        
         switch (state) {
             case OFF:
                 currentLED = new LEDState(0, 0, 0);
@@ -57,11 +56,12 @@ public class Indicator implements Updatable {
                 currentState.getCurrentLEDState(currentLED, time);
                 break;
         }
+        this.setLEDs(currentLED);
     }
 
     @Override
     public synchronized void write(double time, double dt){
-        this.setLEDs(currentLED);
+        
     }
 
     @Override
