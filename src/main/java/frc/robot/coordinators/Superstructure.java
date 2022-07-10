@@ -10,6 +10,7 @@ import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 import org.frcteam6941.utils.AngleNormalization;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.RobotState;
 import frc.robot.controlboard.ControlBoard;
@@ -129,14 +130,12 @@ public class Superstructure implements Updatable{
                 break;
             case SHOOTING:
                 mPeriodicIO.swerveTranslation = mPeriodicIO.swerveInputedTranslation;
-                
                 break;
             case CLIMB:
                 mPeriodicIO.swerveTranslation = mPeriodicIO.swerveInputedTranslation;
                 mPeriodicIO.swerveRotation = mPeriodicIO.swerveInputedRotation;
                 mPeriodicIO.swerveLockHeading = false;
                 mPeriodicIO.swerveHeadingTarget = 0.0;
-
                 mPeriodicIO.turretLockTarget = 90.0;
                 break;
         }
@@ -187,8 +186,7 @@ public class Superstructure implements Updatable{
     @Override
     public synchronized void update(double time, double dt){
         // Swerve and Turret Coordinated Controls
-        
-        
+        updateSwerveAndTurretCoordination();
     }
     
     @Override
@@ -202,22 +200,24 @@ public class Superstructure implements Updatable{
             mSwerve.drive(mPeriodicIO.swerveTranslation, mPeriodicIO.swerveRotation, true);
             mShooter.setShooterRPM(mPeriodicIO.shooterRPM);
         }
+
         if(mPeriodicIO.SHOOT){
             mBallPath.setState(BallPath.STATE.FEEDING);
         } else {
             mBallPath.setState(BallPath.STATE.PROCESSING);
         }
+
         if(mPeriodicIO.INTAKE){
             mIntaker.extend();
         } else {
             mIntaker.retract();
         }
+
         mBallPath.changeIfReadyForWrongBall(true);
     }
     
     @Override
     public synchronized void telemetry(){
-        // Auto Generated Method
     }
 
     @Override

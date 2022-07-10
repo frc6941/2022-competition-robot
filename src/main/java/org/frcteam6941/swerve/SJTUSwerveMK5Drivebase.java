@@ -103,8 +103,8 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
                 new SJTUSwerveModuleMK5(3, Constants.CANID.DRIVETRAIN_BACKRIGHT_DRIVE_MOTOR,
                         Constants.CANID.DRIVETRAIN_BACKRIGHT_STEER_MOTOR, Constants.BACK_RIGHT_OFFSET) };
 
-        swerveModulePositions = new Translation2d[] { new Translation2d(-0.35, 0.35), new Translation2d(-0.35, -0.35),
-                new Translation2d(0.35, 0.35), new Translation2d(0.35, -0.35) };
+        swerveModulePositions = new Translation2d[] { new Translation2d(0.35, 0.35), new Translation2d(0.35, -0.35),
+                new Translation2d(-0.35, 0.35), new Translation2d(-0.35, -0.35) };
         swerveKinematics = new SwerveDriveKinematics(swerveModulePositions);
 
         // Advanced Kalman Filter Swerve Pose Estimator.
@@ -150,7 +150,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         }
 
         headingTarget = target;
-        this.setLockHeading(true);
     }
 
     public double getHeadingTarget() {
@@ -182,6 +181,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
             SwerveModuleState[] swerveModuleStates = swerveKinematics.toSwerveModuleStates(chassisSpeeds);
             SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, 1.0);
             for (SJTUSwerveModuleMK5 mod : mSwerveMods) {
+                System.out.println(swerveModuleStates[mod.moduleNumber]);
                 mod.setDesiredState(swerveModuleStates[mod.moduleNumber], true, false);
             }
         }
