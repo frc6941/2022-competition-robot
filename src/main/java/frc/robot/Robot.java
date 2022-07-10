@@ -97,11 +97,12 @@ public class Robot extends TimedRobot {
 
   @Override
   public void testInit() {
-    this.updateManager.stopDisableLoop();
-    this.updateManager.startEnableLoop(Constants.kLooperDt);
+    // this.updateManager.stopDisableLoop();
+    // this.updateManager.startEnableLoop(Constants.kLooperDt);
   }
 
   @Override
   public void testPeriodic() {
+    SJTUSwerveMK5Drivebase.getInstance().forceResetModules();
   }
 }

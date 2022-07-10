@@ -166,7 +166,7 @@ public class Superstructure implements Updatable{
                 .transformBy(realAimingParameters.get().getFieldToGoal());
     }
 
-
+    
     private Superstructure() {
     }
 
@@ -178,6 +178,8 @@ public class Superstructure implements Updatable{
         mPeriodicIO.swerveSnapRotation = mControlBoard.getSwerveSnapRotation();
         mPeriodicIO.swerveBrake = mControlBoard.getSwerveBrake();
         mPeriodicIO.swerveFieldHeadingAngle = mSwerve.getYaw();
+        mPeriodicIO.INTAKE = mControlBoard.getIntake();
+        mPeriodicIO.SHOOT = mControlBoard.getShoot();
 
         mPeriodicIO.turretAngle = mTurret.getTurretAngle();
         mPeriodicIO.turretFieldHeadingAngle = mPeriodicIO.swerveFieldHeadingAngle + mPeriodicIO.turretAngle;
@@ -218,6 +220,9 @@ public class Superstructure implements Updatable{
     
     @Override
     public synchronized void telemetry(){
+        SmartDashboard.putNumber("Swerved Inputed Translation X", mPeriodicIO.swerveInputedTranslation.getX());
+        SmartDashboard.putNumber("Swerved Inputed Translation Y", mPeriodicIO.swerveInputedTranslation.getY());
+        SmartDashboard.putNumber("Swerved Inputed Rotation", mPeriodicIO.swerveInputedRotation);
     }
 
     @Override

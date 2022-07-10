@@ -234,7 +234,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     private void setModuleStatesBrake() {
         for (SJTUSwerveModuleMK5 mod : mSwerveMods) {
             Translation2d modulePosition = this.swerveModulePositions[mod.moduleNumber];
-            Rotation2d antiAngle = new Rotation2d(-modulePosition.getX(), -modulePosition.getY());
+            Rotation2d antiAngle = new Rotation2d(modulePosition.getX(), modulePosition.getY());
             mod.setDesiredState(new SwerveModuleState(0.0, antiAngle), false, true);
         }
     }

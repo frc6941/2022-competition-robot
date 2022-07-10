@@ -67,7 +67,7 @@ public final class Constants {
         public static final int INTAKER_MOTOR = 15;
 
         public static final int PNEUMATICS_HUB = 1;
-        public static final int LED_CANIFIER = 16;
+        public static final int LED_CANIFIER = 22;
     }
 
     // Analog ID Configurations
@@ -123,7 +123,7 @@ public final class Constants {
      * turning at the correct direction. If not, add or minus 180 and the problem
      * would be solved.
      */
-    public static final double FRONT_LEFT_OFFSET = 0.0 + 180.0;
+    public static final double FRONT_LEFT_OFFSET = 0.0 ;
     public static final double FRONT_RIGHT_OFFSET = 0.0;
     public static final double BACK_LEFT_OFFSET = 0.0 + 180.0;
     public static final double BACK_RIGHT_OFFSET = 0.0 + 180.0;
@@ -244,9 +244,9 @@ public final class Constants {
     public static final int EMERGENCY_REPARING_PORT = 4;
 
     public static final double CONTROLLER_DEADBAND = 0.05;
-    public static final double CONTROLLER_PEDAL = 0.5;
-    public static final boolean CONTROLLER_INVERT_X = true;
-    public static final boolean CONTROLLER_INVERT_Y = true;
+    public static final double CONTROLLER_PEDAL = 0.6;
+    public static final boolean CONTROLLER_INVERT_X = false;
+    public static final boolean CONTROLLER_INVERT_Y = false;
     public static final boolean CONTROLLER_INVERT_R = false;
 
     /* Auto Constants */

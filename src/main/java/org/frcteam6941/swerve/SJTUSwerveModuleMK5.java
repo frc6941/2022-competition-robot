@@ -102,7 +102,7 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
         mAngleMotor.configFactoryDefault();
         mAngleMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
         mAngleMotor.setInverted(false);
-        mAngleMotor.setSensorPhase(false);
+        mAngleMotor.setSensorPhase(true);
         mAngleMotor.setNeutralMode(NeutralMode.Brake);
 
         SupplyCurrentLimitConfiguration curr_lim = new SupplyCurrentLimitConfiguration(true, 15, 40, 0.02);

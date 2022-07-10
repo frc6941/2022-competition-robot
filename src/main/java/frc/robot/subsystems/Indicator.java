@@ -29,11 +29,12 @@ public class Indicator implements Updatable {
     private LEDState currentLED = new LEDState(0, 0, 0);
     private STATE state = STATE.ON;
     private static Indicator instance;
+    private double intensity = 0.1;
 
     public void setLEDs(LEDState color) {
-        ledIndicator.setLEDOutput(color.red, LEDChannel.LEDChannelB);
-        ledIndicator.setLEDOutput(color.green, LEDChannel.LEDChannelA);
-        ledIndicator.setLEDOutput(color.blue, LEDChannel.LEDChannelC);
+        ledIndicator.setLEDOutput(color.blue * intensity, LEDChannel.LEDChannelB);
+        ledIndicator.setLEDOutput(color.red * intensity, LEDChannel.LEDChannelA);
+        ledIndicator.setLEDOutput(color.green * intensity, LEDChannel.LEDChannelC);
     }
 
     public void setIndicatorState(TimedLEDState state) {
