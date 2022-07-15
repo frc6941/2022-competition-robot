@@ -82,10 +82,6 @@ public class Turret implements Updatable {
         mPeriodicIO.turretDemand = angle;
     }
 
-    public void turnOff() {
-        setState(STATE.OFF);
-    }
-
     public synchronized boolean isOnTarget() {
         if(getState() == STATE.ANGLE){
             return Util.epsilonEquals(getTurretAngle(), mPeriodicIO.turretDemand, Constants.TURRET_ERROR_TOLERANCE);
@@ -128,9 +124,6 @@ public class Turret implements Updatable {
     
     @Override
     public void update(double time, double dt) {
-        
-        turretMotor.setNeutralMode(NeutralMode.Brake);
-
         if (mPeriodicIO.turretForwardLimitSwitch) {
             forwardMaxPosition = mPeriodicIO.turretPosition;
             isForwardCalibrated = true;
@@ -222,18 +215,17 @@ public class Turret implements Updatable {
     @Override
     public synchronized void start(){
         setState(STATE.HOMING);
+        turretMotor.setNeutralMode(NeutralMode.Brake);
     }
 
     @Override
     public synchronized void stop(){
-        turnOff();
+        setState(STATE.OFF);
+        turretMotor.setNeutralMode(NeutralMode.Coast);
     }
     
     @Override
     public synchronized void disabled(double time, double dt){
-        if(Math.abs(getTurretAngle()) < Constants.TURRET_SAFE_ZONE_DEGREE){
-            this.turretMotor.setNeutralMode(NeutralMode.Coast);
-        }
     }
 
     public enum STATE {

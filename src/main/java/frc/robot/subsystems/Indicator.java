@@ -1,10 +1,14 @@
 package frc.robot.subsystems;
 
+import java.util.Map;
+
 import com.ctre.phoenix.CANifier;
 import com.ctre.phoenix.CANifier.LEDChannel;
 
 import org.frcteam6941.looper.UpdateManager.Updatable;
 
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.SuppliedValueWidget;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.utils.LEDState;
@@ -25,11 +29,13 @@ public class Indicator implements Updatable {
     }
 
     // Define LED State
-    private TimedLEDState currentState = Lights.RAINBOW;
+    private TimedLEDState currentState = Lights.CALIBRATION;
     private LEDState currentLED = new LEDState(0, 0, 0);
     private STATE state = STATE.ON;
+    private SuppliedValueWidget colorWidget = Shuffleboard.getTab("MyBot").addBoolean("Color", () -> true);
+
     private static Indicator instance;
-    private double intensity = 0.1;
+    private double intensity = 1.0;
 
     public void setLEDs(LEDState color) {
         ledIndicator.setLEDOutput(color.blue * intensity, LEDChannel.LEDChannelB);
@@ -57,17 +63,17 @@ public class Indicator implements Updatable {
                 currentState.getCurrentLEDState(currentLED, time);
                 break;
         }
-        this.setLEDs(currentLED);
     }
 
     @Override
     public synchronized void write(double time, double dt){
-        
+        this.setLEDs(currentLED);
     }
 
     @Override
     public synchronized void telemetry(){
         SmartDashboard.putNumberArray("Indicator LED State", new double[] {currentLED.red, currentLED.green, currentLED.blue});
+        colorWidget.withProperties(Map.of("colorWhenTrue", String.format("#%02x%02x%02x", (int) (currentLED.red * 255), (int) (currentLED.green * 255), (int) (currentLED.blue * 255))));
     }
 
     @Override

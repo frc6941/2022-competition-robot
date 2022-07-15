@@ -31,6 +31,6 @@ public class LEDState {
     }
 
     public static LEDState createFromColor(Color color) {
-        return new LEDState(color.blue, color.green, color.red);
+        return new LEDState(color.red, color.green, color.blue);
     }
 }

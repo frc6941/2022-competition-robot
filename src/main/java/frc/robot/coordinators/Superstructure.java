@@ -48,6 +48,7 @@ public class Superstructure implements Updatable{
         public double turretFieldHeadingAngle = 0.0;
         public boolean turretOnTarget = false;
         public boolean turretReachesLimit = false;
+        public boolean turretCalibrated = false;
 
         // Ballpath Variables
         public TimeDelayedBoolean wrongBallOccupiedTimedBoolean = new TimeDelayedBoolean();
@@ -72,7 +73,7 @@ public class Superstructure implements Updatable{
         public double shooterRPM = 500;
 
         // Indicator Variables
-        public TimedLEDState indicatorState = Lights.RAINBOW;
+        public TimedLEDState indicatorState = Lights.CALIBRATION;
     }
     
     public PeriodicIO mPeriodicIO = new PeriodicIO();
@@ -238,10 +239,16 @@ public class Superstructure implements Updatable{
     private synchronized void updateIndicator(){
         switch(state){
             case PIT:
-                if (DriverStation.getAlliance().equals(Alliance.Red)) {
-                    mPeriodicIO.indicatorState = Lights.RED_ALLIANCE;
-                } else if (DriverStation.getAlliance().equals(Alliance.Red)) {
-                    mPeriodicIO.indicatorState = Lights.BLUE_ALLIANCE;
+                if(mPeriodicIO.turretCalibrated){
+                    if (DriverStation.getAlliance().equals(Alliance.Red)) {
+                        mPeriodicIO.indicatorState = Lights.RED_ALLIANCE;
+                    } else if (DriverStation.getAlliance().equals(Alliance.Blue)) {
+                        mPeriodicIO.indicatorState = Lights.BLUE_ALLIANCE;
+                    } else {
+                        mPeriodicIO.indicatorState = Lights.NORMAL;
+                    }
+                } else {
+                    mPeriodicIO.indicatorState = Lights.CALIBRATION;
                 }
                 break;
             case CHASING:
@@ -271,10 +278,6 @@ public class Superstructure implements Updatable{
                 mPeriodicIO.indicatorState = Lights.CLIMBING;
                 break;
         }
-
-        if(mTurret.getState() == Turret.STATE.HOMING){
-            mPeriodicIO.indicatorState = Lights.CALIBRATION;
-        }
     }
 
     
@@ -299,6 +302,7 @@ public class Superstructure implements Updatable{
         mPeriodicIO.turretFieldHeadingAngle = mPeriodicIO.swerveFieldHeadingAngle + mPeriodicIO.turretAngle;
         mPeriodicIO.turretReachesLimit = !mTurret.forwardSafe() || !mTurret.reverseSafe();
         mPeriodicIO.turretOnTarget = mTurret.isOnTarget();
+        mPeriodicIO.turretCalibrated = mTurret.isCalibrated();
 
         if(mBallPath.wrongBallAtPositionTwo()){
             mPeriodicIO.wrongBallOccupied  = mPeriodicIO.wrongBallOccupiedTimedBoolean.update(mBallPath.wrongBallAtPositionTwo(), 0.0);
