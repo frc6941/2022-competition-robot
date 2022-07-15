@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import com.team254.lib.util.InterpolatingDouble;
+import com.team254.lib.util.InterpolatingTreeMap;
+
 import org.frcteam1678.lib.math.Conversions;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
@@ -135,7 +138,7 @@ public final class Constants {
 
     public static final double DRIVETRAIN_HEADING_CONTROLLER_KP = 1.0 / 70.0;
     public static final double DRIVETRAIN_HEADING_CONTROLLER_KI = 0;
-    public static final double DRIVETRAIN_HEADING_CONTROLLER_KD = 0.0004;
+    public static final double DRIVETRAIN_HEADING_CONTROLLER_KD = 0.000004;
     public static final double DRIVETRAIN_STATIC_HEADING_KS = 0.03;
     public static final TrapezoidProfile.Constraints DRIVETRAIN_HEADING_CONTROLLER_CONSTRAINT = new TrapezoidProfile.Constraints(
             400.0, 200.0);
@@ -177,8 +180,7 @@ public final class Constants {
 
     public static final double SHOOTER_KF = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_FREE_SPEED_RPM, 1.0);
     public static final double SHOOTER_KP = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_FREE_SPEED_RPM, 1.0) * 16.0;
-    public static final double SHOOTER_KD = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_FREE_SPEED_RPM, 1.0) * 15.0
-            * 10.0;
+    public static final double SHOOTER_KD = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_FREE_SPEED_RPM, 1.0) * 15.0 * 10.0;
     public static final double SHOOTER_ERROR_TOLERANCE = 100.0;
     public static final double SHOOTER_RAMP = 0.1;
 
@@ -269,7 +271,7 @@ public final class Constants {
             public static final LimelightConstants LIMELIGHT_CONSTANTS = new LimelightConstants();
                 static{
                     LIMELIGHT_CONSTANTS.kName = "Turret Limelight";
-                    LIMELIGHT_CONSTANTS.kTableName = "turret-limelight";
+                    LIMELIGHT_CONSTANTS.kTableName = "limelight_t";
                     LIMELIGHT_CONSTANTS.kHeight = 0.83;
                     LIMELIGHT_CONSTANTS.kHorizontalPlaneToLens = Rotation2d.fromDegrees(50.0);
                 }
@@ -293,6 +295,32 @@ public final class Constants {
 
         public static final class Ball {
             public static final String BALL_PHOTON_NAME = "photonvision-ball";
+        }
+    }
+
+    /** Shooting Constants */
+    public static class ShootingConstants {
+        public static final double ETA = 0.45;
+    
+        public static double[][] FLYWHEEL_REGRESSION = {
+            /* TEMPLATE REGRESSION */
+            // @x --> distance from target (in meters)
+            // @y --> shooter velocity (in rpm)
+            { 1.0, 300 },
+            { 2.0, 400 },
+            { 3.0, 500 },
+            { 4.0, 600 },
+            { 5.0, 700 },
+            { 6.0, 800 },
+            { 7.0, 900 }    
+        };
+
+        public static InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> FLYWHEEL_AUTO_AIM_MAP = new InterpolatingTreeMap<>();
+
+        static {
+            for (double[] pair : FLYWHEEL_REGRESSION) {
+                FLYWHEEL_AUTO_AIM_MAP.put(new InterpolatingDouble(pair[0]), new InterpolatingDouble(pair[1]));
+            }
         }
     }
 }

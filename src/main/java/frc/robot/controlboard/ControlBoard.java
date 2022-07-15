@@ -41,12 +41,10 @@ public class ControlBoard {
 
     private final CustomXboxController driver;
     private final CustomXboxController operator;
-    private final CustomXboxController emergency;
 
     private ControlBoard() {
         driver = new CustomXboxController(Constants.DRIVER_CONTROLLER_PORT);
         operator = new CustomXboxController(Constants.OPERATOR_CONTROLLER_PORT);
-        emergency = new CustomXboxController(Constants.EMERGENCY_REPARING_PORT);
     }
     
     public void setDriverRumble(boolean on) {
@@ -128,6 +126,9 @@ public class ControlBoard {
     }
 
 
+    public double getGuessedAimTarget(){
+        return new Rotation2d(-operator.getAxis(Side.LEFT, Axis.X), operator.getAxis(Side.LEFT, Axis.Y)).getDegrees() + 90.0;
+    }
 
     public boolean getManualEject() {
         return operator.getButton(Button.LB);
@@ -142,9 +143,4 @@ public class ControlBoard {
         return operator.getButton(Button.BACK) && operator.getButton(Button.START);
     }
 
-
-    /** Emergency Reparing */
-    public boolean getEmergencyZeroing() {
-        return emergency.getButton(Button.A);
-    }
 }

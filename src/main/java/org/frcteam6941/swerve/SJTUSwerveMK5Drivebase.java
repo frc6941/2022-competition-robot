@@ -11,18 +11,15 @@ import org.frcteam6941.drivers.Pigeon;
 import org.frcteam6941.utils.AngleNormalization;
 import org.frcteam6941.utils.PulseHUD;
 
-import edu.wpi.first.math.MatBuilder;
-import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
@@ -58,7 +55,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     @GuardedBy("statusLock")
     private SwerveDriveKinematics swerveKinematics;
     @GuardedBy("statusLock")
-    private SwerveDrivePoseEstimator poseEstimator;
+    private SwerveDriveOdometry poseEstimator;
     private Translation2d[] swerveModulePositions;
     private SJTUSwerveModuleMK5[] mSwerveMods;
 
@@ -108,12 +105,8 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         swerveKinematics = new SwerveDriveKinematics(swerveModulePositions);
 
         // Advanced Kalman Filter Swerve Pose Estimator.
-        poseEstimator = new SwerveDrivePoseEstimator(gyro.getYaw(), new Pose2d(), swerveKinematics,
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.05, 0.05, 0.06), // State Error
-                new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.01), // Encoder Error
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.01, 0.01, 0.01), // Vision Error,
-                kLooperDt);
-        this.pose = poseEstimator.getEstimatedPosition();
+        poseEstimator = new SwerveDriveOdometry(swerveKinematics, gyro.getYaw(), new Pose2d());
+        this.pose = poseEstimator.getPoseMeters();
     }
 
     public boolean isLockHeading() {
@@ -122,22 +115,15 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
     @Override
     public void setLockHeading(boolean status) {
+        if(this.isLockHeading != status){
+            headingController.reset(gyro.getYaw().getDegrees(), getAngularVelocity());
+        }
         this.isLockHeading = status;
         this.headingFeedforward = 0.0;
     }
 
     @Override
     public synchronized void setHeadingTarget(double heading) {
-        headingController.reset(gyro.getYaw().getDegrees(), getAngularVelocity());
-        this.setHeadingTargetContinuously(heading);
-    }
-
-    public void setHeadingTarget(double t, double feedForward) {
-        setHeadingTarget(t);
-        this.headingFeedforward = feedForward;
-    }
-
-    private synchronized void setHeadingTargetContinuously(double heading) {
         double target = heading;
         double position = gyro.getYaw().getDegrees();
 
@@ -150,6 +136,11 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         }
 
         headingTarget = target;
+    }
+
+    public void setHeadingTarget(double t, double feedForward) {
+        setHeadingTarget(t);
+        this.headingFeedforward = feedForward;
     }
 
     public double getHeadingTarget() {
@@ -181,7 +172,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
             SwerveModuleState[] swerveModuleStates = swerveKinematics.toSwerveModuleStates(chassisSpeeds);
             SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, 1.0);
             for (SJTUSwerveModuleMK5 mod : mSwerveMods) {
-                System.out.println(swerveModuleStates[mod.moduleNumber]);
                 mod.setDesiredState(swerveModuleStates[mod.moduleNumber], true, false);
             }
         }
@@ -302,10 +292,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
             states[mod.moduleNumber] = mod.getState();
         }
         return states;
-    }
-
-    public void updateObservation(Pose2d robotPostion) {
-        poseEstimator.addVisionMeasurement(robotPostion, Timer.getFPGATimestamp());
     }
 
     @Override

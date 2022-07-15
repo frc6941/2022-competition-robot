@@ -141,7 +141,7 @@ public class Shooter implements Updatable {
     @Override
     public synchronized void telemetry() {
         SmartDashboard.putNumber("RPM", getShooterRPM());
-        SmartDashboard.putBoolean("Ready", spunUp());
+        SmartDashboard.putBoolean("Spun Up", spunUp());
     }
 
     @Override

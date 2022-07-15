@@ -44,6 +44,7 @@ public class BallPath implements Updatable {
 
     private SITUATION situation = SITUATION.EMPTY;
     private SITUATION targetSituation = SITUATION.EMPTY;
+    private boolean transitionMarker = false;
     private STATE state = STATE.PROCESSING;
 
     private BallPath() {
@@ -98,6 +99,10 @@ public class BallPath implements Updatable {
         }
     }
 
+    public synchronized SITUATION getBallpathSituation(){
+        return situation;
+    }
+
     public synchronized void updateSetPoint(){
         positionOneSlot.updateHasBall(ballAtPosition1(), isEnabled);
         positionTwoSlot.updateHasBall(ballAtPosition2(), isEnabled);
@@ -112,41 +117,45 @@ public class BallPath implements Updatable {
             situation = SITUATION.SECOND; // Only one cargo at the second position
         }
 
-        switch(situation){
-            case EMPTY:
-                if(positionOneSlot.hasQueuedBall()){
-                    targetSituation = SITUATION.FIRST;
-                    mPeriodicIO.feederDirection = true;
-                }
-                break;
-            case FIRST:
-                if(positionOneSlot.hasQueuedBall()){
-                    targetSituation = SITUATION.FULL;
-                    mPeriodicIO.feederDirection = true;
-                }
-                break;
-            case SECOND:
-                if(wrongBallAtPositionTwo() && readyForWrongBallExpel){
-                    targetSituation = SITUATION.EMPTY;
-                    mPeriodicIO.feederDirection = true;
-                } else {
-                    positionTwoSlot.move(positionOneSlot);
-                    targetSituation = SITUATION.FIRST;
-                    mPeriodicIO.feederDirection = false;
-                }
-                
-                break;
-            case FULL:
-                if(wrongBallAtPositionTwo() && readyForWrongBallExpel){
-                    positionOneSlot.move(positionTwoSlot);
-                    targetSituation = SITUATION.SECOND;
-                    mPeriodicIO.feederDirection = true;
-                }
-                break;
+        if(!transitionMarker){
+            switch(situation){
+                case EMPTY:
+                    if(positionOneSlot.hasQueuedBall()){
+                        targetSituation = SITUATION.FIRST;
+                        mPeriodicIO.feederDirection = true;
+                    }
+                    break;
+                case FIRST:
+                    if(positionOneSlot.hasQueuedBall()){
+                        targetSituation = SITUATION.FULL;
+                        mPeriodicIO.feederDirection = true;
+                    }
+                    break;
+                case SECOND:
+                    if(wrongBallAtPositionTwo() && readyForWrongBallExpel){
+                        targetSituation = SITUATION.EMPTY;
+                        mPeriodicIO.feederDirection = true;
+                    } else {
+                        positionTwoSlot.move(positionOneSlot);
+                        targetSituation = SITUATION.FIRST;
+                        mPeriodicIO.feederDirection = false;
+                    }
+                    
+                    break;
+                case FULL:
+                    if(wrongBallAtPositionTwo() && readyForWrongBallExpel){
+                        positionOneSlot.move(positionTwoSlot);
+                        targetSituation = SITUATION.SECOND;
+                        mPeriodicIO.feederDirection = true;
+                    }
+                    break;
+            }
+            transitionMarker = true;
         }
 
         if(situation == targetSituation){
             mPeriodicIO.feederDemand = 0.0;
+            transitionMarker = false;
         } else {
             mPeriodicIO.feederDemand = mPeriodicIO.feederDirection ? Constants.BALLPATH_NORMAL_PERCENTAGE : -Constants.BALLPATH_NORMAL_PERCENTAGE;
         }
@@ -251,7 +260,7 @@ public class BallPath implements Updatable {
         targetSituation = situation;
     }
 
-    private static enum SITUATION {
+    public static enum SITUATION {
         FULL,
         EMPTY,
         FIRST,
