@@ -32,7 +32,7 @@ public class Indicator implements Updatable {
     private TimedLEDState currentState = Lights.CALIBRATION;
     private LEDState currentLED = new LEDState(0, 0, 0);
     private STATE state = STATE.ON;
-    private SuppliedValueWidget colorWidget = Shuffleboard.getTab("MyBot").addBoolean("Color", () -> true);
+    private SuppliedValueWidget<Boolean> colorWidget = Shuffleboard.getTab("MyBot").addBoolean("Color", () -> true);
 
     private static Indicator instance;
     private double intensity = 1.0;

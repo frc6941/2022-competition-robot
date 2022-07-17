@@ -245,6 +245,14 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         return this.gyro.getYaw().getDegrees();
     }
 
+    public double getRoll(){
+        return this.gyro.getRoll().getDegrees();
+    }
+
+    public void resetRoll(double degree){
+        this.gyro.setRoll(degree);
+    }
+
     @Override
     public Pose2d getPose() {
         synchronized (statusLock) {

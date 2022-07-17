@@ -86,6 +86,10 @@ public class Shooter implements Updatable {
         mPeriodicIO.shooterDemand = rpm;
     }
 
+    public void turnOff(){
+        setState(STATE.OFF);
+    }
+
     public double getShooterRPM() {
         return Conversions.falconToRPM(mPeriodicIO.leadVelocity, Constants.SHOOTER_GEAR_RATIO);
     }

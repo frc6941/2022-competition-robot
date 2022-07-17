@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import com.team254.lib.util.InterpolatingDouble;
 import com.team254.lib.util.TimeDelayedBoolean;
+import com.team254.lib.util.Util;
 import com.team254.lib.vision.AimingParameters;
 
 import org.frcteam6941.looper.UpdateManager.Updatable;
@@ -11,7 +12,6 @@ import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 import org.frcteam6941.utils.AngleNormalization;
 
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
@@ -19,6 +19,7 @@ import frc.robot.RobotState;
 import frc.robot.controlboard.ControlBoard;
 import frc.robot.controlboard.ControlBoard.SwerveCardinal;
 import frc.robot.subsystems.BallPath;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Indicator;
 import frc.robot.subsystems.Intaker;
 import frc.robot.subsystems.Limelight;
@@ -27,14 +28,13 @@ import frc.robot.subsystems.Turret;
 import frc.robot.utils.Lights;
 import frc.robot.utils.TimedLEDState;
 
-public class Superstructure implements Updatable{
+public class Superstructure implements Updatable {
     public static class PeriodicIO {
         /** INPUTS */
         // Global Variables
-        public boolean SHOOT = false;
-        public boolean INTAKE = false;
-        public boolean EJECT = false;
-        public boolean SPIT = false;
+        public boolean INTAKE = false; // Intake Cargo
+        public boolean EJECT = false; // Expel wrong Cargo from the shooter
+        public boolean SPIT = false; // Expel Cargo from the ballpath
 
         // Swerve Variables
         public Translation2d swerveInputedTranslation = new Translation2d();
@@ -42,7 +42,8 @@ public class Superstructure implements Updatable{
         public SwerveCardinal swerveSnapRotation = SwerveCardinal.NONE;
         public boolean swerveBrake = false;
         public double swerveFieldHeadingAngle = 0.0;
-        
+        public double swerveRollAngle = 0.0;
+
         // Turret Variables
         public double turretAngle = 0.0;
         public double turretFieldHeadingAngle = 0.0;
@@ -52,9 +53,11 @@ public class Superstructure implements Updatable{
 
         // Ballpath Variables
         public TimeDelayedBoolean wrongBallOccupiedTimedBoolean = new TimeDelayedBoolean();
-        public boolean wrongBallOccupied = false;
-        
 
+        // Climber Variables
+        public boolean climberOnTarget = false;
+
+        
         /** OUTPUTS */
         // Overall Variables
         public double targetAngle = 0.0;
@@ -74,8 +77,12 @@ public class Superstructure implements Updatable{
 
         // Indicator Variables
         public TimedLEDState indicatorState = Lights.CALIBRATION;
+
+        // Climber Vairables
+        public double climberDemand = 0.01;
+        public boolean climberHookOut = false;
     }
-    
+
     public PeriodicIO mPeriodicIO = new PeriodicIO();
 
     private ControlBoard mControlBoard = ControlBoard.getInstance();
@@ -86,16 +93,26 @@ public class Superstructure implements Updatable{
     private Intaker mIntaker = Intaker.getInstance();
     private Indicator mIndicator = Indicator.getInstance();
     private Limelight mLimelight = Limelight.getInstance();
+    private Climber mClimber = Climber.getInstance();
 
     private Optional<AimingParameters> realAimingParameters = Optional.empty();
     private int mTrackId = -1;
 
-    private boolean visionOnTarget = false;
+    // Shooting related tracking constants
+    private boolean onTarget = false;
     private boolean readyToShoot = false;
     private boolean readyToShootWrongBall = false;
 
+    // Climbing related tracking constants
+    private boolean openLoopClimbControl = false;
+    private boolean autoTraversalClimb = false; // if we are running auto-traverse
+    private boolean autoHighBarClimb = false; // if we are running auto-high
+    private boolean forceInterruptClimb = false; // if we are going to stop the climb
+    private int climbStep = 0; // step of auto-climb we are currently on
+
     private static Superstructure instance;
     private STATE state = STATE.PIT;
+
     public static Superstructure getInstance() {
         if (instance == null) {
             instance = new Superstructure();
@@ -108,11 +125,13 @@ public class Superstructure implements Updatable{
      * respect to the input of a new field-oriented angle.
      * 
      * @param desiredAngle The desired field-oriented angle.
-     * @param isLimited If the turret is free to turn over the normal safe position.
+     * @param isLimited    If the turret is free to turn over the normal safe
+     *                     position.
      * @return An array showing the target angle of the turret and the drivetrain.
      */
     private synchronized double[] calculateTurretDrivetrainAngle(double desiredAngle, boolean isLimited) {
-        // Calculate the delta between target and curret angle of the turret, taking the field as the reference
+        // Calculate the delta between target and curret angle of the turret, taking the
+        // field as the reference
         double delta = AngleNormalization.placeInAppropriate0To360Scope(mPeriodicIO.turretFieldHeadingAngle,
                 desiredAngle)
                 - mPeriodicIO.turretFieldHeadingAngle;
@@ -131,16 +150,109 @@ public class Superstructure implements Updatable{
         }
     }
 
+    /** Update Driver and Operator Command.
+     * 
+     */
+    private synchronized void updateDriverAndOperatorCommand(){
+        if(climbStep == 0){
+            mSwerve.resetRoll(0.0);
+        }
+
+        if (mControlBoard.getEnterClimbMode()) {
+            mPeriodicIO.climberDemand = 0.0;
+            mPeriodicIO.climberHookOut = false;
+            
+            climbStep = 0;
+            openLoopClimbControl = false;
+            autoHighBarClimb = false;
+            autoTraversalClimb = false;
+            setState(STATE.CLIMB);
+        }
+
+        if(getState() == STATE.CLIMB){
+            // Climb mode and related controls
+            if (mControlBoard.getExitClimbMode()) {
+                setState(STATE.CHASING);
+                autoHighBarClimb = false;
+                autoTraversalClimb = false;
+            }
+
+            // Change if use openloop to control the climber
+            if (mControlBoard.getToggleOpenLoopClimbMode()) {
+                openLoopClimbControl = !openLoopClimbControl;
+                autoTraversalClimb = false;
+                autoHighBarClimb = false;
+            }
+
+            if(!openLoopClimbControl){
+                if (mControlBoard.getClimberRetract()) {
+                    mPeriodicIO.climberDemand = 0.01;
+                    climbStep = 0;
+                    autoHighBarClimb = false;
+                    autoTraversalClimb = false;
+
+                } else if (mControlBoard.getClimberExtend()) {
+                    // climb step 1
+                    mPeriodicIO.climberDemand = Constants.CLIMBER_EXTENSION_HEIGHT;
+                    autoHighBarClimb = false;
+                    autoTraversalClimb = false;
+                    climbStep = 1;
+
+                } else if (mControlBoard.getTraversalClimb()) {
+                    autoTraversalClimb = true;
+                    autoHighBarClimb = false;
+
+                } else if (mControlBoard.getHighBarClimb()) {
+                    autoHighBarClimb = true;
+                    autoTraversalClimb = false;
+
+                } else {
+                    // backup manual climb controls
+                    if(mControlBoard.getClimberExtend()){
+                        mPeriodicIO.climberDemand = Constants.CLIMBER_EXTENSION_HEIGHT;
+                    } else if (mControlBoard.getClimberRetract()){
+                        mPeriodicIO.climberDemand = 0.01;
+                    } else if (mControlBoard.getClimberHootOut()){
+                        mPeriodicIO.climberHookOut = true;
+                    } else if (mControlBoard.getClimberHootIn()){
+                        mPeriodicIO.climberHookOut = false;
+                    }
+                }
+            } else {
+                if(mControlBoard.getClimberUp()){
+                    mPeriodicIO.climberDemand = Constants.CLIMBER_OPENLOOP_CONTROL_PERCENTAGE;
+                } else if (mControlBoard.getClimberDown()){
+                    mPeriodicIO.climberDemand = -Constants.CLIMBER_OPENLOOP_CONTROL_PERCENTAGE;
+                } else if (mControlBoard.getClimberHootOut()){
+                    mPeriodicIO.climberHookOut = true;
+                } else if (mControlBoard.getClimberHootIn()){
+                    mPeriodicIO.climberHookOut = false;
+                }
+            }
+
+        } else if (getState() == STATE.CHASING || getState() == STATE.SHOOTING){
+            // Mode switch in normal teleop game mode
+            if (getState() == STATE.CHASING && mControlBoard.getShoot()) {
+                setState(STATE.SHOOTING);
+            }
+            if (getState() == STATE.SHOOTING && !mControlBoard.getShoot()) {
+                setState(STATE.CHASING);
+            }
+        } else {
+            // PIT Mode, do nothing
+        }
+    }
 
     /**
      * Update Swerve and Turret status, with respect to the curret state.
-     * This methods should be run after all vision measurements that determine the target angle.
+     * This methods should be run after all vision measurements that determine the
+     * target angle.
      */
-    private synchronized void updateSwerveAndTurretCoordination(){
+    private synchronized void updateSwerveAndTurretCoordination() {
         double[] targetArray = calculateTurretDrivetrainAngle(mPeriodicIO.targetAngle, mPeriodicIO.isTurretLimited);
         boolean overturning = targetArray[1] != Double.NaN;
-        
-        switch(state){
+
+        switch (state) {
             case PIT:
                 mPeriodicIO.swerveTranslation = new Translation2d();
                 mPeriodicIO.swerveRotation = 0.0;
@@ -152,9 +264,11 @@ public class Superstructure implements Updatable{
             case CHASING:
                 mPeriodicIO.swerveTranslation = mPeriodicIO.swerveInputedTranslation;
                 mPeriodicIO.swerveRotation = mPeriodicIO.swerveInputedRotation;
-                if(mPeriodicIO.swerveSnapRotation != SwerveCardinal.NONE){
+                if (mPeriodicIO.swerveSnapRotation != SwerveCardinal.NONE) {
                     mPeriodicIO.swerveLockHeading = true;
-                    mPeriodicIO.swerveHeadingTarget = mPeriodicIO.swerveSnapRotation.degrees; // When in chasing mode, enable snap rotation normally
+                    mPeriodicIO.swerveHeadingTarget = mPeriodicIO.swerveSnapRotation.degrees; // When in chasing mode,
+                                                                                              // enable snap rotation
+                                                                                              // normally
                 } else {
                     mPeriodicIO.swerveLockHeading = false;
                     mPeriodicIO.swerveHeadingTarget = 0.0;
@@ -164,7 +278,7 @@ public class Superstructure implements Updatable{
             case SHOOTING:
                 mPeriodicIO.swerveTranslation = mPeriodicIO.swerveInputedTranslation;
                 mPeriodicIO.turretLockTarget = targetArray[0];
-                if(overturning){
+                if (overturning) {
                     mPeriodicIO.swerveLockHeading = true;
                     mPeriodicIO.swerveHeadingTarget = targetArray[1];
                 } else {
@@ -194,65 +308,102 @@ public class Superstructure implements Updatable{
         }
     }
 
-     /**
-      * Update parameters from Limelight or Odometry.
-      */
-     public void updateVisionAimingParameters() {
+    /**
+     * Update parameters from Limelight or Odometry.
+     */
+    public void updateVisionAimingParameters() {
         // get aiming parameters from either vision-assisted goal tracking or
         // odometry-only tracking
         realAimingParameters = getRealAimingParameters();
 
         // predicted pose and target
-        com.team254.lib.geometry.Pose2d predictedFieldToVehicle = RobotState.getInstance().getPredictedFieldToVehicle(0.01);
+        com.team254.lib.geometry.Pose2d predictedFieldToVehicle = RobotState.getInstance()
+                .getPredictedFieldToVehicle(0.01);
         com.team254.lib.geometry.Pose2d predictedVehicleToGoal = predictedFieldToVehicle.inverse()
                 .transformBy(realAimingParameters.get().getFieldToGoal());
 
         mTrackId = realAimingParameters.get().getTrackId();
-        mPeriodicIO.targetAngle = predictedVehicleToGoal.getTranslation().direction().getDegrees() + mPeriodicIO.swerveFieldHeadingAngle;
+        mPeriodicIO.targetAngle = predictedVehicleToGoal.getTranslation().direction().getDegrees()
+                + mPeriodicIO.swerveFieldHeadingAngle;
 
         double distanceToTarget;
-        if(mLimelight.hasTarget() && mLimelight.getLimelightDistanceToTarget().isPresent()){
+        if (mLimelight.hasTarget() && mLimelight.getLimelightDistanceToTarget().isPresent()) {
             distanceToTarget = mLimelight.getLimelightDistanceToTarget().get();
         } else {
             distanceToTarget = predictedVehicleToGoal.getTranslation().norm();
         }
-        mPeriodicIO.shooterRPM = Constants.ShootingConstants.FLYWHEEL_AUTO_AIM_MAP.getInterpolated(new InterpolatingDouble(distanceToTarget)).value;
+        mPeriodicIO.shooterRPM = Constants.ShootingConstants.FLYWHEEL_AUTO_AIM_MAP
+                .getInterpolated(new InterpolatingDouble(distanceToTarget)).value;
     }
 
     /** Motion compensation for moving while shooting. */
-    public void updateMotionCompensation(){
-        
+    public void updateMotionCompensation() {
+
     }
 
     /** Calculation for wrong ball ejection. */
-    public void updateWrongballEjectionParameters(){
+    public void updateWrongballEjectionParameters() {
         mPeriodicIO.shooterRPM = 600;
         mPeriodicIO.turretLockTarget = 45.0;
-        if(mPeriodicIO.turretOnTarget && mShooter.spunUp()){
+        if (mPeriodicIO.turretOnTarget && mShooter.spunUp()) {
             readyToShootWrongBall = true;
+        }
+    }
+
+    /** Calculating and setting climber set points. */
+    public synchronized void updateClimberSetPoint() {
+        mPeriodicIO.INTAKE = false;
+        mPeriodicIO.EJECT = false;
+        mPeriodicIO.SPIT = false;
+        if (autoTraversalClimb){ // Auto Traversal Climb Mode
+            if(climbStep == 1) {
+                mPeriodicIO.climberDemand = 0.01; // First step, pull down the climber to the lowest position
+                climbStep++;
+            } else if (climbStep == 2){
+            }
+        } else if (autoHighBarClimb) {
+
+        }
+    }
+
+    /** Determine if shooting conditions are met. */
+    public synchronized void updateShootingReadyOrNot() {
+        boolean modeCorrect = !mPeriodicIO.EJECT && getState() == STATE.SHOOTING; // Make sure that the machine is in SHOOTING mode andhas no wrong ball
+        boolean targetAngleCorrect = Util.epsilonEquals(mPeriodicIO.targetAngle, mPeriodicIO.turretFieldHeadingAngle,Constants.ShootingConstants.EPISILON); // Make sure that the aiming target is locked on
+        boolean spunUp = mShooter.spunUp(); // Make sure the shooter reaches the target speed
+
+        if(modeCorrect && targetAngleCorrect && spunUp){
+            readyToShoot = true;
+            onTarget = true;
+        } else if (targetAngleCorrect) {
+            readyToShoot = false;
+            onTarget = true;
+        } else {
+            readyToShoot = false;
+            onTarget = false;
         }
     }
 
     /**
      * Decide the color for the indicator.
      */
-    private synchronized void updateIndicator(){
-        switch(state){
+    private synchronized void updateIndicator() {
+        switch (state) {
             case PIT:
-                if(mPeriodicIO.turretCalibrated){
-                    if (DriverStation.getAlliance().equals(Alliance.Red)) {
+                if (mPeriodicIO.turretCalibrated) {
+                    if (Constants.FMS.ALLIANCE().equals(Alliance.Red)) {
                         mPeriodicIO.indicatorState = Lights.RED_ALLIANCE;
-                    } else if (DriverStation.getAlliance().equals(Alliance.Blue)) {
+                    } else if (Constants.FMS.ALLIANCE().equals(Alliance.Blue)) {
                         mPeriodicIO.indicatorState = Lights.BLUE_ALLIANCE;
                     } else {
-                        mPeriodicIO.indicatorState = Lights.NORMAL;
+                        mPeriodicIO.indicatorState = Lights.CONNECTING;
                     }
                 } else {
                     mPeriodicIO.indicatorState = Lights.CALIBRATION;
                 }
                 break;
             case CHASING:
-                if(mPeriodicIO.wrongBallOccupied){
+                if (mPeriodicIO.EJECT) {
                     mPeriodicIO.indicatorState = Lights.BALLPATH_WRONG_BALL;
                 } else {
                     if (mBallPath.getBallpathSituation() == BallPath.SITUATION.FULL) {
@@ -263,14 +414,16 @@ public class Superstructure implements Updatable{
                 }
                 break;
             case SHOOTING:
-                if(mPeriodicIO.wrongBallOccupied){
+                if (mPeriodicIO.EJECT) {
                     mPeriodicIO.indicatorState = Lights.BALLPATH_WRONG_BALL;
                 } else {
-                    if (visionOnTarget) {
+                    if (onTarget) {
                         mPeriodicIO.indicatorState = Lights.ON_TARGET;
-                        if(readyToShoot) {
+                        if (readyToShoot) {
                             mPeriodicIO.indicatorState = Lights.READY;
                         }
+                    } else {
+                        mPeriodicIO.indicatorState = Lights.LOSS_TARGET;
                     }
                 }
                 break;
@@ -278,25 +431,21 @@ public class Superstructure implements Updatable{
                 mPeriodicIO.indicatorState = Lights.CLIMBING;
                 break;
         }
+        mIndicator.setIndicatorState(mPeriodicIO.indicatorState);
     }
 
-    
     private Superstructure() {
-        
-    }
 
+    }
 
     @Override
-    public synchronized void read(double time, double dt){
-        mPeriodicIO.INTAKE = mControlBoard.getIntake();
-        mPeriodicIO.SHOOT = mControlBoard.getShoot();
-
+    public synchronized void read(double time, double dt) {
         mPeriodicIO.swerveInputedTranslation = mControlBoard.getSwerveTranslation();
         mPeriodicIO.swerveInputedRotation = mControlBoard.getSwerveRotation();
         mPeriodicIO.swerveSnapRotation = mControlBoard.getSwerveSnapRotation();
         mPeriodicIO.swerveBrake = mControlBoard.getSwerveBrake();
         mPeriodicIO.swerveFieldHeadingAngle = mSwerve.getYaw();
-        
+        mPeriodicIO.swerveRollAngle = mSwerve.getRoll();
 
         mPeriodicIO.turretAngle = mTurret.getTurretAngle();
         mPeriodicIO.turretFieldHeadingAngle = mPeriodicIO.swerveFieldHeadingAngle + mPeriodicIO.turretAngle;
@@ -304,93 +453,127 @@ public class Superstructure implements Updatable{
         mPeriodicIO.turretOnTarget = mTurret.isOnTarget();
         mPeriodicIO.turretCalibrated = mTurret.isCalibrated();
 
-        if(mBallPath.wrongBallAtPositionTwo()){
-            mPeriodicIO.wrongBallOccupied  = mPeriodicIO.wrongBallOccupiedTimedBoolean.update(mBallPath.wrongBallAtPositionTwo(), 0.0);
-        } else {
-            mPeriodicIO.wrongBallOccupied  = mPeriodicIO.wrongBallOccupiedTimedBoolean.update(mBallPath.wrongBallAtPositionTwo(), 0.5);
-        }
-        
+        mPeriodicIO.climberOnTarget = mClimber.isClimberOnTarget();
 
-        visionOnTarget = mLimelight.isAimed();
-        if(visionOnTarget && mShooter.spunUp()){
-            readyToShoot = true;
+        if (mBallPath.wrongBallAtPositionTwo()) {
+            mPeriodicIO.EJECT = mPeriodicIO.wrongBallOccupiedTimedBoolean.update(mBallPath.wrongBallAtPositionTwo(),
+                    0.0);
         } else {
-            readyToShoot = false;
+            mPeriodicIO.EJECT = mPeriodicIO.wrongBallOccupiedTimedBoolean.update(mBallPath.wrongBallAtPositionTwo(),
+                    0.5);
         }
     }
-    
+
     @Override
-    public synchronized void update(double time, double dt){
-        if(getState() != STATE.PIT && getState() != STATE.CLIMB){
-            if(!mPeriodicIO.wrongBallOccupied){
+    public synchronized void update(double time, double dt) {
+        updateDriverAndOperatorCommand();
+        if (getState() == STATE.CHASING || getState() == STATE.SHOOTING) {
+            if (!mPeriodicIO.EJECT) {
+                // Determine the appropriate lock angle according to vision, odomertry and
+                // motion of the robot
                 getRealAimingParameters();
                 updateVisionAimingParameters();
                 updateMotionCompensation();
+                // Update swerve and turret afterwards with coordination
                 updateSwerveAndTurretCoordination();
                 readyToShootWrongBall = false;
             } else {
+                // Update swerve and turret first
                 updateSwerveAndTurretCoordination();
+                // Change turret force lock direction afterwards
                 updateWrongballEjectionParameters();
             }
+            updateShootingReadyOrNot();
+        } else if (getState() == STATE.CLIMB) {
+            updateClimberSetPoint();
+            updateSwerveAndTurretCoordination();
+        } else {
+
         }
 
         // Decide LED Color for the Indicator
         updateIndicator();
     }
-    
+
     @Override
-    public synchronized void write(double time, double dt){
-        if(mPeriodicIO.swerveBrake){
+    public synchronized void write(double time, double dt) {
+        if(getState() == STATE.CHASING || getState() == STATE.SHOOTING) {
+            mBallPath.changeIfReadyForWrongBall(readyToShootWrongBall);
+
+            if (readyToShoot && !mPeriodicIO.EJECT && getState() == STATE.SHOOTING) {
+                mBallPath.setState(BallPath.STATE.FEEDING);
+            } else {
+                mBallPath.setState(BallPath.STATE.PROCESSING);
+            }
+
+            if (mPeriodicIO.INTAKE) {
+                mIntaker.extend();
+            } else {
+                mIntaker.retract();
+            }
+            mShooter.setShooterRPM(mPeriodicIO.shooterRPM);
+            mClimber.setClimberHeight(0.01);
+            mClimber.retractClimber();
+        } else if (getState() == STATE.CLIMB){
+            if(openLoopClimbControl){
+                mClimber.setClimberPercentage(mPeriodicIO.climberDemand);
+            } else {
+                mClimber.setClimberHeight(mPeriodicIO.climberDemand);
+            }
+
+            if(mPeriodicIO.climberHookOut){
+                mClimber.tryToExtend();
+            } else {
+                mClimber.retractClimber();
+            }
+        }
+
+
+        if (mPeriodicIO.swerveBrake) {
             mSwerve.setState(SJTUSwerveMK5Drivebase.STATE.BRAKE);
         } else {
             mSwerve.setState(SJTUSwerveMK5Drivebase.STATE.DRIVE);
             mSwerve.setLockHeading(mPeriodicIO.swerveLockHeading);
             mSwerve.setHeadingTarget(mPeriodicIO.swerveHeadingTarget);
             mSwerve.drive(mPeriodicIO.swerveTranslation, mPeriodicIO.swerveRotation, true);
-            mShooter.setShooterRPM(mPeriodicIO.shooterRPM);
         }
-
-        if(mPeriodicIO.SHOOT && !mPeriodicIO.wrongBallOccupied && readyToShoot){
-            mBallPath.setState(BallPath.STATE.FEEDING);
-        } else {
-            mBallPath.setState(BallPath.STATE.PROCESSING);
-        }
-
-        if(mPeriodicIO.INTAKE){
-            mIntaker.extend();
-        } else {
-            mIntaker.retract();
-        }
-
-        mBallPath.changeIfReadyForWrongBall(readyToShootWrongBall);
-        mIndicator.setIndicatorState(mPeriodicIO.indicatorState);
     }
-    
+
     @Override
-    public synchronized void telemetry(){
+    public synchronized void telemetry() {
+        SmartDashboard.putBoolean("PIT", getState() == STATE.PIT);
+        SmartDashboard.putBoolean("CHASING", getState() == STATE.CHASING);
+        SmartDashboard.putBoolean("SHOOTING", getState() == STATE.SHOOTING);
+        SmartDashboard.putBoolean("CLIMB", getState() == STATE.CLIMB);
+
         SmartDashboard.putNumber("Swerve Translation X", mPeriodicIO.swerveTranslation.getX());
         SmartDashboard.putNumber("Swerve Translation Y", mPeriodicIO.swerveTranslation.getY());
         SmartDashboard.putNumber("Swerve Rotation", mPeriodicIO.swerveRotation);
         SmartDashboard.putNumber("Swerve Heading Target", mPeriodicIO.swerveHeadingTarget);
         SmartDashboard.putBoolean("Is Swerve Lockheading", mPeriodicIO.swerveLockHeading);
+
         SmartDashboard.putNumber("Target Angle", mPeriodicIO.targetAngle);
         SmartDashboard.putNumber("Turret Lock Target", mPeriodicIO.turretLockTarget);
         SmartDashboard.putNumber("Shooter RPM", mPeriodicIO.shooterRPM);
-        SmartDashboard.putBoolean("Wrong Ball Occupied", mPeriodicIO.wrongBallOccupied);
+        SmartDashboard.putBoolean("EJECTING Wrong Ball", mPeriodicIO.EJECT);
+
+        SmartDashboard.putNumber("Climber Step", climbStep);
+        SmartDashboard.putNumber("Climber Demand", mPeriodicIO.climberDemand);
+        SmartDashboard.putBoolean("Climber Hoot Out", mPeriodicIO.climberHookOut);
     }
 
     @Override
-    public synchronized void start(){
+    public synchronized void start() {
         setState(STATE.CHASING);
     }
-    
+
     @Override
-    public synchronized void stop(){
+    public synchronized void stop() {
         setState(STATE.PIT);
     }
-    
+
     @Override
-    public synchronized void disabled(double time, double dt){
+    public synchronized void disabled(double time, double dt) {
         // Auto Generated Method
     }
 

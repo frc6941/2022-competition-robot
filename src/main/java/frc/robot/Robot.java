@@ -63,6 +63,8 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledInit() {
     this.updateManager.stopEnableLoop();
+    CommandScheduler.getInstance().cancelAll();
+    CommandScheduler.getInstance().disable();
     this.updateManager.startDisableLoop(Constants.kLooperDt);
   }
 
@@ -77,6 +79,7 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
     this.updateManager.stopDisableLoop();
+    CommandScheduler.getInstance().enable();
     this.updateManager.startEnableLoop(Constants.kLooperDt);
   }
 
@@ -89,12 +92,15 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
     this.updateManager.stopDisableLoop();
+    CommandScheduler.getInstance().cancelAll();
+    CommandScheduler.getInstance().enable();
     this.updateManager.startEnableLoop(Constants.kLooperDt);
   }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
+    CommandScheduler.getInstance().run();
   }
 
   @Override

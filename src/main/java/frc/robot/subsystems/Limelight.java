@@ -213,14 +213,6 @@ public class Limelight implements Updatable {
         return mPeriodicIO.has_comms;
     }
 
-    public synchronized boolean isAimed() {
-        if (hasTarget()) {
-            return Util.epsilonEquals(mPeriodicIO.xOffset, 0.0, Constants.VisionConstants.Turret.EPSILON);
-        } else {
-            return false;
-        }
-    }
-
     public synchronized boolean isAutonomousAimed() {
         if (hasTarget()) {
             return Util.epsilonEquals(mPeriodicIO.xOffset, 0.0, 1.0);

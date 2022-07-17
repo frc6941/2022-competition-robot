@@ -143,4 +143,40 @@ public class ControlBoard {
         return operator.getButton(Button.BACK) && operator.getButton(Button.START);
     }
 
+    public boolean getToggleOpenLoopClimbMode() {
+        return operator.getController().getLeftStickButtonPressed();
+    }
+
+    public boolean getClimberRetract() {
+        return operator.getController().getPOV() == kDpadDown;
+    }
+
+    public boolean getClimberExtend() {
+        return operator.getController().getPOV() == kDpadUp;
+    }
+
+    public boolean getClimberDown() {
+        return operator.getController().getPOV() == kDpadDown;
+    }
+
+    public boolean getClimberUp() {
+        return operator.getController().getPOV() == kDpadUp;
+    }
+
+    public boolean getClimberHootOut(){
+        return operator.getController().getPOV() == kDpadRight;
+    }
+
+    public boolean getClimberHootIn(){
+        return operator.getController().getPOV() == kDpadLeft;
+    }
+
+    public boolean getTraversalClimb() {
+        return operator.getButton(Button.LB) && operator.getController().getYButtonPressed();
+    }
+    
+    public boolean getHighBarClimb() {
+        return operator.getButton(Button.LB) && operator.getController().getBButtonPressed();
+    }
+
 }

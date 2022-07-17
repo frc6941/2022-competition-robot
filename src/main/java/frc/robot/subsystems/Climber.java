@@ -88,6 +88,7 @@ public class Climber implements Updatable {
         // Make sure that the climber is at a state that is suitable to extend
         if (this.freeToExtend() && this.isClimberCalibrated) {
             this.isExtended = true;
+            this.tryToExtend = false;
         } else {
             retractClimber();
         }
@@ -95,6 +96,7 @@ public class Climber implements Updatable {
 
     public void retractClimber() {
         this.isExtended = false;
+        this.tryToExtend = false;
     }
 
     public void tryToExtend(){
@@ -142,6 +144,27 @@ public class Climber implements Updatable {
         climberMotor.setSelectedSensorPosition(0.0);
     }
 
+    public synchronized void setClimberExtend(){
+        if(getState() != STATE.PERCENTAGE){
+            setState(STATE.PERCENTAGE);
+        }
+        setClimberPercentage(Constants.CLIMBER_OPENLOOP_CONTROL_PERCENTAGE);
+    }
+
+    public synchronized void setExtentionHeight() {
+        if(getState() != STATE.HEIGHT){
+            setState(STATE.HEIGHT);
+        }
+        setClimberHeight(Constants.CLIMBER_EXTENSION_HEIGHT);
+    }
+
+    public synchronized void setMinimumHeight() {
+        if(getState() != STATE.HEIGHT){
+            setState(STATE.HEIGHT);
+        }
+        setClimberHeight(0.05);
+    }
+
     @Override
     public synchronized void read(double time, double dt){
         mPeriodicIO.climberCurret = climberMotor.getStatorCurrent();
@@ -156,6 +179,7 @@ public class Climber implements Updatable {
     public synchronized void update(double time, double dt){
         // Calibration if the switch is closed.
         if (climberMotor.isFwdLimitSwitchClosed() == 1) {
+            resetClimberPosition();
             isClimberCalibrated = true;
         }
 
@@ -163,11 +187,9 @@ public class Climber implements Updatable {
             setState(STATE.HOMING);
         }
 
-        if(this.tryToExtend){
-            if(this.freeToExtend()){
-                this.isExtended = true;
-                this.tryToExtend = false;
-            }
+        if(this.tryToExtend && this.freeToExtend()){
+            this.isExtended = true;
+            this.tryToExtend = false;
         }
 
         if(this.isExtended && this.freeToExtend()){

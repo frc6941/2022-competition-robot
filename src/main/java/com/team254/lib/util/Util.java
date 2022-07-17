@@ -53,6 +53,7 @@ public class Util {
         return sb.toString();
     }
 
+    /** Determine if b is around a with range of epsilon. */
     public static boolean epsilonEquals(double a, double b, double epsilon) {
         return (a - epsilon <= b) && (a + epsilon >= b);
     }
