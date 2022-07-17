@@ -207,6 +207,8 @@ public final class Constants {
 
     public static final double CLIMBER_OPENLOOP_CONTROL_PERCENTAGE = 0.5;
     public static final double CLIMBER_EXTENSION_HEIGHT = 0.82;
+    public static final double CLIMBER_STAGING_HEIGHT = 0.65;
+    public static final double CLIMBER_SWITCH_HOOK_HEIGHT = 0.20;
 
 
     /* Control Board Constants */
