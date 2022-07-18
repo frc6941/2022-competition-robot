@@ -38,9 +38,9 @@ public class Indicator implements Updatable {
     private double intensity = 1.0;
 
     public void setLEDs(LEDState color) {
-        ledIndicator.setLEDOutput(color.blue * intensity, LEDChannel.LEDChannelB);
+        ledIndicator.setLEDOutput(color.green * intensity, LEDChannel.LEDChannelB);
         ledIndicator.setLEDOutput(color.red * intensity, LEDChannel.LEDChannelA);
-        ledIndicator.setLEDOutput(color.green * intensity, LEDChannel.LEDChannelC);
+        ledIndicator.setLEDOutput(color.blue * intensity, LEDChannel.LEDChannelC);
     }
 
     public void setIndicatorState(TimedLEDState state) {
@@ -63,11 +63,12 @@ public class Indicator implements Updatable {
                 currentState.getCurrentLEDState(currentLED, time);
                 break;
         }
+        this.setLEDs(currentLED);
     }
 
     @Override
     public synchronized void write(double time, double dt){
-        this.setLEDs(currentLED);
+        
     }
 
     @Override

@@ -242,7 +242,7 @@ public final class Constants {
             public static final LimelightConstants LIMELIGHT_CONSTANTS = new LimelightConstants();
                 static{
                     LIMELIGHT_CONSTANTS.kName = "Turret Limelight";
-                    LIMELIGHT_CONSTANTS.kTableName = "limelight_t";
+                    LIMELIGHT_CONSTANTS.kTableName = "limelight";
                     LIMELIGHT_CONSTANTS.kHeight = 0.83;
                     LIMELIGHT_CONSTANTS.kHorizontalPlaneToLens = Rotation2d.fromDegrees(50.0);
                 }

@@ -26,6 +26,7 @@ import frc.robot.subsystems.Intaker;
 import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.BallPath.STATE;
 import frc.robot.utils.Lights;
 import frc.robot.utils.TimedLEDState;
 
@@ -317,26 +318,17 @@ public class Superstructure implements Updatable {
      * Update parameters from Limelight or Odometry.
      */
     public void updateVisionAimingParameters() {
-        // get aiming parameters from either vision-assisted goal tracking or
-        // odometry-only tracking
-        realAimingParameters = getRealAimingParameters();
-
-        // predicted pose and target
-        com.team254.lib.geometry.Pose2d predictedFieldToVehicle = RobotState.getInstance()
-                .getPredictedFieldToVehicle(0.01);
-        com.team254.lib.geometry.Pose2d predictedVehicleToGoal = predictedFieldToVehicle.inverse()
-                .transformBy(realAimingParameters.get().getFieldToGoal());
-
-        mTrackId = realAimingParameters.get().getTrackId();
-        mPeriodicIO.targetAngle = predictedVehicleToGoal.getTranslation().direction().getDegrees()
-                + mPeriodicIO.swerveFieldHeadingAngle;
 
         double distanceToTarget;
         if (mLimelight.hasTarget() && mLimelight.getLimelightDistanceToTarget().isPresent()) {
             distanceToTarget = mLimelight.getLimelightDistanceToTarget().get();
+            double tx = mLimelight.getOffset()[0];
+            mPeriodicIO.targetAngle = mPeriodicIO.turretFieldHeadingAngle + tx;
         } else {
-            distanceToTarget = predictedVehicleToGoal.getTranslation().norm();
+            distanceToTarget = 3.0;
+            mPeriodicIO.targetAngle = mPeriodicIO.turretFieldHeadingAngle;
         }
+
         mPeriodicIO.shooterRPM = Constants.ShootingConstants.FLYWHEEL_AUTO_AIM_MAP
                 .getInterpolated(new InterpolatingDouble(distanceToTarget)).value;
     }
@@ -647,7 +639,7 @@ public class Superstructure implements Updatable {
     @Override
     public synchronized void update(double time, double dt) {
         updateDriverAndOperatorCommand();
-        if (getState() == STATE.CHASING || getState() == STATE.SHOOTING) {
+        if (getState() == STATE.CHASING || getState() == STATE.SHOOTING || getState() == STATE.PIT) {
             if (!mPeriodicIO.EJECT) {
                 // Determine the appropriate lock angle according to vision, odomertry and
                 // motion of the robot
@@ -743,6 +735,8 @@ public class Superstructure implements Updatable {
         SmartDashboard.putBoolean("Climber Open Loop", openLoopClimbControl);
         SmartDashboard.putBoolean("Traversal Climb Auto", autoTraversalClimb);
         SmartDashboard.putBoolean("High Climb Auto", autoHighBarClimb);
+
+        SmartDashboard.putNumber("Field Heading Angle", mPeriodicIO.turretFieldHeadingAngle);
     }
 
     @Override

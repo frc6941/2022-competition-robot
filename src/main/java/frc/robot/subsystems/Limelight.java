@@ -56,16 +56,17 @@ public class Limelight implements Updatable {
             RobotState.getInstance().addVisionUpdate(time - getLatency(), getTarget(), Limelight.this);
             updateDistanceToTarget();
         }
-    }
-
-    @Override
-    public void start(){
         setLed(LedMode.ON);
     }
 
     @Override
+    public void start(){
+        
+    }
+
+    @Override
     public synchronized void stop(){
-        setLed(LedMode.OFF);
+        
     }
 
     public synchronized boolean limelightOK() {
@@ -121,8 +122,9 @@ public class Limelight implements Updatable {
 
     public void updateDistanceToTarget() {
         double goal_theta = Constants.VisionConstants.Turret.LIMELIGHT_CONSTANTS.kHorizontalPlaneToLens.getRadians() + Math.toRadians(mPeriodicIO.yOffset);
-        double height_diff = (FieldConstants.visionTargetHeightLower + FieldConstants.visionTargetHeightUpper) * 0.5 - Constants.VisionConstants.Turret.LIMELIGHT_CONSTANTS.kHeight;
-
+        // double height_diff = (FieldConstants.visionTargetHeightLower + FieldConstants.visionTargetHeightUpper) * 0.5 - Constants.VisionConstants.Turret.LIMELIGHT_CONSTANTS.kHeight;
+        double height_diff = 1.7;
+        
         mDistanceToTarget = Optional.of(height_diff / Math.tan(goal_theta) + FieldConstants.visionTargetDiameter * 0.5); // add goal radius for offset to center of target
     }
 
