@@ -11,14 +11,16 @@ import org.frcteam6941.drivers.Pigeon;
 import org.frcteam6941.utils.AngleNormalization;
 import org.frcteam6941.utils.PulseHUD;
 
+import edu.wpi.first.math.MatBuilder;
+import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
@@ -55,7 +57,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     @GuardedBy("statusLock")
     private SwerveDriveKinematics swerveKinematics;
     @GuardedBy("statusLock")
-    private SwerveDriveOdometry poseEstimator;
+    private SwerveDrivePoseEstimator poseEstimator;
     private Translation2d[] swerveModulePositions;
     private SJTUSwerveModuleMK5[] mSwerveMods;
 
@@ -105,8 +107,13 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         swerveKinematics = new SwerveDriveKinematics(swerveModulePositions);
 
         // Advanced Kalman Filter Swerve Pose Estimator.
-        poseEstimator = new SwerveDriveOdometry(swerveKinematics, gyro.getYaw(), new Pose2d());
-        this.pose = poseEstimator.getPoseMeters();
+        poseEstimator = new SwerveDrivePoseEstimator(Rotation2d.fromDegrees(getYaw()) , new Pose2d(), swerveKinematics,
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.05, 0.05, 0.06), // State Error
+                new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.01), // Encoder Error
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.01, 0.01, 0.01), // Vision Error,
+                kLooperDt);
+;
+        this.pose = poseEstimator.getEstimatedPosition();
     }
 
     public boolean isLockHeading() {
@@ -227,6 +234,10 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
             Rotation2d antiAngle = new Rotation2d(modulePosition.getX(), modulePosition.getY());
             mod.setDesiredState(new SwerveModuleState(0.0, antiAngle), false, true);
         }
+    }
+
+    public void addVisionObservations(Pose2d visionMeasurement, double time){
+        poseEstimator.addVisionMeasurement(visionMeasurement, time);
     }
 
     public Translation2d getTranslation() {

@@ -2,31 +2,30 @@ package frc.robot.coordinators;
 
 import java.util.Optional;
 
+import com.team254.lib.geometry.Pose2d;
 import com.team254.lib.util.InterpolatingDouble;
 import com.team254.lib.util.TimeDelayedBoolean;
 import com.team254.lib.util.Util;
-import com.team254.lib.vision.AimingParameters;
 
 import org.frcteam6941.looper.UpdateManager.Updatable;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 import org.frcteam6941.utils.AngleNormalization;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
-import frc.robot.RobotState;
+import frc.robot.FieldConstants;
 import frc.robot.controlboard.ControlBoard;
 import frc.robot.controlboard.ControlBoard.SwerveCardinal;
 import frc.robot.subsystems.BallPath;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Indicator;
 import frc.robot.subsystems.Intaker;
-import frc.robot.subsystems.Limelight;
+import frc.robot.subsystems.RobotStateEstimator;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
-import frc.robot.subsystems.BallPath.STATE;
 import frc.robot.utils.Lights;
 import frc.robot.utils.TimedLEDState;
 
@@ -59,7 +58,6 @@ public class Superstructure implements Updatable {
         // Climber Variables
         public boolean climberOnTarget = false;
 
-        
         /** OUTPUTS */
         // Overall Variables
         public double targetAngle = 0.0;
@@ -94,11 +92,8 @@ public class Superstructure implements Updatable {
     private Turret mTurret = Turret.getInstance();
     private Intaker mIntaker = Intaker.getInstance();
     private Indicator mIndicator = Indicator.getInstance();
-    private Limelight mLimelight = Limelight.getInstance();
     private Climber mClimber = Climber.getInstance();
-
-    private Optional<AimingParameters> realAimingParameters = Optional.empty();
-    private int mTrackId = -1;
+    private RobotStateEstimator mEstimator = RobotStateEstimator.getInstance();
 
     // Shooting related tracking constants
     private boolean onTarget = false;
@@ -109,7 +104,6 @@ public class Superstructure implements Updatable {
     private boolean openLoopClimbControl = false;
     private boolean autoTraversalClimb = false; // if we are running auto-traverse
     private boolean autoHighBarClimb = false; // if we are running auto-high
-    private boolean forceInterruptClimb = false; // if we are going to stop the climb
     private int climbStep = 0; // step of auto-climb we are currently on
     private double climbStepTimeRecord = 0.0;
 
@@ -153,18 +147,19 @@ public class Superstructure implements Updatable {
         }
     }
 
-    /** Update Driver and Operator Command.
+    /**
+     * Update Driver and Operator Command.
      * 
      */
-    private synchronized void updateDriverAndOperatorCommand(){
-        if(climbStep == 0){
+    private synchronized void updateDriverAndOperatorCommand() {
+        if (climbStep == 0) {
             mSwerve.resetRoll(0.0);
         }
 
         if (mControlBoard.getEnterClimbMode()) {
             mPeriodicIO.climberDemand = 0.0;
             mPeriodicIO.climberHookOut = false;
-            
+
             climbStep = 0;
             openLoopClimbControl = false;
             autoHighBarClimb = false;
@@ -172,7 +167,7 @@ public class Superstructure implements Updatable {
             setState(STATE.CLIMB);
         }
 
-        if(getState() == STATE.CLIMB){
+        if (getState() == STATE.CLIMB) {
             // Climb mode and related controls
             if (mControlBoard.getExitClimbMode()) {
                 setState(STATE.CHASING);
@@ -187,7 +182,7 @@ public class Superstructure implements Updatable {
                 autoHighBarClimb = false;
             }
 
-            if(!openLoopClimbControl){
+            if (!openLoopClimbControl) {
                 if (mControlBoard.getClimberRetract()) {
                     mPeriodicIO.climberDemand = 0.01;
                     climbStep = 0;
@@ -211,32 +206,32 @@ public class Superstructure implements Updatable {
 
                 } else {
                     // backup manual climb controls
-                    if(mControlBoard.getClimberExtend()){
+                    if (mControlBoard.getClimberExtend()) {
                         mPeriodicIO.climberDemand = Constants.CLIMBER_EXTENSION_HEIGHT;
-                    } else if (mControlBoard.getClimberRetract()){
+                    } else if (mControlBoard.getClimberRetract()) {
                         mPeriodicIO.climberDemand = 0.01;
-                    } else if (mControlBoard.getClimberHootOut()){
+                    } else if (mControlBoard.getClimberHootOut()) {
                         mPeriodicIO.climberHookOut = true;
-                    } else if (mControlBoard.getClimberHootIn()){
+                    } else if (mControlBoard.getClimberHootIn()) {
                         mPeriodicIO.climberHookOut = false;
                     }
                 }
             } else {
-                if(mControlBoard.getClimberUp()){
+                if (mControlBoard.getClimberUp()) {
                     mPeriodicIO.climberDemand = Constants.CLIMBER_OPENLOOP_CONTROL_PERCENTAGE;
-                } else if (mControlBoard.getClimberDown()){
+                } else if (mControlBoard.getClimberDown()) {
                     mPeriodicIO.climberDemand = -Constants.CLIMBER_OPENLOOP_CONTROL_PERCENTAGE;
                 } else {
                     mPeriodicIO.climberDemand = 0.0;
                 }
-                if (mControlBoard.getClimberHootOut()){
+                if (mControlBoard.getClimberHootOut()) {
                     mPeriodicIO.climberHookOut = true;
-                } else if (mControlBoard.getClimberHootIn()){
+                } else if (mControlBoard.getClimberHootIn()) {
                     mPeriodicIO.climberHookOut = false;
                 }
             }
 
-        } else if (getState() == STATE.CHASING || getState() == STATE.SHOOTING){
+        } else if (getState() == STATE.CHASING || getState() == STATE.SHOOTING) {
             // Mode switch in normal teleop game mode
             if (getState() == STATE.CHASING && mControlBoard.getShoot()) {
                 setState(STATE.SHOOTING);
@@ -303,34 +298,26 @@ public class Superstructure implements Updatable {
         }
     }
 
-    private Optional<AimingParameters> getRealAimingParameters() {
-        Optional<AimingParameters> aiming_params = RobotState.getInstance().getAimingParameters(mTrackId,
-                Constants.VisionConstants.Turret.MAX_GOAL_TRACK_AGE);
-        if (aiming_params.isPresent()) {
-            return aiming_params;
-        } else {
-            Optional<AimingParameters> default_aiming_params = RobotState.getInstance().getDefaultAimingParameters();
-            return default_aiming_params;
-        }
+    public Rotation2d getTargetRotation(Translation2d position, Translation2d target) {
+        Translation2d vehicleToCenter = target.minus(position);
+        Rotation2d targetRotation = new Rotation2d(vehicleToCenter.getX(), vehicleToCenter.getY());
+        return targetRotation;
     }
 
     /**
-     * Update parameters from Limelight or Odometry.
+     * Update parameters from Odometry.
      */
-    public void updateVisionAimingParameters() {
-
-        double distanceToTarget;
-        if (mLimelight.hasTarget() && mLimelight.getLimelightDistanceToTarget().isPresent()) {
-            distanceToTarget = mLimelight.getLimelightDistanceToTarget().get();
-            double tx = mLimelight.getOffset()[0];
-            mPeriodicIO.targetAngle = mPeriodicIO.turretFieldHeadingAngle + tx;
-        } else {
-            distanceToTarget = 3.0;
-            mPeriodicIO.targetAngle = mPeriodicIO.turretFieldHeadingAngle;
+    public void updateVisionAimingParameters(double time) {
+        Optional<Pose2d> pose = mEstimator.getPoseAtTime(time);
+        if(pose.isEmpty()){
+            return;
         }
+        double distanceToTarget = pose.get().getWpilibPose2d().getTranslation().getDistance(FieldConstants.hubCenter);
+        Rotation2d rotationToTarget = getTargetRotation(pose.get().getWpilibPose2d().getTranslation(), FieldConstants.hubCenter);
 
         mPeriodicIO.shooterRPM = Constants.ShootingConstants.FLYWHEEL_AUTO_AIM_MAP
                 .getInterpolated(new InterpolatingDouble(distanceToTarget)).value;
+        mPeriodicIO.targetAngle = rotationToTarget.getDegrees();
     }
 
     /** Motion compensation for moving while shooting. */
@@ -352,184 +339,193 @@ public class Superstructure implements Updatable {
         mPeriodicIO.INTAKE = false;
         mPeriodicIO.EJECT = false;
         mPeriodicIO.SPIT = false;
-        if(autoTraversalClimb){ // Auto Traversal Climb Mode
-            if(climbStep == 1) {
+        if (autoTraversalClimb) { // Auto Traversal Climb Mode
+            if (climbStep == 1) {
                 mPeriodicIO.climberDemand = 0.01; // First step, pull down the climber to the lowest position
                 mPeriodicIO.climberHookOut = false;
                 climbStep++;
-            } else if (climbStep == 2){
-                if(mPeriodicIO.climberOnTarget){
+            } else if (climbStep == 2) {
+                if (mPeriodicIO.climberOnTarget) {
                     climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
+                    if (climbStepTimeRecord >= 1.0) {
                         climbStepTimeRecord = 0.0;
-                        mPeriodicIO.climberDemand = Constants.CLIMBER_STAGING_HEIGHT; // Second step, go to the staging height, with hook out
-                        mPeriodicIO.climberHookOut = true; 
-                        climbStep++;
-                    }
-                }
-            } else if (climbStep == 3){
-                if(mPeriodicIO.climberOnTarget){
-                    climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
-                        climbStepTimeRecord = 0.0;
-                        mPeriodicIO.climberDemand = Constants.CLIMBER_EXTENSION_HEIGHT; // Third step, go to extention height
+                        mPeriodicIO.climberDemand = Constants.CLIMBER_STAGING_HEIGHT; // Second step, go to the staging
+                                                                                      // height, with hook out
                         mPeriodicIO.climberHookOut = true;
                         climbStep++;
                     }
                 }
-            } else if (climbStep == 4){
-                if(mPeriodicIO.climberOnTarget){
+            } else if (climbStep == 3) {
+                if (mPeriodicIO.climberOnTarget) {
                     climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
+                    if (climbStepTimeRecord >= 1.0) {
+                        climbStepTimeRecord = 0.0;
+                        mPeriodicIO.climberDemand = Constants.CLIMBER_EXTENSION_HEIGHT; // Third step, go to extention
+                                                                                        // height
+                        mPeriodicIO.climberHookOut = true;
+                        climbStep++;
+                    }
+                }
+            } else if (climbStep == 4) {
+                if (mPeriodicIO.climberOnTarget) {
+                    climbStepTimeRecord += dt;
+                    if (climbStepTimeRecord >= 1.0) {
                         climbStepTimeRecord = 0.0;
                         mPeriodicIO.climberDemand = Constants.CLIMBER_EXTENSION_HEIGHT; // Fourth step, grab on
-                        mPeriodicIO.climberHookOut = false; 
+                        mPeriodicIO.climberHookOut = false;
                         climbStep++;
                     }
                 }
-            } else if (climbStep == 5){
-                if(mPeriodicIO.climberOnTarget){
+            } else if (climbStep == 5) {
+                if (mPeriodicIO.climberOnTarget) {
                     climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
+                    if (climbStepTimeRecord >= 1.0) {
                         climbStepTimeRecord = 0.0;
-                        mPeriodicIO.climberDemand = Constants.CLIMBER_STAGING_HEIGHT; // Fifth step, hook in and grab down to staging height
-                        mPeriodicIO.climberHookOut = false; 
+                        mPeriodicIO.climberDemand = Constants.CLIMBER_STAGING_HEIGHT; // Fifth step, hook in and grab
+                                                                                      // down to staging height
+                        mPeriodicIO.climberHookOut = false;
                         climbStep++;
                     }
                 }
-            } else if (climbStep == 6){
-                if(mPeriodicIO.climberOnTarget){
+            } else if (climbStep == 6) {
+                if (mPeriodicIO.climberOnTarget) {
                     climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
+                    if (climbStepTimeRecord >= 1.0) {
                         climbStepTimeRecord = 0.0;
                         mPeriodicIO.climberDemand = 0.01; // Sixth step, grab down
-                        mPeriodicIO.climberHookOut = false; 
+                        mPeriodicIO.climberHookOut = false;
                         climbStep++;
                     }
                 }
-            } else if (climbStep == 7){
-                if(mPeriodicIO.climberOnTarget){
+            } else if (climbStep == 7) {
+                if (mPeriodicIO.climberOnTarget) {
                     climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
+                    if (climbStepTimeRecord >= 1.0) {
                         climbStepTimeRecord = 0.0;
                         mPeriodicIO.climberDemand = Constants.CLIMBER_STAGING_HEIGHT; // Seventh step, staging again
-                        mPeriodicIO.climberHookOut = true; 
+                        mPeriodicIO.climberHookOut = true;
                         climbStep++;
                     }
                 }
-            } else if (climbStep == 8){
-                if(mPeriodicIO.climberOnTarget){
+            } else if (climbStep == 8) {
+                if (mPeriodicIO.climberOnTarget) {
                     climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
+                    if (climbStepTimeRecord >= 1.0) {
                         climbStepTimeRecord = 0.0;
                         mPeriodicIO.climberDemand = Constants.CLIMBER_EXTENSION_HEIGHT; // Eighth step, extension again
                         mPeriodicIO.climberHookOut = true;
                         climbStep++;
                     }
                 }
-            } else if (climbStep == 9){
-                if(mPeriodicIO.climberOnTarget){
+            } else if (climbStep == 9) {
+                if (mPeriodicIO.climberOnTarget) {
                     climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
+                    if (climbStepTimeRecord >= 1.0) {
                         climbStepTimeRecord = 0.0;
                         mPeriodicIO.climberDemand = Constants.CLIMBER_EXTENSION_HEIGHT; // Ninth step, grab on
-                        mPeriodicIO.climberHookOut = false; 
+                        mPeriodicIO.climberHookOut = false;
                         climbStep++;
                     }
                 }
-            } else if (climbStep == 10){
-                if(mPeriodicIO.climberOnTarget){
+            } else if (climbStep == 10) {
+                if (mPeriodicIO.climberOnTarget) {
                     climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
+                    if (climbStepTimeRecord >= 1.0) {
                         climbStepTimeRecord = 0.0;
-                        mPeriodicIO.climberDemand = Constants.CLIMBER_STAGING_HEIGHT; // Tenth step, hook in and grab down to staging height
-                        mPeriodicIO.climberHookOut = false; 
+                        mPeriodicIO.climberDemand = Constants.CLIMBER_STAGING_HEIGHT; // Tenth step, hook in and grab
+                                                                                      // down to staging height
+                        mPeriodicIO.climberHookOut = false;
                         climbStep++;
                     }
                 }
-            } else if (climbStep == 11){
-                if(mPeriodicIO.climberOnTarget){
+            } else if (climbStep == 11) {
+                if (mPeriodicIO.climberOnTarget) {
                     climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
+                    if (climbStepTimeRecord >= 1.0) {
                         climbStepTimeRecord = 0.0;
                         mPeriodicIO.climberDemand = 0.01; // 11th step, grab down
-                        mPeriodicIO.climberHookOut = false; 
+                        mPeriodicIO.climberHookOut = false;
                         climbStep++;
                     }
                 }
-            } else if (climbStep == 12){
-                if(mPeriodicIO.climberOnTarget){
+            } else if (climbStep == 12) {
+                if (mPeriodicIO.climberOnTarget) {
                     climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
+                    if (climbStepTimeRecord >= 1.0) {
                         climbStepTimeRecord = 0.0;
-                        mPeriodicIO.climberDemand = Constants.CLIMBER_SWITCH_HOOK_HEIGHT; // 12th step, switch hook height and end
-                        mPeriodicIO.climberHookOut = false; 
+                        mPeriodicIO.climberDemand = Constants.CLIMBER_SWITCH_HOOK_HEIGHT; // 12th step, switch hook
+                                                                                          // height and end
+                        mPeriodicIO.climberHookOut = false;
                         climbStep++;
                     }
                 }
             }
         } else if (autoHighBarClimb) {
-            if(climbStep == 1) {
+            if (climbStep == 1) {
                 mPeriodicIO.climberDemand = 0.01; // First step, pull down the climber to the lowest position
                 mPeriodicIO.climberHookOut = false;
                 climbStep++;
-            } else if (climbStep == 2){
-                if(mPeriodicIO.climberOnTarget){
+            } else if (climbStep == 2) {
+                if (mPeriodicIO.climberOnTarget) {
                     climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
+                    if (climbStepTimeRecord >= 1.0) {
                         climbStepTimeRecord = 0.0;
-                        mPeriodicIO.climberDemand = Constants.CLIMBER_STAGING_HEIGHT; // Second step, go to the staging height, with hook out
-                        mPeriodicIO.climberHookOut = true; 
-                        climbStep++;
-                    }
-                }
-            } else if (climbStep == 3){
-                if(mPeriodicIO.climberOnTarget){
-                    climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
-                        climbStepTimeRecord = 0.0;
-                        mPeriodicIO.climberDemand = Constants.CLIMBER_EXTENSION_HEIGHT; // Third step, go to extention height
+                        mPeriodicIO.climberDemand = Constants.CLIMBER_STAGING_HEIGHT; // Second step, go to the staging
+                                                                                      // height, with hook out
                         mPeriodicIO.climberHookOut = true;
                         climbStep++;
                     }
                 }
-            } else if (climbStep == 4){
-                if(mPeriodicIO.climberOnTarget){
+            } else if (climbStep == 3) {
+                if (mPeriodicIO.climberOnTarget) {
                     climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
+                    if (climbStepTimeRecord >= 1.0) {
+                        climbStepTimeRecord = 0.0;
+                        mPeriodicIO.climberDemand = Constants.CLIMBER_EXTENSION_HEIGHT; // Third step, go to extention
+                                                                                        // height
+                        mPeriodicIO.climberHookOut = true;
+                        climbStep++;
+                    }
+                }
+            } else if (climbStep == 4) {
+                if (mPeriodicIO.climberOnTarget) {
+                    climbStepTimeRecord += dt;
+                    if (climbStepTimeRecord >= 1.0) {
                         climbStepTimeRecord = 0.0;
                         mPeriodicIO.climberDemand = Constants.CLIMBER_EXTENSION_HEIGHT; // Fourth step, grab on
-                        mPeriodicIO.climberHookOut = false; 
+                        mPeriodicIO.climberHookOut = false;
                         climbStep++;
                     }
                 }
-            } else if (climbStep == 5){
-                if(mPeriodicIO.climberOnTarget){
+            } else if (climbStep == 5) {
+                if (mPeriodicIO.climberOnTarget) {
                     climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
+                    if (climbStepTimeRecord >= 1.0) {
                         climbStepTimeRecord = 0.0;
-                        mPeriodicIO.climberDemand = Constants.CLIMBER_STAGING_HEIGHT; // Fifth step, hook in and grab down to staging height
-                        mPeriodicIO.climberHookOut = false; 
+                        mPeriodicIO.climberDemand = Constants.CLIMBER_STAGING_HEIGHT; // Fifth step, hook in and grab
+                                                                                      // down to staging height
+                        mPeriodicIO.climberHookOut = false;
                         climbStep++;
                     }
                 }
-            } else if (climbStep == 6){
-                if(mPeriodicIO.climberOnTarget){
+            } else if (climbStep == 6) {
+                if (mPeriodicIO.climberOnTarget) {
                     climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
+                    if (climbStepTimeRecord >= 1.0) {
                         climbStepTimeRecord = 0.0;
                         mPeriodicIO.climberDemand = 0.01; // Sixth step, grab down
-                        mPeriodicIO.climberHookOut = false; 
+                        mPeriodicIO.climberHookOut = false;
                         climbStep++;
                     }
                 }
-            } else if (climbStep == 7){
-                if(mPeriodicIO.climberOnTarget){
+            } else if (climbStep == 7) {
+                if (mPeriodicIO.climberOnTarget) {
                     climbStepTimeRecord += dt;
-                    if(climbStepTimeRecord >= 1.0){
+                    if (climbStepTimeRecord >= 1.0) {
                         climbStepTimeRecord = 0.0;
-                        mPeriodicIO.climberDemand = Constants.CLIMBER_SWITCH_HOOK_HEIGHT; // Seventh step, switch hook and end
-                        mPeriodicIO.climberHookOut = false; 
+                        mPeriodicIO.climberDemand = Constants.CLIMBER_SWITCH_HOOK_HEIGHT; // Seventh step, switch hook
+                                                                                          // and end
+                        mPeriodicIO.climberHookOut = false;
                         climbStep++;
                     }
                 }
@@ -539,11 +535,13 @@ public class Superstructure implements Updatable {
 
     /** Determine if shooting conditions are met. */
     public synchronized void updateShootingReadyOrNot() {
-        boolean modeCorrect = !mPeriodicIO.EJECT && getState() == STATE.SHOOTING; // Make sure that the machine is in SHOOTING mode andhas no wrong ball
-        boolean targetAngleCorrect = Util.epsilonEquals(mPeriodicIO.targetAngle, mPeriodicIO.turretFieldHeadingAngle,Constants.ShootingConstants.EPISILON); // Make sure that the aiming target is locked on
+        boolean modeCorrect = !mPeriodicIO.EJECT && getState() == STATE.SHOOTING; // Make sure that the machine is in
+                                                                                  // SHOOTING mode andhas no wrong ball
+        boolean targetAngleCorrect = Util.epsilonEquals(mPeriodicIO.targetAngle, mPeriodicIO.turretFieldHeadingAngle,
+                Constants.ShootingConstants.EPISILON); // Make sure that the aiming target is locked on
         boolean spunUp = mShooter.spunUp(); // Make sure the shooter reaches the target speed
 
-        if(modeCorrect && targetAngleCorrect && spunUp){
+        if (modeCorrect && targetAngleCorrect && spunUp) {
             readyToShoot = true;
             onTarget = true;
         } else if (targetAngleCorrect) {
@@ -643,8 +641,7 @@ public class Superstructure implements Updatable {
             if (!mPeriodicIO.EJECT) {
                 // Determine the appropriate lock angle according to vision, odomertry and
                 // motion of the robot
-                getRealAimingParameters();
-                updateVisionAimingParameters();
+                updateVisionAimingParameters(time);
                 updateMotionCompensation();
                 // Update swerve and turret afterwards with coordination
                 updateSwerveAndTurretCoordination();
@@ -669,7 +666,7 @@ public class Superstructure implements Updatable {
 
     @Override
     public synchronized void write(double time, double dt) {
-        if(getState() == STATE.CHASING || getState() == STATE.SHOOTING) {
+        if (getState() == STATE.CHASING || getState() == STATE.SHOOTING) {
             mBallPath.changeIfReadyForWrongBall(readyToShootWrongBall);
 
             if (readyToShoot && !mPeriodicIO.EJECT && getState() == STATE.SHOOTING) {
@@ -686,20 +683,19 @@ public class Superstructure implements Updatable {
             mShooter.setShooterRPM(mPeriodicIO.shooterRPM);
             mClimber.setClimberHeight(0.01);
             mClimber.retractClimber();
-        } else if (getState() == STATE.CLIMB){
-            if(openLoopClimbControl){
+        } else if (getState() == STATE.CLIMB) {
+            if (openLoopClimbControl) {
                 mClimber.setClimberPercentage(mPeriodicIO.climberDemand);
             } else {
                 mClimber.setClimberHeight(mPeriodicIO.climberDemand);
             }
 
-            if(mPeriodicIO.climberHookOut){
+            if (mPeriodicIO.climberHookOut) {
                 mClimber.tryToExtend();
             } else {
                 mClimber.retractClimber();
             }
         }
-
 
         if (mPeriodicIO.swerveBrake) {
             mSwerve.setState(SJTUSwerveMK5Drivebase.STATE.BRAKE);

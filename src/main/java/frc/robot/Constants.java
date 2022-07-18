@@ -11,6 +11,7 @@ import org.frcteam1678.lib.math.Conversions;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -249,9 +250,17 @@ public final class Constants {
 
             public static final Translation2d TURRET_RING_CENTER_TO_ROBOT_CENTER = new Translation2d(0.0, -0.1);
             public static final double TURRET_RING_RADIUS = Units.inchesToMeters(10.0);
+            public static Transform2d VEHICLE_TO_TURRET_CAMERA(double angle){
+                Rotation2d rot = Rotation2d.fromDegrees(angle);
+                return new Transform2d(new Translation2d(TURRET_RING_RADIUS, rot.unaryMinus()), null);
+            }
 
+            public static final double WIDTH_PIXELS = 960;
+            public static final double HEIGHT_PIXELS = 720;
             public static final double HORIZONTAL_FOV = 59.6; // degrees
-		    public static final double VERTICAL = 49.7; // degrees
+		    public static final double VERTICAL_FOV = 49.7; // degrees
+            public static final double VPW = 2.0 * Math.tan(Math.toRadians(HORIZONTAL_FOV) / 2.0);
+            public static final double VPH = 2.0 * Math.tan(Math.toRadians(VERTICAL_FOV) / 2.0);
 		    public static final double LATENCY = 11.0 / 1000.0; // seconds
             public static final double FRAME_RATE = 90.0;
 
