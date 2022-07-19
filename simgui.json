@@ -62,6 +62,9 @@
         "open": true
       }
     },
+    "Preferences": {
+      "open": true
+    },
     "PulseHUD": {
       "PathFollower": {
         "open": true
@@ -71,6 +74,9 @@
       "PathFollower": {
         "open": true
       },
+      "open": true
+    },
+    "limelight": {
       "open": true
     }
   }

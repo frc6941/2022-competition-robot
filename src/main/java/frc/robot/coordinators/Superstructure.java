@@ -2,8 +2,6 @@ package frc.robot.coordinators;
 
 import java.util.Optional;
 
-import com.team254.lib.geometry.Pose2d;
-import com.team254.lib.util.InterpolatingDouble;
 import com.team254.lib.util.TimeDelayedBoolean;
 import com.team254.lib.util.Util;
 
@@ -11,18 +9,19 @@ import org.frcteam6941.looper.UpdateManager.Updatable;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 import org.frcteam6941.utils.AngleNormalization;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
-import frc.robot.FieldConstants;
 import frc.robot.controlboard.ControlBoard;
 import frc.robot.controlboard.ControlBoard.SwerveCardinal;
 import frc.robot.subsystems.BallPath;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Indicator;
 import frc.robot.subsystems.Intaker;
+import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.RobotStateEstimator;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
@@ -94,6 +93,13 @@ public class Superstructure implements Updatable {
     private Indicator mIndicator = Indicator.getInstance();
     private Climber mClimber = Climber.getInstance();
     private RobotStateEstimator mEstimator = RobotStateEstimator.getInstance();
+    private Limelight mLimelight = Limelight.getInstance();
+
+    // Swerve setting related constants
+    private boolean robotOrientedDrive = false;
+
+    // Vision delta related
+    private PIDController angleDeltaController = new PIDController(0.7, 0.0001, 0.0);
 
     // Shooting related tracking constants
     private boolean onTarget = false;
@@ -152,6 +158,15 @@ public class Superstructure implements Updatable {
      * 
      */
     private synchronized void updateDriverAndOperatorCommand() {
+        mPeriodicIO.swerveInputedTranslation = mControlBoard.getSwerveTranslation();
+        mPeriodicIO.swerveInputedRotation = mControlBoard.getSwerveRotation();
+        mPeriodicIO.swerveSnapRotation = mControlBoard.getSwerveSnapRotation();
+        mPeriodicIO.swerveBrake = mControlBoard.getSwerveBrake();
+
+        if(mControlBoard.getToggleRobotOrientedDrive()){
+            robotOrientedDrive = !robotOrientedDrive;
+        }
+
         if (climbStep == 0) {
             mSwerve.resetRoll(0.0);
         }
@@ -308,16 +323,27 @@ public class Superstructure implements Updatable {
      * Update parameters from Odometry.
      */
     public void updateVisionAimingParameters(double time) {
-        Optional<Pose2d> pose = mEstimator.getPoseAtTime(time);
-        if(pose.isEmpty()){
-            return;
-        }
-        double distanceToTarget = pose.get().getWpilibPose2d().getTranslation().getDistance(FieldConstants.hubCenter);
-        Rotation2d rotationToTarget = getTargetRotation(pose.get().getWpilibPose2d().getTranslation(), FieldConstants.hubCenter);
+        // Optional<Pose2d> pose = mEstimator.getPoseAtTime(time);
+        // if(pose.isEmpty()){
+        //     return;
+        // }
+        // double distanceToTarget = pose.get().getWpilibPose2d().getTranslation().getDistance(FieldConstants.hubCenter);
+        // Rotation2d rotationToTarget = getTargetRotation(pose.get().getWpilibPose2d().getTranslation(), FieldConstants.hubCenter);
 
-        mPeriodicIO.shooterRPM = Constants.ShootingConstants.FLYWHEEL_AUTO_AIM_MAP
-                .getInterpolated(new InterpolatingDouble(distanceToTarget)).value;
-        mPeriodicIO.targetAngle = rotationToTarget.getDegrees();
+        // mPeriodicIO.shooterRPM = Constants.ShootingConstants.FLYWHEEL_AUTO_AIM_MAP
+        //         .getInterpolated(new InterpolatingDouble(distanceToTarget)).value;
+        // mPeriodicIO.targetAngle = rotationToTarget.getDegrees();
+        
+        mPeriodicIO.shooterRPM = 400;
+        Optional<Double> simpleAimAngle = mEstimator.getSimpleAimAngleAtTime(time);
+        if(mLimelight.hasTarget() && simpleAimAngle.isPresent()){
+            double angle = simpleAimAngle.get();
+            double outputAngle = angleDeltaController.calculate(angle, 0.0);
+            mPeriodicIO.targetAngle = -outputAngle + mPeriodicIO.turretFieldHeadingAngle;
+        } else {
+            mPeriodicIO.targetAngle = mPeriodicIO.swerveFieldHeadingAngle;
+            angleDeltaController.reset();
+        }
     }
 
     /** Motion compensation for moving while shooting. */
@@ -604,15 +630,12 @@ public class Superstructure implements Updatable {
     }
 
     private Superstructure() {
-
+        angleDeltaController.setTolerance(0.1);
     }
 
     @Override
     public synchronized void read(double time, double dt) {
-        mPeriodicIO.swerveInputedTranslation = mControlBoard.getSwerveTranslation();
-        mPeriodicIO.swerveInputedRotation = mControlBoard.getSwerveRotation();
-        mPeriodicIO.swerveSnapRotation = mControlBoard.getSwerveSnapRotation();
-        mPeriodicIO.swerveBrake = mControlBoard.getSwerveBrake();
+        updateDriverAndOperatorCommand();
         mPeriodicIO.swerveFieldHeadingAngle = mSwerve.getYaw();
         mPeriodicIO.swerveRollAngle = mSwerve.getRoll();
 
@@ -636,7 +659,6 @@ public class Superstructure implements Updatable {
 
     @Override
     public synchronized void update(double time, double dt) {
-        updateDriverAndOperatorCommand();
         if (getState() == STATE.CHASING || getState() == STATE.SHOOTING || getState() == STATE.PIT) {
             if (!mPeriodicIO.EJECT) {
                 // Determine the appropriate lock angle according to vision, odomertry and
@@ -681,6 +703,7 @@ public class Superstructure implements Updatable {
                 mIntaker.retract();
             }
             mShooter.setShooterRPM(mPeriodicIO.shooterRPM);
+            mTurret.setTurretAngle(mPeriodicIO.turretLockTarget);
             mClimber.setClimberHeight(0.01);
             mClimber.retractClimber();
         } else if (getState() == STATE.CLIMB) {
@@ -703,7 +726,7 @@ public class Superstructure implements Updatable {
             mSwerve.setState(SJTUSwerveMK5Drivebase.STATE.DRIVE);
             mSwerve.setLockHeading(mPeriodicIO.swerveLockHeading);
             mSwerve.setHeadingTarget(mPeriodicIO.swerveHeadingTarget);
-            mSwerve.drive(mPeriodicIO.swerveTranslation, mPeriodicIO.swerveRotation, true);
+            mSwerve.drive(mPeriodicIO.swerveTranslation, mPeriodicIO.swerveRotation, !robotOrientedDrive);
         }
     }
 
