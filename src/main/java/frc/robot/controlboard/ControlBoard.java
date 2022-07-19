@@ -70,13 +70,8 @@ public class ControlBoard {
         if (Math.abs(tAxes.getNorm()) < kSwerveDeadband) {
             return new Translation2d();
         } else {
-            Rotation2d deadbandDirection = new Rotation2d(tAxes.getX(), tAxes.getY());
-            Translation2d deadbandVector = new Translation2d(deadbandDirection.getCos() * kSwerveDeadband, deadbandDirection.getSin() * kSwerveDeadband);
-
-            double scaledX = tAxes.getX() - (deadbandVector.getX()) / (1 - deadbandVector.getX());
-            double scaledY = tAxes.getY() - (deadbandVector.getY()) / (1 - deadbandVector.getY());
             double pedalScale = 1.0 - Constants.CONTROLLER_PEDAL + Constants.CONTROLLER_PEDAL * pedal;
-            return new Translation2d(scaledX, scaledY).times(pedalScale);
+            return tAxes.times(pedalScale);
         }
     }
 

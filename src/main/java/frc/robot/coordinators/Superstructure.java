@@ -99,7 +99,7 @@ public class Superstructure implements Updatable {
     private boolean robotOrientedDrive = false;
 
     // Vision delta related
-    private PIDController angleDeltaController = new PIDController(0.7, 0.0001, 0.0);
+    private PIDController angleDeltaController = new PIDController(0.4, 0.0000, 0.0);
 
     // Shooting related tracking constants
     private boolean onTarget = false;
@@ -162,6 +162,10 @@ public class Superstructure implements Updatable {
         mPeriodicIO.swerveInputedRotation = mControlBoard.getSwerveRotation();
         mPeriodicIO.swerveSnapRotation = mControlBoard.getSwerveSnapRotation();
         mPeriodicIO.swerveBrake = mControlBoard.getSwerveBrake();
+        if(mControlBoard.zeroGyro()){
+            mSwerve.resetGyro(0.0);
+        }
+        
 
         if(mControlBoard.getToggleRobotOrientedDrive()){
             robotOrientedDrive = !robotOrientedDrive;
@@ -335,15 +339,15 @@ public class Superstructure implements Updatable {
         // mPeriodicIO.targetAngle = rotationToTarget.getDegrees();
         
         mPeriodicIO.shooterRPM = 400;
-        Optional<Double> simpleAimAngle = mEstimator.getSimpleAimAngleAtTime(time);
-        if(mLimelight.hasTarget() && simpleAimAngle.isPresent()){
-            double angle = simpleAimAngle.get();
-            double outputAngle = angleDeltaController.calculate(angle, 0.0);
-            mPeriodicIO.targetAngle = -outputAngle + mPeriodicIO.turretFieldHeadingAngle;
+        double offsetAngle = mLimelight.getOffset()[0];
+        if(mLimelight.hasTarget()){
+            double adjustedAngle = angleDeltaController.calculate(offsetAngle, 0.0);
+            mPeriodicIO.targetAngle = -adjustedAngle + mPeriodicIO.turretFieldHeadingAngle;
         } else {
             mPeriodicIO.targetAngle = mPeriodicIO.swerveFieldHeadingAngle;
             angleDeltaController.reset();
         }
+        
     }
 
     /** Motion compensation for moving while shooting. */
@@ -706,6 +710,7 @@ public class Superstructure implements Updatable {
             mTurret.setTurretAngle(mPeriodicIO.turretLockTarget);
             mClimber.setClimberHeight(0.01);
             mClimber.retractClimber();
+
         } else if (getState() == STATE.CLIMB) {
             if (openLoopClimbControl) {
                 mClimber.setClimberPercentage(mPeriodicIO.climberDemand);
@@ -756,6 +761,7 @@ public class Superstructure implements Updatable {
         SmartDashboard.putBoolean("High Climb Auto", autoHighBarClimb);
 
         SmartDashboard.putNumber("Field Heading Angle", mPeriodicIO.turretFieldHeadingAngle);
+        SmartDashboard.putBoolean("Is Swerve Robot Oreinted", robotOrientedDrive);
     }
 
     @Override

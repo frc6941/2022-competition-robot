@@ -11,6 +11,7 @@ import org.frcteam6941.utils.LazyTalonFX;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
+import frc.robot.subsystems.BallPath.STATE;
 
 public class Turret implements Updatable {
     public static class PeriodicIO {
@@ -137,6 +138,9 @@ public class Turret implements Updatable {
 
         // Carry out calibration according to sensor status. Reverse and forward must
         // both be calibrated either by hand or through motor before further actions.
+        if(!isCalibrated()){
+            setState(STATE.HOMING);
+        }
         switch(state){
             case HOMING:
                 if (this.isForwardCalibrated && this.isReverseCalibrated) {
@@ -152,14 +156,37 @@ public class Turret implements Updatable {
             case PERCENTAGE:
                 break;
             case ANGLE:
-                break;
+            double angle = mPeriodicIO.turretDemand;
+            while (angle > 180.0) {
+                angle -= 360.0;
+            }
+            while (angle < -180.0) {
+                angle += 360.0;
+            }
+
+            // Determine if the set angle is out of reach. If so, set the angle to
+            // the reachable maximum or minimum.
+            if (Math.abs(angle) < Constants.TURRET_MAX_ROTATION_DEGREE) {
+                turretMotor.set(ControlMode.MotionMagic,
+                        Conversions.degreesToFalcon(angle, Constants.TURRET_GEAR_RATIO)
+                                + (forwardMaxPosition + reverseMaxPosition) / 2.0);
+            } else {
+                turretMotor.set(ControlMode.MotionMagic,
+                        Conversions.degreesToFalcon(Math.copySign(Constants.TURRET_MAX_ROTATION_DEGREE, angle), Constants.TURRET_GEAR_RATIO)
+                                + (forwardMaxPosition + reverseMaxPosition) / 2.0);
+            }
+            break;
             case OFF:
                 mPeriodicIO.turretDemand = 0.0;
+            
         }
     }
     
     @Override
     public synchronized void write(double time, double dt){
+        if(!isCalibrated()){
+            setState(STATE.HOMING);
+        }
         switch(state){
             case HOMING:
                 turretMotor.set(ControlMode.PercentOutput, mPeriodicIO.turretDemand);
@@ -198,7 +225,8 @@ public class Turret implements Updatable {
             case OFF:
                 turretMotor.set(ControlMode.PercentOutput, 0.0);
                 break;
-        }
+            
+        } 
     }
     
     @Override

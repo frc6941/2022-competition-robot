@@ -95,6 +95,7 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
         } else{
             mAngleMotor.set(ControlMode.MotionMagic, (this.getEncoderUnbound().getDegrees() + angleOffset) / 360.0 * 4096.0);
         }
+        
     }
 
     /** Configurations for the angle motor. */
@@ -103,7 +104,7 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
         mAngleMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
         mAngleMotor.setInverted(false);
         mAngleMotor.setSensorPhase(true);
-        mAngleMotor.setNeutralMode(NeutralMode.Brake);
+        mAngleMotor.setNeutralMode(NeutralMode.Coast);
 
         SupplyCurrentLimitConfiguration curr_lim = new SupplyCurrentLimitConfiguration(true, 15, 40, 0.02);
         mAngleMotor.configSupplyCurrentLimit(curr_lim);

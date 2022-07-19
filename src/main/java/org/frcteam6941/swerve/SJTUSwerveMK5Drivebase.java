@@ -114,6 +114,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
                 kLooperDt);
 ;
         this.pose = poseEstimator.getEstimatedPosition();
+        headingController.enableContinuousInput(0, 360.0);
     }
 
     public boolean isLockHeading() {
@@ -180,8 +181,9 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
             SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, 1.0);
             for (SJTUSwerveModuleMK5 mod : mSwerveMods) {
                 mod.setDesiredState(swerveModuleStates[mod.moduleNumber], true, false);
+                
             }
-        }
+        } 
     }
 
     private void updateOdometry(double time, double dt) {
