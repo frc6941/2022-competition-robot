@@ -1,10 +1,8 @@
 package frc.robot.auto.basics;
 
 import com.pathplanner.lib.PathPlannerTrajectory;
-
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 public class FollowTrajectory extends CommandBase{
@@ -12,7 +10,6 @@ public class FollowTrajectory extends CommandBase{
     boolean angleLock;
     boolean reset;
     boolean onTarget;
-    Timer timer = new Timer();
 
     SJTUSwerveMK5Drivebase mDrivebase;
 

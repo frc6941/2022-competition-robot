@@ -1,11 +1,11 @@
-package frc.robot.utils;
+package frc.robot.utils.led;
 
 
 import edu.wpi.first.wpilibj.util.Color;
-import frc.robot.utils.TimedLEDState.BlinkingLEDState;
-import frc.robot.utils.TimedLEDState.BreathingLEDState;
-import frc.robot.utils.TimedLEDState.RainbowLEDState;
-import frc.robot.utils.TimedLEDState.StaticLEDState;
+import frc.robot.utils.led.TimedLEDState.BlinkingLEDState;
+import frc.robot.utils.led.TimedLEDState.BreathingLEDState;
+import frc.robot.utils.led.TimedLEDState.RainbowLEDState;
+import frc.robot.utils.led.TimedLEDState.StaticLEDState;
 
 public class Lights {
     public static final LEDState OFF = new LEDState(0.0, 0.0, 0.0);

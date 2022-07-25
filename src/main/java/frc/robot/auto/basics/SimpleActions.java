@@ -1,15 +1,13 @@
 package frc.robot.auto.basics;
 
-import edu.wpi.first.wpilibj2.command.CommandBase;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import frc.robot.subsystems.BallPath;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import frc.robot.coordinators.Superstructure;
 import frc.robot.subsystems.Intaker;
-import frc.robot.subsystems.BallPath.STATE;
 
 public final class SimpleActions {
     private static final Intaker mIntaker = Intaker.getInstance();
-    private static final BallPath mBallPath = BallPath.getInstance();
+    private static final Superstructure mSuperstructure = Superstructure.getInstance();
 
     public static final InstantCommand extendIntaker = new InstantCommand(() ->{
         mIntaker.setState(Intaker.STATE.EXTENDING);
@@ -23,30 +21,23 @@ public final class SimpleActions {
     public static final InstantCommand stopSpinIntaker = new InstantCommand(() -> {
         mIntaker.spinIntaker(false);
     });
+    public static final ParallelCommandGroup extendAndSpinIntaker = new ParallelCommandGroup(
+        extendIntaker,
+        spinIntaker
+    );
+    public static final ParallelCommandGroup retractAndStopSpinIntaker = new ParallelCommandGroup(
+        retractIntaker,
+        stopSpinIntaker
+    );
 
 
-
-    public static final InstantCommand shoot = new InstantCommand(() -> {
-        mBallPath.setState(BallPath.STATE.FEEDING);
+    public static final InstantCommand prepShoot = new InstantCommand(() -> {
+        mSuperstructure.setState(Superstructure.STATE.SHOOTING);
     });
 
     public static final InstantCommand stopShoot = new InstantCommand(() -> {
-        if(mBallPath.getState() == BallPath.STATE.FEEDING){
-            mBallPath.setState(STATE.PROCESSING);
+        if(mSuperstructure.getState() == Superstructure.STATE.SHOOTING){
+            mSuperstructure.setState(Superstructure.STATE.CHASING);
         }
     });
-
-    public static final class shootIfReady extends CommandBase{
-        @Override
-        public void initialize(){
-           
-        }
-
-        @Override
-        public void end(boolean isInterrupted){
-            CommandScheduler.getInstance().schedule(stopShoot);
-        }
-    }
-    
-
 }

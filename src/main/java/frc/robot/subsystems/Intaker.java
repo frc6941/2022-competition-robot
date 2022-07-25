@@ -10,10 +10,9 @@ import org.frcteam6941.looper.UpdateManager.Updatable;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
-public class Intaker extends SubsystemBase implements Updatable {
+public class Intaker implements Updatable {
     public static class PeriodicIO {
         // OUTPUTS
         private double intakerDemand = 0.0;
@@ -119,8 +118,7 @@ public class Intaker extends SubsystemBase implements Updatable {
     @Override
     public synchronized void write(double time, double dt){
         intakerMotor.set(mPeriodicIO.intakerDemand);
-        // intakerExtender.set(mPeriodicIO.intakerExtenderDemand); TODO: Change back when neo550 is working properly
-        intakerExtender.set(DoubleSolenoid.Value.kReverse);
+        intakerExtender.set(mPeriodicIO.intakerExtenderDemand);
         feederExtender.set(mPeriodicIO.feederExtenderDemand);
     }
 

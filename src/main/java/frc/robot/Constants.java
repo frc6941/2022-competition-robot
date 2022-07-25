@@ -64,6 +64,8 @@ public final class Constants {
         public static final int SHOOTER_FOLLOWER_MOTOR = 11;
         public static final int CLIMBER_MOTOR = 12;
         public static final int INTAKER_MOTOR = 15;
+        public static final int TRIGGER_MOTOR = 41; // TODO: Change CANID
+        public static final int HOPPER_MOTOR = 42; // TODO: Change CANID
 
         public static final int PNEUMATICS_HUB = 1;
         public static final int LED_CANIFIER = 22;
@@ -103,9 +105,9 @@ public final class Constants {
     public static final double DRIVE_GEAR_RATIO = 7.73;
     public static final double ANGLE_GEAR_RATIO = 10.0; // TODO: Need reconfirmation.
 
-    public static final double FRONT_LEFT_OFFSET = 0.0 + 180.0;
-    public static final double FRONT_RIGHT_OFFSET = 0.0 + 180.0;
-    public static final double BACK_LEFT_OFFSET = 0.0 +180.0;
+    public static final double FRONT_LEFT_OFFSET = 0.0;
+    public static final double FRONT_RIGHT_OFFSET = 0.0;
+    public static final double BACK_LEFT_OFFSET = 0.0;
     public static final double BACK_RIGHT_OFFSET = 0.0;
 
     public static final double DRIVE_MAX_VELOCITY = 4.0; // FIXME: Need remeasurement for more accurate data.
@@ -162,6 +164,19 @@ public final class Constants {
     public static final double SHOOTER_ERROR_TOLERANCE = 100.0;
     public static final double SHOOTER_RAMP = 0.1;
 
+    // Trigger Constants
+    public static final double TRIGGER_GEAR_RATIO = 3.0;
+    public static final double TRIGGER_PASSIVE_REVERSE_VELOCITY = -100.0;
+    public static final double TRIGGER_SLOW_FEEDING_VELOCITY = 254.0;
+    public static final double TRIGGER_FEEDING_VELOCITY = 500.0;
+    public static final double TRIGGER_REVERSING_VELOCITY = -500.0;
+
+    // Hood Constants
+    public static final double HOOD_GEAR_RATIO = 3.0;
+    public static final double HOOD_MINIMUM_ANGLE = 15.0;
+    public static final double HOOD_MAXIMUM_ANGLE = 75.0;
+    
+
     // Turret Constants
     public static final double TURRET_GEAR_RATIO = 7.0 * 181.0 / 18.0;
     public static final double TURRET_SAFE_ZONE_DEGREE = 70.0;
@@ -205,6 +220,7 @@ public final class Constants {
     public static final double CLIMBER_MOTION_CRUISE_VELOCITY = 40000.0;
     public static final double CLIMBER_MOTION_ACCELERATION = 20000.0;
     public static final double CLIMBER_ON_TARGET_TOLERANCE = 0.02;
+    public static final double CLIMBER_CALIBRATION_STATOR_CURRET_THRESHOLD = 15.0;
 
     public static final double CLIMBER_OPENLOOP_CONTROL_PERCENTAGE = 0.5;
     public static final double CLIMBER_EXTENSION_HEIGHT = 0.82;

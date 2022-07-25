@@ -11,9 +11,9 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.SuppliedValueWidget;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
-import frc.robot.utils.LEDState;
-import frc.robot.utils.Lights;
-import frc.robot.utils.TimedLEDState;
+import frc.robot.utils.led.LEDState;
+import frc.robot.utils.led.Lights;
+import frc.robot.utils.led.TimedLEDState;
 
 public class Indicator implements Updatable {
     private CANifier ledIndicator = new CANifier(Constants.CANID.LED_CANIFIER);

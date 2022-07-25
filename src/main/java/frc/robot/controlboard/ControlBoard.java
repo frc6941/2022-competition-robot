@@ -112,8 +112,8 @@ public class ControlBoard {
     }
 
     // Robot oriented switch
-    public boolean getToggleRobotOrientedDrive() {
-        return driver.getController().getRightStickButtonPressed();
+    public boolean getRobotOrientedDrive() {
+        return driver.getController().getRightStickButton();
     }
 
     // Start intake
@@ -122,7 +122,7 @@ public class ControlBoard {
     }
 
     public boolean getShoot() {
-        return driver.getButton(Button.X);
+        return driver.getButton(Button.LB);
     }
 
 

@@ -4,6 +4,7 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
+import com.team254.lib.util.TimeDelayedBoolean;
 import com.team254.lib.util.Util;
 
 import org.frcteam1678.lib.math.Conversions;
@@ -63,6 +64,7 @@ public class Climber implements Updatable {
     private boolean isClimberCalibrated = false;
     private boolean isExtended = false;
     private boolean tryToExtend = false;
+    private TimeDelayedBoolean climberHookTimer = new TimeDelayedBoolean();
 
     private STATE state = STATE.HOMING;
 
@@ -84,22 +86,12 @@ public class Climber implements Updatable {
         return this.getClimberHeight() > Constants.CLIMBER_SAFE_EXTENSION_MINIMUM;
     }
 
-    public void extendClimber() {
-        // Make sure that the climber is at a state that is suitable to extend
-        if (this.freeToExtend() && this.isClimberCalibrated) {
-            this.isExtended = true;
-            this.tryToExtend = false;
-        } else {
-            retractClimber();
-        }
-    }
-
     public void retractClimber() {
         this.isExtended = false;
         this.tryToExtend = false;
     }
 
-    public void tryToExtend(){
+    public void extendClimber(){
         this.tryToExtend = true;
     }
 
@@ -192,8 +184,20 @@ public class Climber implements Updatable {
             this.tryToExtend = false;
         }
 
-        if(this.isExtended && this.freeToExtend()){
+        if(this.isExtended && this.freeToExtend()){ // At good height and received signal to extend
             mPeriodicIO.climberExtenderDemand = Value.kForward;
+        } else if (this.isExtended && !this.freeToExtend()) { // Not a good height to extend yet desired to extend
+            if (!climberHookTimer.update(false, 1.0)){ // If climber is out, start a time delayed boolean, cotinue after fully retraction
+                if(getState() == STATE.PERCENTAGE){
+                    mPeriodicIO.climberDemand = 0.0;
+                    mPeriodicIO.climberExtenderDemand = Value.kReverse;
+                } else if (getState() == STATE.HEIGHT){
+                    mPeriodicIO.climberDemand = getClimberHeight();
+                    mPeriodicIO.climberExtenderDemand = Value.kReverse;
+                }
+            } else { // Climber fully retracted
+                mPeriodicIO.climberExtenderDemand = Value.kReverse;
+            }
         } else {
             mPeriodicIO.climberExtenderDemand = Value.kReverse;
         }
@@ -204,6 +208,7 @@ public class Climber implements Updatable {
         switch(state){
             case HOMING:
                 climberMotor.set(ControlMode.PercentOutput, -0.3);
+                climberExtender.set(Value.kReverse);
                 break;
             case PERCENTAGE:
                 climberMotor.set(ControlMode.PercentOutput, mPeriodicIO.climberDemand);

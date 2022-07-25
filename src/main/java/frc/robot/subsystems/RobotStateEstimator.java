@@ -19,6 +19,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
+import frc.robot.RobotState;
 
 public class RobotStateEstimator implements Updatable {
     private Limelight mLimelight = Limelight.getInstance();
@@ -28,16 +29,13 @@ public class RobotStateEstimator implements Updatable {
     private static RobotStateEstimator instance;
 
     private int targetCount = 0;
-    private Pose2d pose;
 
-    private InterpolatingTreeMap<InterpolatingDouble, Pose2d> poseMap = new InterpolatingTreeMap<InterpolatingDouble, Pose2d>(
-            Constants.kUniBufferSize);
-    private InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> turretAngleMap = new InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble>(
-            Constants.kUniBufferSize);
-    private InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> drivetrainHeadingMap = new InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble>(
-            Constants.kUniBufferSize);
-    private InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> simpleAimAngleMap = new InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble>(
-            Constants.kUniBufferSize);
+    private Pose2d lastPose = null;
+    private Pose2d lastMeasuredVelocity = new Pose2d();
+
+    private InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> turretAngleMap = new InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble>(5);
+    private InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> drivetrainHeadingMap = new InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble>(5);
+    private InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> simpleAimAngleMap = new InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble>(5);
 
     public static RobotStateEstimator getInstance() {
         if (instance == null) {
@@ -50,43 +48,53 @@ public class RobotStateEstimator implements Updatable {
 
     }
 
-    private synchronized void updateRecordingMaps(double time) {
+    private synchronized void updateRecordingMaps(double time, double dt) {
         edu.wpi.first.math.geometry.Pose2d pose = mSwerve.getPose();
-        poseMap.put(
-                new InterpolatingDouble(time),
-                new Pose2d(pose.getX(), pose.getY(),
-                        com.team254.lib.geometry.Rotation2d.fromDegrees(pose.getRotation().getDegrees())));
+        Pose2d currentPose = new Pose2d(pose.getX(), pose.getY(), com.team254.lib.geometry.Rotation2d.fromDegrees(pose.getRotation().getDegrees()));
+        if(lastPose == null){
+            lastPose = currentPose;
+        }
+
+        final com.team254.lib.geometry.Translation2d transDisplacement = new com.team254.lib.geometry.Translation2d(lastPose.getTranslation(), currentPose.getTranslation());
+        final com.team254.lib.geometry.Rotation2d rotDisplacement = lastPose.getRotation().inverse().rotateBy(currentPose.getRotation());
+        Pose2d odometryDelta = new Pose2d(transDisplacement, rotDisplacement);
+        final Pose2d measuredVelocity = odometryDelta.scaled(1.0 / dt);
+        final Pose2d measuredVelocityFiltered = RobotState.getInstance().getSmoothedMeasuredVelocity();
+        final Pose2d lastVelocityAcceleration = lastMeasuredVelocity.inverse().transformBy(measuredVelocityFiltered).scaled(1.0 / dt);            
+        final Pose2d predictedVelocity = measuredVelocity.transformBy(lastVelocityAcceleration.scaled(dt));
+
+        RobotState.getInstance().addObservations(time, odometryDelta, measuredVelocity, predictedVelocity);
+
+        lastPose = currentPose;
+        lastMeasuredVelocity = measuredVelocityFiltered;
+       
+        
         if (mTurret.isCalibrated()) {
             turretAngleMap.put(
                     new InterpolatingDouble(time),
                     new InterpolatingDouble(mTurret.getTurretAngle()));
+        } else {
+            turretAngleMap.clear();
         }
+
         drivetrainHeadingMap.put(
                 new InterpolatingDouble(time),
                 new InterpolatingDouble(mSwerve.getYaw()));
+
         if (mLimelight.hasTarget()) {
             simpleAimAngleMap.put(
                 new InterpolatingDouble(time - mLimelight.getLatency()),
                 new InterpolatingDouble(mLimelight.getOffset()[0])
             );
-        }
-    }
-
-    public synchronized Optional<Double> getTurretAngleAtTime(double time) {
-        if (mTurret.isCalibrated()) {
-            return Optional.ofNullable(turretAngleMap.getInterpolated(new InterpolatingDouble(time)).value);
         } else {
-            return Optional.empty();
+            simpleAimAngleMap.clear();
         }
-    }
-
-    public synchronized Optional<Pose2d> getPoseAtTime(double time) {
-        return Optional.ofNullable(poseMap.getInterpolated(new InterpolatingDouble(time)));
     }
 
     public synchronized Optional<Double> getDrivetrainHeadingAtTime(double time) {
         return Optional.ofNullable(drivetrainHeadingMap.getInterpolated(new InterpolatingDouble(time)).value);
     }
+
 
     public synchronized Optional<Double> getSimpleAimAngleAtTime(double time) {
         if (mTurret.isCalibrated()) {
@@ -96,11 +104,12 @@ public class RobotStateEstimator implements Updatable {
         }
     }
 
-    public synchronized Optional<Pose2d> getDrivetrainVelocityAtTime(double time, double dt) {
-        Pose2d delta = poseMap.getInterpolated(new InterpolatingDouble(time)).transformBy(
-            poseMap.getInterpolated(new InterpolatingDouble(time- dt)).inverse()
-        ).scaled(1 / dt);
-        return Optional.ofNullable(delta);
+    public synchronized Optional<Double> getTurretAngleAtTime(double time){
+        if(mTurret.isCalibrated()){
+            return Optional.of(turretAngleMap.getInterpolated(new InterpolatingDouble(time)).value);
+        } else {
+            return Optional.empty();
+        }
     }
 
 
@@ -269,9 +278,8 @@ public class RobotStateEstimator implements Updatable {
 
     @Override
     public synchronized void update(double time, double dt) {
-        updateRecordingMaps(time);
+        updateRecordingMaps(time, dt);
         addVisionUpdate(targetCount, time);
-        pose = getPoseAtTime(time).get();
     }
 
     @Override
@@ -281,9 +289,7 @@ public class RobotStateEstimator implements Updatable {
 
     @Override
     public synchronized void telemetry() {
-        SmartDashboard.putNumber("Pose X", pose.getWpilibPose2d().getX());
-        SmartDashboard.putNumber("Pose Y", pose.getWpilibPose2d().getY());
-        SmartDashboard.putNumber("Pose Rot", pose.getWpilibPose2d().getRotation().getDegrees());
+        
     }
 
     @Override

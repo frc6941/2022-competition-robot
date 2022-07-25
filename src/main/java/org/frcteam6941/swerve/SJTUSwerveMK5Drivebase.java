@@ -198,8 +198,11 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
     public void drive(Translation2d translationalVelocity, double rotationalVelocity, boolean isFieldOriented) {
         synchronized (signalLock) {
-            driveSignal = new HolonomicDriveSignal(
-                    translationalVelocity, rotationalVelocity, isFieldOriented);
+            if(this.trajectoryFollower.isPathFollowing()){
+                trajectoryFollower.cancel();
+            }
+            setState(STATE.DRIVE);
+            driveSignal = new HolonomicDriveSignal(translationalVelocity, rotationalVelocity, isFieldOriented);
         }
     }
 
@@ -209,6 +212,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         if (resetOnStart) {
             this.resetOdometry(targetTrajectory.getInitialPose());
         }
+        setState(STATE.PATH_FOLLOWING);
         this.trajectoryFollower.follow(targetTrajectory);
     }
 
@@ -282,6 +286,10 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         synchronized (statusLock) {
             return this.swerveKinematics;
         }
+    }
+
+    public Translation2d[] getSwerveModulePositions(){
+        return this.swerveModulePositions;
     }
 
     public HolonomicTrajectoryFollower getFollower(){

@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.Optional;
+
 import org.frcteam6941.looper.UpdateManager;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
@@ -17,7 +19,10 @@ import frc.robot.subsystems.Intaker;
 import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.RobotStateEstimator;
 import frc.robot.subsystems.Shooter;
+import frc.robot.auto.AutoSelector;
+import frc.robot.auto.modes.AutoModeBase;
 import frc.robot.coordinators.Superstructure;
+import frc.robot.shuffleboard.ShuffleBoardInteractions;
 import frc.robot.subsystems.Turret;
 
 /**
@@ -30,87 +35,95 @@ import frc.robot.subsystems.Turret;
  * project.
  */
 public class Robot extends TimedRobot {
-  private UpdateManager updateManager;
+    private UpdateManager updateManager;
+    private AutoSelector mAutoSelector = new AutoSelector();
+    private ShuffleBoardInteractions mShuffleBoardInteractions = ShuffleBoardInteractions.getInstance();
 
-  /**
-   * This function is run when the robot is first started up and should be used
-   * for any
-   * initialization code.
-   */
-  @Override
-  public void robotInit() {
-    this.updateManager = new UpdateManager(
-      SJTUSwerveMK5Drivebase.getInstance(),
-      Intaker.getInstance(),
-      BallPath.getInstance(),
-      Turret.getInstance(),
-      Shooter.getInstance(),
-      // Climber.getInstance(),
-      ColorSensor.getInstance(),
-      // Indicator.getInstance(),
-      Limelight.getInstance(),
-      RobotStateEstimator.getInstance(),
-      Superstructure.getInstance()
-    );
-    this.updateManager.startEnableLoop(Constants.kLooperDt);
-  }
+    /**
+     * This function is run when the robot is first started up and should be used
+     * for any
+     * initialization code.
+     */
+    @Override
+    public void robotInit() {
+        this.updateManager = new UpdateManager(
+                SJTUSwerveMK5Drivebase.getInstance(),
+                Intaker.getInstance(),
+                BallPath.getInstance(),
+                Turret.getInstance(),
+                Shooter.getInstance(),
+                // Climber.getInstance(),
+                ColorSensor.getInstance(),
+                // Indicator.getInstance(),
+                Limelight.getInstance(),
+                RobotStateEstimator.getInstance(),
+                Superstructure.getInstance());
+        this.updateManager.startEnableLoop(Constants.kLooperDt);
+    }
 
-  @Override
-  public void robotPeriodic() {
-  }
+    @Override
+    public void robotPeriodic() {
+        mShuffleBoardInteractions.update();
+    }
 
-  /** This function is called once each time the robot enters Disabled mode. */
-  @Override
-  public void disabledInit() {
-    this.updateManager.stopEnableLoop();
-    CommandScheduler.getInstance().cancelAll();
-    CommandScheduler.getInstance().disable();
-    this.updateManager.startDisableLoop(Constants.kLooperDt);
-  }
+    /** This function is called once each time the robot enters Disabled mode. */
+    @Override
+    public void disabledInit() {
+        this.updateManager.stopEnableLoop();
+        CommandScheduler.getInstance().cancelAll();
+        CommandScheduler.getInstance().disable();
+        this.updateManager.startDisableLoop(Constants.kLooperDt);
+    }
 
-  @Override
-  public void disabledPeriodic() {
-  }
+    @Override
+    public void disabledPeriodic() {
+        mAutoSelector.updateModeCreator();
+    }
 
-  /**
-   * This autonomous runs the autonomous command selected by your
-   * {@link RobotContainer} class.
-   */
-  @Override
-  public void autonomousInit() {
-    this.updateManager.stopDisableLoop();
-    CommandScheduler.getInstance().enable();
-    this.updateManager.startEnableLoop(Constants.kLooperDt);
-  }
+    /**
+     * This autonomous runs the autonomous command selected by your
+     * {@link RobotContainer} class.
+     */
+    @Override
+    public void autonomousInit() {
+        this.updateManager.stopDisableLoop();
+        CommandScheduler.getInstance().enable();
+        this.updateManager.startEnableLoop(Constants.kLooperDt);
 
-  /** This function is called periodically during autonomous. */
-  @Override
-  public void autonomousPeriodic() {
-    CommandScheduler.getInstance().run();
-  }
+        Optional<AutoModeBase> autoMode = mAutoSelector.getAutoMode();
+        if(autoMode.isPresent()){
+            SJTUSwerveMK5Drivebase.getInstance().resetOdometry(autoMode.get().getStartingPose());
+            if(autoMode.get().getAutoCommand() != null){
+                autoMode.get().getAutoCommand().schedule();
+            }
+        }
+    }
 
-  @Override
-  public void teleopInit() {
-    this.updateManager.stopDisableLoop();
-    CommandScheduler.getInstance().cancelAll();
-    CommandScheduler.getInstance().enable();
-    this.updateManager.startEnableLoop(Constants.kLooperDt);
-  }
+    /** This function is called periodically during autonomous. */
+    @Override
+    public void autonomousPeriodic() {
+        CommandScheduler.getInstance().run();
+    }
 
-  /** This function is called periodically during operator control. */
-  @Override
-  public void teleopPeriodic() {
-    CommandScheduler.getInstance().run();
-  }
+    @Override
+    public void teleopInit() {
+        this.updateManager.stopDisableLoop();
+        CommandScheduler.getInstance().cancelAll();
+        CommandScheduler.getInstance().enable();
+        this.updateManager.startEnableLoop(Constants.kLooperDt);
+    }
 
-  @Override
-  public void testInit() {
-    // this.updateManager.stopDisableLoop();
-    // this.updateManager.startEnableLoop(Constants.kLooperDt);
-  }
+    /** This function is called periodically during operator control. */
+    @Override
+    public void teleopPeriodic() {
+        CommandScheduler.getInstance().run();
+    }
 
-  @Override
-  public void testPeriodic() {
-    SJTUSwerveMK5Drivebase.getInstance().forceResetModules();
-  }
+    @Override
+    public void testInit() {
+    }
+
+    @Override
+    public void testPeriodic() {
+    }
 }
