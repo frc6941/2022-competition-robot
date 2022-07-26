@@ -138,16 +138,27 @@ public final class Constants {
     public static final double INTAKER_SLOW_INTAKE_PERCENTAGE = 0.4;
     public static final double INTAKER_REVERSE_INTAKE_PERCENTAGE = -1.0;
 
-    // Ball Path Constants
-    public static final double BALLPATH_NORMAL_PERCENTAGE = 0.4;
-    public static final double BALLPATH_EXPELLING_PERCENTAGE = 0.5;
-    public static final double BALLPATH_FAST_EJECT_PERCENTAGE = -0.7;
-    public static final double BALLPATH_SLOW_EJECT_PERCENTAGE = -0.3;
+    // Feeder Constants
+    public static final double FEEDER_NORMAL_PERCENTAGE = 0.4;
+    public static final double FEEDER_EXPELLING_PERCENTAGE = 0.5;
+    public static final double FEEDER_SPIT_PERCENTAGE = -0.7;
+    public static final double FEEDER_EJECT_PERCENTAGE = 0.3;
 
-    public static final double BALLPATH_EXPEL_TIME = 2.0; // Time wait to turn back to normal if a ball with incorrect
+    // Trigger Constants
+    public static final double TRIGGER_GEAR_RATIO = 7.0;
+    public static final double TRIGGER_PASSIVE_REVERSE_VELOCITY = -50.0;
+    public static final double TRIGGER_SLOW_EJECT_VELOCITY = 254.0;
+    public static final double TRIGGER_FEEDING_VELOCITY = 700.0;
+    public static final double TRIGGER_REVERSING_VELOCITY = -700.0;
+    
+    public static final double TRIGGER_KP = 1.0;
+    public static final double TRIGGER_KI = 0.0001;
+    public static final double TRIGGER_KD = 0.005;
+
+    // Ballpath (Trigger + Feeder) Constants
+    public static final double BALLPATH_EXPEL_TIME = 1.0; // Time wait to turn back to normal if a ball with incorrect
                                                           // color is expelled.
-    public static final double BALLPATH_REVERSE_TIME = 1.0; // Time wait to turn back to normal if a ball with
-                                                            // incorrect color is reversed out of the intaker.
+    public static final double BALLPAHT_SHUFFLING_TIME = 1.0;
 
     // Color Sensor Constants
     public static final double COLOR_SENSOR_RATIO_THRESHOLD = 0.35;
@@ -164,18 +175,16 @@ public final class Constants {
     public static final double SHOOTER_ERROR_TOLERANCE = 100.0;
     public static final double SHOOTER_RAMP = 0.1;
 
-    // Trigger Constants
-    public static final double TRIGGER_GEAR_RATIO = 3.0;
-    public static final double TRIGGER_PASSIVE_REVERSE_VELOCITY = -100.0;
-    public static final double TRIGGER_SLOW_FEEDING_VELOCITY = 254.0;
-    public static final double TRIGGER_FEEDING_VELOCITY = 500.0;
-    public static final double TRIGGER_REVERSING_VELOCITY = -500.0;
 
     // Hood Constants
-    public static final double HOOD_GEAR_RATIO = 3.0;
+    public static final double HOOD_GEAR_RATIO = (50.0 / 8.0) * (284.0 / 11.0);
     public static final double HOOD_MINIMUM_ANGLE = 15.0;
     public static final double HOOD_MAXIMUM_ANGLE = 75.0;
-    
+
+    public static final double HOOD_KP = 1.0;
+    public static final double HOOD_KI = 0.0001;
+    public static final double HOOD_KD = 0.005;
+    public static final double HOOD_KF = 0.001;
 
     // Turret Constants
     public static final double TURRET_GEAR_RATIO = 7.0 * 181.0 / 18.0;

@@ -46,17 +46,18 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
+        mShuffleBoardInteractions.configAutoSelector(mAutoSelector);
         this.updateManager = new UpdateManager(
                 SJTUSwerveMK5Drivebase.getInstance(),
                 Intaker.getInstance(),
                 BallPath.getInstance(),
                 Turret.getInstance(),
-                Shooter.getInstance(),
+                // Shooter.getInstance(),
                 // Climber.getInstance(),
                 ColorSensor.getInstance(),
                 // Indicator.getInstance(),
-                Limelight.getInstance(),
-                RobotStateEstimator.getInstance(),
+                // Limelight.getInstance(),
+                // RobotStateEstimator.getInstance(),
                 Superstructure.getInstance());
         this.updateManager.startEnableLoop(Constants.kLooperDt);
     }

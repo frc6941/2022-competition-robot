@@ -82,4 +82,8 @@ public class AutoSelector {
         }
         return mAutoMode;
     }
+
+    public SendableChooser<AUTO_MODES> getSendableChooser(){
+        return mModeChooser;
+    }
 }

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import frc.robot.auto.AutoSelector;
+import frc.robot.shuffleboard.tabs.BallPathTab;
 import frc.robot.shuffleboard.tabs.ClimberTab;
 import frc.robot.shuffleboard.tabs.OperatorTab;
 
@@ -34,7 +36,8 @@ public class ShuffleBoardInteractions {
 
         if (mDebug) {
             List<ShuffleboardTabBase> optionalTabs = List.of(
-                new ClimberTab()
+                new ClimberTab(),
+                new BallPathTab()
             );
             mTabs.addAll(optionalTabs);
         } else {
@@ -54,5 +57,9 @@ public class ShuffleBoardInteractions {
 
     public ShuffleboardTab getOperatorTab() {
         return mOperatorTab.getTab();
+    }
+
+    public void configAutoSelector(AutoSelector autoSelector){
+        mOperatorTab.configAutoModeSelector(autoSelector);
     }
 }

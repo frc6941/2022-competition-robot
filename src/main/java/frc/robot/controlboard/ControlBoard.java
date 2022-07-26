@@ -122,7 +122,11 @@ public class ControlBoard {
     }
 
     public boolean getShoot() {
-        return driver.getButton(Button.LB);
+        return driver.getButton(Button.X);
+    }
+
+    public boolean getSpit() {
+        return driver.getButton(Button.B);
     }
 
 

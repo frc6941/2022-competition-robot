@@ -48,11 +48,11 @@
       "/LiveWindow/Ungrouped/PIDController[4]": "PIDController",
       "/LiveWindow/Ungrouped/Scheduler": "Scheduler",
       "/LiveWindow/VisionSubsystem": "Subsystem",
+      "/Shuffleboard/Operator/Autonomous Choose": "String Chooser",
       "/SmartDashboard/Field": "Field2d"
     },
     "windows": {
       "/SmartDashboard/Field": {
-        "image": "E:\\School\\Pinghe\\IronPulse\\2022 RAPID REACT\\tactical-map-6328.jpeg",
         "units": "meters",
         "window": {
           "visible": true
