@@ -60,20 +60,20 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
         double rotation = 0.0;
         Translation2d translationVector = new Translation2d(x, y);
 
+        
         if (this.lastState != null) {
             Translation2d targetDisplacement = lastState.poseMeters.getTranslation()
                     .minus(this.lastState.poseMeters.getTranslation());
             double feedForwardGain = feedforward.calculate(lastState.velocityMetersPerSecond,
                     lastState.accelerationMetersPerSecondSq) / 12.0;
-            Translation2d feedForwardVector = targetDisplacement.times(feedForwardGain / targetDisplacement.getNorm());
-            translationVector = translationVector.plus(feedForwardVector);
+            if(targetDisplacement.getNorm() != 0.00) { // Prevent NaN cases
+                Translation2d feedForwardVector = targetDisplacement.times(feedForwardGain / targetDisplacement.getNorm());
+                translationVector = translationVector.plus(feedForwardVector);
+            }
         }
 
         if (this.lockAngle) {
-            // TODO: As we take clockwise as positive, the value provided by PathPlanner
-            // need to be converted.
-            rotation = this.thetaController.calculate(360.0 - currentPose.getRotation().getDegrees(),
-                    lastState.holonomicRotation.getDegrees());
+            rotation = this.thetaController.calculate(currentPose.getRotation().getDegrees(), lastState.holonomicRotation.getDegrees());
         }
 
         return new HolonomicDriveSignal(

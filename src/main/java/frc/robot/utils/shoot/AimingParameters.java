@@ -1,36 +1,32 @@
 package frc.robot.utils.shoot;
 
+import java.util.Optional;
+
 import edu.wpi.first.math.geometry.Translation2d;
 
+/**
+ * Record of one set of Aiming Parameters, with all the needed variables for the machine to aim on the target.
+ */
 public class AimingParameters {
-    private Translation2d transltionToTarget;
-    private Translation2d velocityToTarget;
-    private double simpleAimAngle;
+    private Optional<Translation2d> transltionToTarget;
+    private Optional<Translation2d> velocityToTarget;
+    private Optional<Double> simpleAimAngle;
 
-    public AimingParameters(Translation2d transT, Translation2d veloT){
+    public AimingParameters(Optional<Translation2d> transT, Optional<Translation2d> veloT, Optional<Double> simpleAimAngle){
         this.transltionToTarget = transT;
         this.velocityToTarget = veloT;
-    }
-
-    public AimingParameters(Translation2d transT){
-        this(transT, new Translation2d());
-    }
-
-    public AimingParameters(double simpleAimAngle){
         this.simpleAimAngle = simpleAimAngle;
-        this.transltionToTarget = null;
-        this.velocityToTarget = null;
     }
 
-    public Translation2d getTranslationToTarget(){
+    public Optional<Translation2d> getTranslationToTarget(){
         return this.transltionToTarget;
     }
 
-    public Translation2d getVelocityToTaget(){
+    public Optional<Translation2d> getVelocityToTaget(){
         return this.velocityToTarget;
     }
 
-    public double getSimpleAimAngle(){
+    public Optional<Double> getSimpleAimAngle(){
         return this.simpleAimAngle;
     }
 }

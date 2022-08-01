@@ -34,8 +34,7 @@ public class Turret implements Updatable {
 
     private double angleLockTarget = 0.0;
 
-    private boolean isForwardCalibrated = false;
-    private boolean isReverseCalibrated = false;
+    private boolean isCalibrated = false;
 
     private static Turret instance;
     private STATE state = STATE.OFF;
@@ -69,14 +68,14 @@ public class Turret implements Updatable {
     }
 
     public void setTurretPercentage(double power) {
-        if(getState() != STATE.PERCENTAGE){
+        if(getState() != STATE.PERCENTAGE && getState() != STATE.HOMING){
             setState(STATE.PERCENTAGE);
         }
         mPeriodicIO.turretDemand = power;
     }
 
     public void setTurretAngle(double angle) {
-        if(getState() != STATE.ANGLE){
+        if(getState() != STATE.ANGLE && getState() != STATE.HOMING){
             setState(STATE.ANGLE);
         }
         mPeriodicIO.turretDemand = angle;
@@ -92,7 +91,7 @@ public class Turret implements Updatable {
     }
 
     public boolean isCalibrated(){
-        return isForwardCalibrated && isReverseCalibrated;
+        return isCalibrated;
     }
 
     public boolean forwardSafe() {
@@ -124,15 +123,11 @@ public class Turret implements Updatable {
     
     @Override
     public void update(double time, double dt) {
-        if (mPeriodicIO.turretForwardLimitSwitch) {
+        if (mPeriodicIO.turretForwardLimitSwitch && mPeriodicIO.turretReverseLimitSwitch) {
             forwardMaxPosition = mPeriodicIO.turretPosition;
-            isForwardCalibrated = true;
+            reverseMaxPosition = mPeriodicIO.turretPosition - Constants.TURRET_TRAVEL_DISTANCE;
+            isCalibrated = true;
             turretMotor.configForwardSoftLimitThreshold(forwardMaxPosition);
-        }
-        if (mPeriodicIO.turretReverseLimitSwitch) {
-            reverseMaxPosition = mPeriodicIO.turretPosition;
-            isReverseCalibrated = true;
-            turretMotor.configReverseSoftLimitThreshold(reverseMaxPosition);
         }
 
         // Carry out calibration according to sensor status. Reverse and forward must
@@ -142,39 +137,35 @@ public class Turret implements Updatable {
         }
         switch(state){
             case HOMING:
-                if (this.isForwardCalibrated && this.isReverseCalibrated) {
+                if (this.isCalibrated) {
                     setState(STATE.OFF);
-                } else if (!this.isForwardCalibrated && !this.isReverseCalibrated) {
-                    mPeriodicIO.turretDemand = 0.2;
-                } else if (this.isForwardCalibrated && !this.isReverseCalibrated) {
-                    mPeriodicIO.turretDemand = -0.2;
-                } else if (!this.isForwardCalibrated && this.isReverseCalibrated) {
+                } else {
                     mPeriodicIO.turretDemand = 0.2;
                 }
                 break;
             case PERCENTAGE:
                 break;
             case ANGLE:
-            double angle = mPeriodicIO.turretDemand;
-            while (angle > 180.0) {
-                angle -= 360.0;
-            }
-            while (angle < -180.0) {
-                angle += 360.0;
-            }
+                double angle = mPeriodicIO.turretDemand;
+                while (angle > 180.0) {
+                    angle -= 360.0;
+                }
+                while (angle < -180.0) {
+                    angle += 360.0;
+                }
 
-            // Determine if the set angle is out of reach. If so, set the angle to
-            // the reachable maximum or minimum.
-            if (Math.abs(angle) < Constants.TURRET_MAX_ROTATION_DEGREE) {
-                turretMotor.set(ControlMode.MotionMagic,
-                        Conversions.degreesToFalcon(angle, Constants.TURRET_GEAR_RATIO)
-                                + (forwardMaxPosition + reverseMaxPosition) / 2.0);
-            } else {
-                turretMotor.set(ControlMode.MotionMagic,
-                        Conversions.degreesToFalcon(Math.copySign(Constants.TURRET_MAX_ROTATION_DEGREE, angle), Constants.TURRET_GEAR_RATIO)
-                                + (forwardMaxPosition + reverseMaxPosition) / 2.0);
-            }
-            break;
+                // Determine if the set angle is out of reach. If so, set the angle to
+                // the reachable maximum or minimum.
+                if (Math.abs(angle) < Constants.TURRET_MAX_ROTATION_DEGREE) {
+                    turretMotor.set(ControlMode.MotionMagic,
+                            Conversions.degreesToFalcon(angle, Constants.TURRET_GEAR_RATIO)
+                                    + (forwardMaxPosition + reverseMaxPosition) / 2.0);
+                } else {
+                    turretMotor.set(ControlMode.MotionMagic,
+                            Conversions.degreesToFalcon(Math.copySign(Constants.TURRET_MAX_ROTATION_DEGREE, angle), Constants.TURRET_GEAR_RATIO)
+                                    + (forwardMaxPosition + reverseMaxPosition) / 2.0);
+                }
+                break;
             case OFF:
                 mPeriodicIO.turretDemand = 0.0;
             

@@ -10,10 +10,12 @@ import org.frcteam6941.looper.UpdateManager;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.BallPath;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.ColorSensor;
+import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Indicator;
 import frc.robot.subsystems.Intaker;
 import frc.robot.subsystems.Limelight;
@@ -21,6 +23,7 @@ import frc.robot.subsystems.RobotStateEstimator;
 import frc.robot.subsystems.Shooter;
 import frc.robot.auto.AutoSelector;
 import frc.robot.auto.modes.AutoModeBase;
+import frc.robot.controlboard.ControlBoard;
 import frc.robot.coordinators.Superstructure;
 import frc.robot.shuffleboard.ShuffleBoardInteractions;
 import frc.robot.subsystems.Turret;
@@ -49,12 +52,13 @@ public class Robot extends TimedRobot {
         mShuffleBoardInteractions.configAutoSelector(mAutoSelector);
         this.updateManager = new UpdateManager(
                 SJTUSwerveMK5Drivebase.getInstance(),
-                Intaker.getInstance(),
+                // Intaker.getInstance(),
                 BallPath.getInstance(),
-                Turret.getInstance(),
+                // Turret.getInstance(),
+                // Hood.getInstance(),
                 // Shooter.getInstance(),
                 // Climber.getInstance(),
-                ColorSensor.getInstance(),
+                // ColorSensor.getInstance(),
                 // Indicator.getInstance(),
                 // Limelight.getInstance(),
                 // RobotStateEstimator.getInstance(),
@@ -82,11 +86,13 @@ public class Robot extends TimedRobot {
     }
 
     /**
-     * This autonomous runs the autonomous command selected by your
-     * {@link RobotContainer} class.
+     * This autonomous runs the autonomous command selected.
      */
     @Override
     public void autonomousInit() {
+        CommandScheduler.getInstance().cancelAll();;
+        Superstructure.getInstance().stop();
+
         this.updateManager.stopDisableLoop();
         CommandScheduler.getInstance().enable();
         this.updateManager.startEnableLoop(Constants.kLooperDt);
@@ -108,8 +114,10 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
-        this.updateManager.stopDisableLoop();
         CommandScheduler.getInstance().cancelAll();
+        Superstructure.getInstance().stop();
+
+        this.updateManager.stopDisableLoop();
         CommandScheduler.getInstance().enable();
         this.updateManager.startEnableLoop(Constants.kLooperDt);
     }
@@ -118,11 +126,13 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopPeriodic() {
         CommandScheduler.getInstance().run();
+        Superstructure.getInstance().updateDriverAndOperatorCommand();
     }
 
     @Override
     public void testInit() {
     }
+    
 
     @Override
     public void testPeriodic() {

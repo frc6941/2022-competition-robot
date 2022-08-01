@@ -3,7 +3,7 @@ package frc.robot.utils.shoot;
 /**
  * Record of one set of Shooting Parameters, with all the needed variables to conduct a defined shot.
  */
-public class CoreShootingParameters {
+public class ShootingParameters {
     private double targetAngle;
     private double shotAngle;
     private double shootingVelocity;
@@ -14,7 +14,7 @@ public class CoreShootingParameters {
      * @param shotAngle Angle of the hood. In degrees.
      * @param shootingVelocity Lauching velocity of the flywheel. In RPM.
      */
-    public CoreShootingParameters(double targetAngle, double shotAngle, double shootingVelocity){
+    public ShootingParameters(double targetAngle, double shotAngle, double shootingVelocity){
         this.targetAngle = targetAngle;
         this.shotAngle = shotAngle;
         this.shootingVelocity = shootingVelocity;

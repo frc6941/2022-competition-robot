@@ -8,7 +8,7 @@ import frc.robot.controlboard.CustomXboxController.Button;
 import frc.robot.controlboard.CustomXboxController.Side;
 
 public class ControlBoard {
-    private final double kSwerveDeadband = Constants.CONTROLLER_DEADBAND;
+    public final double kSwerveDeadband = Constants.CONTROLLER_DEADBAND;
 
     private final int kDpadUp = 0;
     private final int kDpadRight = 90;
@@ -45,6 +45,14 @@ public class ControlBoard {
     private ControlBoard() {
         driver = new CustomXboxController(Constants.DRIVER_CONTROLLER_PORT);
         operator = new CustomXboxController(Constants.OPERATOR_CONTROLLER_PORT);
+    }
+
+    public CustomXboxController getDriverController(){
+        return driver;
+    }
+
+    public CustomXboxController getOperatorController(){
+        return operator;
     }
     
     public void setDriverRumble(boolean on) {

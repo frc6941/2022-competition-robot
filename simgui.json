@@ -52,6 +52,11 @@
       "/SmartDashboard/Field": "Field2d"
     },
     "windows": {
+      "/Shuffleboard/Operator/Autonomous Choose": {
+        "window": {
+          "visible": true
+        }
+      },
       "/SmartDashboard/Field": {
         "units": "meters",
         "window": {
@@ -80,6 +85,15 @@
         "open": true
       }
     },
+    "Shuffleboard": {
+      "BallPath": {
+        "open": true
+      },
+      "Swerve": {
+        "open": true
+      },
+      "open": true
+    },
     "SmartDashboard": {
       "PathFollower": {
         "open": true
@@ -89,8 +103,5 @@
     "limelight": {
       "open": true
     }
-  },
-  "NetworkTables View": {
-    "visible": false
   }
 }

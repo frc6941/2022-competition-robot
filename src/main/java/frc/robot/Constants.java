@@ -66,6 +66,7 @@ public final class Constants {
         public static final int INTAKER_MOTOR = 15;
         public static final int TRIGGER_MOTOR = 41; // TODO: Change CANID
         public static final int HOPPER_MOTOR = 42; // TODO: Change CANID
+        public static final int HOOD_MOTOR = 43; // TODO: Change CANID
 
         public static final int PNEUMATICS_HUB = 1;
         public static final int LED_CANIFIER = 22;
@@ -131,18 +132,22 @@ public final class Constants {
             
 
     // Intaker Constants
-    public static final double INTAKER_WAITING_TIME_EXTEND = 0.0; // Time waited before the feeder extender takes action
-    public static final double INTAKER_WAITING_TIME_RETRACT = 1.0;
-
     public static final double INTAKER_FAST_INTAKE_PERCENTAGE = 0.6;
     public static final double INTAKER_SLOW_INTAKE_PERCENTAGE = 0.4;
-    public static final double INTAKER_REVERSE_INTAKE_PERCENTAGE = -1.0;
+    public static final double INTAKER_REVERSE_INTAKE_PERCENTAGE = -0.6;
 
     // Feeder Constants
-    public static final double FEEDER_NORMAL_PERCENTAGE = 0.4;
-    public static final double FEEDER_EXPELLING_PERCENTAGE = 0.5;
+    public static final double FEEDER_FAST_PERCENTAGE = 0.5;
+    public static final double FEEDER_SLOW_PERCENTAGE = 0.2;
+    public static final double FEEDER_EXPEL_PERCENTAGE = 0.7;
+    public static final double FEEDER_FEED_PERCENTAGE = 0.8;
     public static final double FEEDER_SPIT_PERCENTAGE = -0.7;
     public static final double FEEDER_EJECT_PERCENTAGE = 0.3;
+
+    public static final double FEEDER_KF = 1024.0 / Conversions.RPMToFalcon(6380, 1.0);
+    public static final double FEEDER_KP = 1024.0 / Conversions.RPMToFalcon(6380, 1.0) * 1.0;
+    public static final double FEEDER_KI = 0.0;
+    public static final double FEEDER_KD = 0.0;
 
     // Trigger Constants
     public static final double TRIGGER_GEAR_RATIO = 7.0;
@@ -151,14 +156,20 @@ public final class Constants {
     public static final double TRIGGER_FEEDING_VELOCITY = 700.0;
     public static final double TRIGGER_REVERSING_VELOCITY = -700.0;
     
-    public static final double TRIGGER_KP = 1.0;
-    public static final double TRIGGER_KI = 0.0001;
-    public static final double TRIGGER_KD = 0.005;
+    public static final double TRIGGER_KF_V_SLOT_0 = 0.00009;
+    public static final double TRIGGER_KP_V_SLOT_0 = 0.0000254;
+    public static final double TRIGGER_KI_V_SLOT_0 = 0.0000;
+    public static final double TRIGGER_KD_V_SLOT_0 = 0.01;
+
+    public static final double TRIGGER_KF_V_SLOT_1 = 0.00009;
+    public static final double TRIGGER_KP_V_SLOT_1 = 0.0000254;
+    public static final double TRIGGER_KI_V_SLOT_1 = 0.0000;
+    public static final double TRIGGER_KD_V_SLOT_1 = 0.01;
 
     // Ballpath (Trigger + Feeder) Constants
     public static final double BALLPATH_EXPEL_TIME = 1.0; // Time wait to turn back to normal if a ball with incorrect
                                                           // color is expelled.
-    public static final double BALLPAHT_SHUFFLING_TIME = 1.0;
+    public static final double BALLPATH_SLOW_PROCESS_TIME = 2.0;
 
     // Color Sensor Constants
     public static final double COLOR_SENSOR_RATIO_THRESHOLD = 0.35;
@@ -186,6 +197,8 @@ public final class Constants {
     public static final double HOOD_KD = 0.005;
     public static final double HOOD_KF = 0.001;
 
+    public static final double HOOD_HOMING_CURRENT_THRESHOLD = 15.0;
+
     // Turret Constants
     public static final double TURRET_GEAR_RATIO = 7.0 * 181.0 / 18.0;
     public static final double TURRET_SAFE_ZONE_DEGREE = 70.0;
@@ -193,9 +206,10 @@ public final class Constants {
     public static final double TURRET_FORWARD_MAX_POSITION = 0.0;
     public static final double TURRET_REVERSE_MAX_POSITION = 0.0;
     public static final double TURRET_ERROR_TOLERANCE = 1.0;
-    public static final double TURRET_MANUAL_ROTATION_GAP_ZONE = 1.0;
+    public static final double TURRET_MANUAL_ROTATION_GAP_ZONE = 5.0;
+    public static final double TURRET_TRAVEL_DISTANCE = 72078.2222;
 
-    // If in the range between +- 180 degrees, the encoder units traveled should
+    // If in the range between +- 90 degrees, the encoder units traveled should
     // theoretically be:
     // 180.0 / (360.0 / 70.388889) * 2048.0 = 72078.22222
 

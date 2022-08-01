@@ -6,6 +6,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Launch TestKinematics",
+      "request": "launch",
+      "mainClass": "org.frcteam6941.utils.TestKinematics",
+      "projectName": "2022CompetitionRobot"
+    },
+    {
+      "type": "java",
       "name": "Launch Constants$VisionConstants",
       "request": "launch",
       "mainClass": "frc.robot.Constants$VisionConstants",

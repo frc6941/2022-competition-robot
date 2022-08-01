@@ -19,7 +19,6 @@ public class BallPathTab extends ShuffleboardTabBase {
     private NetworkTableEntry mTriggerCurrent;
     private NetworkTableEntry mTriggerVoltage;
 
-    private NetworkTableEntry mBallAtEntrance;
     private NetworkTableEntry mBallAtPositionOne;
     private NetworkTableEntry mBallAtPositionTwo;
 
@@ -60,10 +59,6 @@ public class BallPathTab extends ShuffleboardTabBase {
                 .withProperties(Map.of("Min", 0, "Max", 12.0))
                 .getEntry();
 
-        mBallAtEntrance = mTab
-                .add("Entrance", false)
-                .withSize(1, 1)
-                .getEntry();
         mBallAtPositionOne = mTab
                 .add("Position 1", false)
                 .withSize(1, 1)
@@ -77,7 +72,6 @@ public class BallPathTab extends ShuffleboardTabBase {
     @Override
     public void update() {
         mBallPathState.setString(mBallPath.getState().toString());
-        mBallAtEntrance.setBoolean(mBallPath.ballAtEntrance());
         mBallAtPositionOne.setBoolean(mBallPath.ballAtPosition1());
         mBallAtPositionTwo.setBoolean(mBallPath.ballAtPosition2());
         mFeederDemand.setDouble(mBallPath.mPeriodicIO.feederDemand);

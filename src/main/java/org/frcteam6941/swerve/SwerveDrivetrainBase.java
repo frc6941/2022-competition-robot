@@ -10,7 +10,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 public interface SwerveDrivetrainBase extends Updatable{
     abstract void setModuleStates(SwerveModuleState[] desiredStates, boolean isOpenLoop);
 
-    abstract SwerveModuleState[] getStates();
+    abstract SwerveModuleState[] getSwerveModuleStates();
 
     abstract void drive(Translation2d translation, double rotation, boolean fieldRelative);
     

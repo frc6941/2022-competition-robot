@@ -24,8 +24,8 @@ public class AutoSelector {
 
     public AutoSelector() {
         mModeChooser = new SendableChooser<>();
-        mModeChooser.setDefaultOption("Do Nothing", AUTO_MODES.DO_NOTHING);
-        mModeChooser.addOption("Auto Test", AUTO_MODES.TEST_PATH);
+        mModeChooser.addOption("Do Nothing", AUTO_MODES.DO_NOTHING);
+        mModeChooser.setDefaultOption("Auto Test", AUTO_MODES.TEST_PATH);
         mModeChooser.addOption("Five Ball Mode", AUTO_MODES.FIVE_BALL_AUTO);
     }
 

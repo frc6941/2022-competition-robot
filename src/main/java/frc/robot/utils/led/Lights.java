@@ -28,5 +28,7 @@ public class Lights {
     public static final BlinkingLEDState LOSS_TARGET = new BlinkingLEDState(RED, OFF, 0.5);
     public static final BlinkingLEDState ON_TARGET = new BlinkingLEDState(GREEN, OFF, 0.5);
     public static final BlinkingLEDState READY = new BlinkingLEDState(GREEN, OFF, 0.25);
-    public static final RainbowLEDState CLIMBING = new RainbowLEDState(5.0);
+    public static final RainbowLEDState CLIMBING_MANUAL = new RainbowLEDState(5.0);
+    public static final BlinkingLEDState CLIMBING_HIGH = new BlinkingLEDState(WHITE, OFF, 0.5);
+    public static final BlinkingLEDState CLIMBING_TRAVERSAL = new BlinkingLEDState(WHITE, OFF, 0.25);
 }
