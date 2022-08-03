@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.team254.lib.util.Util;
 import com.team254.lib.vision.TargetInfo;
@@ -13,6 +14,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
 
 public class Limelight implements Updatable {
     public final static int kDefaultPipeline = 0;
@@ -21,6 +23,7 @@ public class Limelight implements Updatable {
     private static Limelight mInstance = null;
 
     private int mLatencyCounter = 0;
+    public Optional<Double> mDistanceToTarget = Optional.empty();
 
     public static class LimelightConstants {
         public String kName = "";
@@ -45,17 +48,20 @@ public class Limelight implements Updatable {
 
     @Override
     public synchronized void update(double time, double dt) {
-        setLed(LedMode.ON);
+        if (mPeriodicIO.sees_target) {
+            updateDistanceToTarget();
+        }
+        
     }
 
     @Override
     public void start() {
-
+        setLed(LedMode.ON);
     }
 
     @Override
     public synchronized void stop() {
-
+        setLed(LedMode.ON);
     }
 
     public synchronized boolean limelightOK() {
@@ -196,6 +202,13 @@ public class Limelight implements Updatable {
         }
     }
 
+    public void updateDistanceToTarget() {
+        double goal_theta = Constants.VisionConstants.Turret.LIMELIGHT_CONSTANTS.kHorizontalPlaneToLens.getRadians() + Math.toRadians(mPeriodicIO.yOffset);
+        double height_diff = FieldConstants.visionTargetHeightLower - Constants.VisionConstants.Turret.LIMELIGHT_CONSTANTS.kHeight;
+
+        mDistanceToTarget = Optional.of(height_diff / Math.tan(goal_theta) + FieldConstants.visionTargetDiameter * 0.5); // add goal radius for offset to center of target
+    }
+
     public synchronized void triggerOutputs() {
         mOutputsHaveChanged = true;
     }
@@ -238,6 +251,10 @@ public class Limelight implements Updatable {
 
     public double[] getYCorners(){
         return mPeriodicIO.cornerY;
+    }
+
+    public Optional<Double> getLimelightDistanceToTarget() {
+        return mDistanceToTarget;
     }
 
     @Override

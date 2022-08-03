@@ -1,24 +1,18 @@
 package org.frcteam6941.utils;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 public class TestKinematics {
-    static Translation2d[] swerveModulePositions = new Translation2d[] { new Translation2d(0.35, 0.35),
-            new Translation2d(0.35, -0.35),
-            new Translation2d(-0.35, 0.35)};
-    static SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(swerveModulePositions);
-
     public static void main(String[] args) {
-        for (SwerveModuleState state: swerveKinematics.toSwerveModuleStates(
-            new ChassisSpeeds(0, 0, 0)
-        )){
-            System.out.println(
-            state
-        );
-        }
-        
+        double distance = 5.0;
+        double turretAngle = 40;
+        double targetAngleDelta = -20;
+
+        Translation2d robotVelocitytoField = new Translation2d(1.0, 1.0);
+
+        double facingAngle = turretAngle + targetAngleDelta;
+
+        System.out.println(robotVelocitytoField.rotateBy(Rotation2d.fromDegrees(facingAngle)));
     }
 }

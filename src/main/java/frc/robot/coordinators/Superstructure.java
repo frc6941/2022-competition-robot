@@ -2,6 +2,7 @@ package frc.robot.coordinators;
 
 import java.util.Optional;
 
+import com.team254.lib.util.InterpolatingDouble;
 import com.team254.lib.util.Util;
 
 import org.frcteam6941.looper.UpdateManager.Updatable;
@@ -12,7 +13,6 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
@@ -101,7 +101,7 @@ public class Superstructure implements Updatable {
     }
 
     public PeriodicIO mPeriodicIO = new PeriodicIO();
-    public AimingParameters coreAimingParameters;
+    public Optional<AimingParameters> coreAimingParameters;
     public ShootingParameters coreShootingParameters = new ShootingParameters(0.0, 45.0, 1000.0);
 
     private ControlBoard mControlBoard = ControlBoard.getInstance();
@@ -381,37 +381,49 @@ public class Superstructure implements Updatable {
      * Update parameters from Odometry.
      */
     public synchronized void updateAimingParameters(double time) {
-        Pose2d pose = RobotState.getInstance().getFieldToVehicle(time).getWpilibPose2d();
         Pose2d velocity = RobotState.getInstance().getSmoothedMeasuredVelocity().getWpilibPose2d();
-        Translation2d translationToTarget = FieldConstants.hubCenter.minus(pose.getTranslation());
-        Translation2d velocityToTarget = FieldConstants.hubCenter.minus(velocity.getTranslation());
 
-        if (mLimelight.hasTarget()) {
+        if (mLimelight.getLimelightDistanceToTarget().isPresent()) { // Has target and simple distance mode is enabled
+            double distance = mLimelight.getLimelightDistanceToTarget().get();
             double offsetAngle = mLimelight.getOffset()[0];
-            double simpleAimAngle = angleDeltaController.calculate(offsetAngle, 0.0);
-            coreAimingParameters = new AimingParameters(Optional.ofNullable(translationToTarget),
-                    Optional.ofNullable(velocityToTarget), Optional.ofNullable(simpleAimAngle));
+            double turretAngle = mPeriodicIO.inTurretFieldHeadingAngle;
+
+            Translation2d translationToTarget = new Translation2d(distance, -offsetAngle);
+            Translation2d velocityToTarget = velocity.getTranslation()
+                    .rotateBy(new Rotation2d(turretAngle - offsetAngle));
+
+            coreAimingParameters = Optional.ofNullable(new AimingParameters(
+                    translationToTarget,
+                    velocityToTarget));
         } else {
-            coreAimingParameters = new AimingParameters(Optional.ofNullable(translationToTarget),
-                    Optional.ofNullable(velocityToTarget), Optional.empty());
-            angleDeltaController.reset();
+            coreAimingParameters = Optional.empty();
         }
     }
 
     public synchronized void updateShootingParameters() {
         if (!mPeriodicIO.EJECT) { // Normal ball logic
-            if (coreAimingParameters.getSimpleAimAngle().isPresent()) { // If vision has target
-                coreShootingParameters = new ShootingParameters(
-                        mPeriodicIO.inTurretFieldHeadingAngle + coreAimingParameters.getSimpleAimAngle().get(),
-                        40.0, 500.0);
+            if (coreAimingParameters.isPresent()) {
+                if (mLimelight.getLimelightDistanceToTarget().isPresent()) {
+                    Translation2d translationToTarget = coreAimingParameters.get().getTranslationToTarget();
+                    double distance = translationToTarget.getNorm();
+                    Rotation2d rotationToTarget = new Rotation2d(translationToTarget.getX(),
+                            translationToTarget.getY());
+
+                    double simpleAimAngle = angleDeltaController.calculate(rotationToTarget.getDegrees(), 0.0);
+                    coreShootingParameters = new ShootingParameters(
+                            mPeriodicIO.inTurretFieldHeadingAngle + simpleAimAngle,
+                            40.0,
+                            Constants.ShootingConstants.FLYWHEEL_AUTO_AIM_MAP
+                                    .getInterpolated(new InterpolatingDouble(distance)).value);
+                } else {
+                }
+
             } else {
-                Translation2d translationToTarget = coreAimingParameters.getTranslationToTarget().get();
-                Rotation2d rotationToTarget = new Rotation2d(translationToTarget.getX(), translationToTarget.getY());
                 coreShootingParameters = new ShootingParameters(
-                        rotationToTarget.getDegrees(),
+                        0.0,
                         40.0, 500.0);
             }
-        } else {
+        } else { // Wrong ball logic
             coreShootingParameters = new ShootingParameters(
                     mPeriodicIO.inSwerveFieldHeadingAngle + 45.0, 30.0,
                     500.0);
@@ -739,26 +751,22 @@ public class Superstructure implements Updatable {
             if (mPeriodicIO.EJECT) {
                 mBallPath.eject();
             }
-            
+
             if (mPeriodicIO.INTAKE) {
                 mIntaker.extend();
+                mIntaker.spinIntaker(true);
                 mBallPath.setContinueProcess(true);
                 mBallPath.continueProcess();
             } else {
                 mIntaker.retract();
+                mIntaker.spinIntaker(false);
                 mBallPath.setContinueProcess(false);
             }
 
-            if (mPeriodicIO.SHOOT) {
+            if (mControlBoard.getShoot()) {
                 mBallPath.feed();
             } else {
-                mBallPath.backToProcess();
-            }
-
-            if (mPeriodicIO.SPIT) {
-                mBallPath.spit();
-            } else {
-                mBallPath.backToProcess();
+                mBallPath.backToProcess(); 
             }
 
             mClimber.retractClimber();
@@ -768,6 +776,8 @@ public class Superstructure implements Updatable {
             mShooter.turnOff();
             mTurret.setTurretAngle(90.0);
             mIntaker.retract();
+            mIntaker.spinIntaker(false);
+            mBallPath.setContinueProcess(false);
             if (readyForClimbControls) {
                 if (openLoopClimbControl) {
                     mClimber.setClimberPercentage(mPeriodicIO.outClimberDemand);
@@ -796,11 +806,13 @@ public class Superstructure implements Updatable {
             if (mPeriodicIO.inSwerveTranslation.getNorm() > Constants.CONTROLLER_DEADBAND
                     || mPeriodicIO.inSwerveRotation > Constants.CONTROLLER_DEADBAND) {
                 mSwerve.getFollower().cancel();
+                mSwerve.setState(SJTUSwerveMK5Drivebase.STATE.DRIVE);
             }
             mSwerve.setLockHeading(mPeriodicIO.outSwerveLockHeading);
             mSwerve.setHeadingTarget(mPeriodicIO.outSwerveHeadingTarget);
             mSwerve.drive(mPeriodicIO.outSwerveTranslation, mPeriodicIO.outSwerveRotation, !robotOrientedDrive);
         }
+        
     }
 
     @Override
@@ -810,6 +822,7 @@ public class Superstructure implements Updatable {
         SmartDashboard.putNumber("Swerve Rotation", mPeriodicIO.outSwerveRotation);
         SmartDashboard.putNumber("Swerve Heading Target", mPeriodicIO.outSwerveHeadingTarget);
         SmartDashboard.putBoolean("Is Swerve Lockheading", mPeriodicIO.outSwerveLockHeading);
+        SmartDashboard.putBoolean("Swerve Brake", mPeriodicIO.inSwerveBrake);
 
         SmartDashboard.putNumber("Turret Lock Target", mPeriodicIO.outTurretLockTarget);
         SmartDashboard.putBoolean("EJECT", mPeriodicIO.EJECT);

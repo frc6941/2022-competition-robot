@@ -47,15 +47,17 @@ public class BallPath implements Updatable {
 
     private static BallPath instance;
 
-    private boolean enableColorEject = true;
+    private boolean enableColorEject = false;
     private boolean continueProcess = false;
+    private boolean isLocking = false;
+    private double lockingPositionRecorder = 0.0;
     private TimeDelayedBoolean slowProcessBoolean = new TimeDelayedBoolean();
     private TimeDelayedBoolean ejectBoolean = new TimeDelayedBoolean();
     private STATE state = STATE.IDLE;
 
     private BallPath() {
         feederMotor.configFactoryDefault();
-        feederMotor.setInverted(InvertType.InvertMotorOutput);
+        feederMotor.setInverted(InvertType.None);
         feederMotor.setNeutralMode(NeutralMode.Brake);
         feederMotor.enableVoltageCompensation(true);
 
@@ -63,7 +65,8 @@ public class BallPath implements Updatable {
         triggerMotor.setIdleMode(IdleMode.kBrake);
         triggerMotor.enableVoltageCompensation(12.0);
         triggerMotor.setSmartCurrentLimit(25, 5);
-        triggerMotor.setClosedLoopRampRate(0.2);
+        triggerMotor.setInverted(true);
+        triggerMotor.setOpenLoopRampRate(0.5);
 
         triggerMotor.getPIDController().setP(Constants.TRIGGER_KP_V_SLOT_0, 0);
         triggerMotor.getPIDController().setI(Constants.TRIGGER_KI_V_SLOT_0, 0);
@@ -139,19 +142,15 @@ public class BallPath implements Updatable {
     }
 
     public synchronized void continueProcess(){
-        if(!isFull() && getState() != STATE.PROCESSING){
+        if(!isFull() && getState() == STATE.IDLE){
             setState(STATE.PROCESSING);
         }
     }
 
     @Override
     public synchronized void read(double time, double dt) {
-        mPeriodicIO.breakPosition1 = ballPositionOneDetector.getVoltage() < 2.0;
-        mPeriodicIO.breakPosition2 = ballPositionTwoDetector.getVoltage() < 2.0;
-
-        mPeriodicIO.feederCurrent = feederMotor.getStatorCurrent();
-        mPeriodicIO.feederVoltage = feederMotor.getMotorOutputVoltage();
-        mPeriodicIO.feederVelocity = feederMotor.getSelectedSensorVelocity();
+        mPeriodicIO.breakPosition1 = ballPositionOneDetector.getVoltage() > 2.0;
+        mPeriodicIO.breakPosition2 = ballPositionTwoDetector.getVoltage() > 2.0;
 
         mPeriodicIO.triggerCurrent = triggerMotor.getOutputCurrent();
         mPeriodicIO.triggerVoltage = triggerMotor.getAppliedOutput();
@@ -203,6 +202,7 @@ public class BallPath implements Updatable {
                 }
                 mPeriodicIO.feederDemand = Constants.FEEDER_EJECT_PERCENTAGE;
                 mPeriodicIO.triggerDemand = Constants.TRIGGER_SLOW_EJECT_VELOCITY;
+                mPeriodicIO.triggerLock = false;
                 break;
             case FEEDING:
                 if(wrongBallAtPositionTwo()){
@@ -225,9 +225,9 @@ public class BallPath implements Updatable {
     public synchronized void write(double time, double dt) {
         feederMotor.set(ControlMode.PercentOutput, mPeriodicIO.feederDemand);
         if(mPeriodicIO.triggerLock){
-            triggerMotor.getPIDController().setReference(mPeriodicIO.triggerPosition, ControlType.kPosition, 1);
+            triggerMotor.set(0.0);
         } else {
-            triggerMotor.getPIDController().setReference(mPeriodicIO.triggerDemand * Constants.TRIGGER_GEAR_RATIO, ControlType.kVelocity, 0);
+            triggerMotor.set(mPeriodicIO.triggerDemand);
         }
     }
 
@@ -240,6 +240,9 @@ public class BallPath implements Updatable {
 
         SmartDashboard.putNumber("Trigger RPM", mPeriodicIO.triggerVelocity);
         SmartDashboard.putNumber("Trigger Demand", mPeriodicIO.triggerDemand);
+        SmartDashboard.putBoolean("Trigger Locking", mPeriodicIO.triggerLock);
+
+        SmartDashboard.putString("BallPath State", getState().toString());
     }
 
     @Override

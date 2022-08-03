@@ -45,6 +45,7 @@ public class Intaker implements Updatable {
         intakerMotor.setIdleMode(IdleMode.kBrake);
         intakerMotor.enableVoltageCompensation(12.0);
         intakerMotor.setSmartCurrentLimit(25, 10);
+        intakerMotor.setInverted(true);
         intakerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 500);
         intakerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 60000);
         intakerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 60000);

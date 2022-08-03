@@ -40,7 +40,7 @@ import frc.robot.subsystems.Turret;
 public class Robot extends TimedRobot {
     private UpdateManager updateManager;
     private AutoSelector mAutoSelector = new AutoSelector();
-    private ShuffleBoardInteractions mShuffleBoardInteractions = ShuffleBoardInteractions.getInstance();
+    // private ShuffleBoardInteractions mShuffleBoardInteractions = ShuffleBoardInteractions.getInstance();
 
     /**
      * This function is run when the robot is first started up and should be used
@@ -49,10 +49,10 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        mShuffleBoardInteractions.configAutoSelector(mAutoSelector);
+        // mShuffleBoardInteractions.configAutoSelector(mAutoSelector);
         this.updateManager = new UpdateManager(
                 SJTUSwerveMK5Drivebase.getInstance(),
-                // Intaker.getInstance(),
+                Intaker.getInstance(),
                 BallPath.getInstance(),
                 // Turret.getInstance(),
                 // Hood.getInstance(),
@@ -68,7 +68,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotPeriodic() {
-        mShuffleBoardInteractions.update();
+        // mShuffleBoardInteractions.update();
     }
 
     /** This function is called once each time the robot enters Disabled mode. */

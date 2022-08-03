@@ -83,7 +83,8 @@
     "PulseHUD": {
       "PathFollower": {
         "open": true
-      }
+      },
+      "open": true
     },
     "Shuffleboard": {
       "BallPath": {

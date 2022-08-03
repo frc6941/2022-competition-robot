@@ -129,7 +129,7 @@ public class RobotStateEstimator implements Updatable {
         }
         if (targetCount >= Constants.VisionConstants.Turret.MIN_TARGET_COUNT
                 && cornerX.length == cornerY.length
-                && cornerX.length % 4 == 0) {
+                && cornerX.length % 4 == 0) { // If there's enough target and target has fully defined corners
             // Calculate individual corner translations
             List<Translation2d> cameraToTargetTranslations = new ArrayList<>();
             for (int targetIndex = 0; targetIndex < targetCount; targetIndex++) {
@@ -175,6 +175,8 @@ public class RobotStateEstimator implements Updatable {
                 SmartDashboard.putNumber("Estimated Field to Vehicle Rot", fieldToVehicle.getRotation().getDegrees());
                 mSwerve.addVisionObservations(fieldToVehicle, captureTimestamp);
             }
+        } else {
+
         }
     }
 
