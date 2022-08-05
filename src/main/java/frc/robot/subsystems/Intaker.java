@@ -4,6 +4,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
+import com.team254.lib.util.TimeDelayedBoolean;
 
 import org.frcteam6941.looper.UpdateManager.Updatable;
 
@@ -29,6 +30,7 @@ public class Intaker implements Updatable {
     private CANSparkMax intakerMotor = new CANSparkMax(Constants.CANID.INTAKER_MOTOR, MotorType.kBrushless);
 
     private static Intaker instance;
+    private TimeDelayedBoolean neutralGasSaverBoolean = new TimeDelayedBoolean();
     private boolean spin = false;
     private boolean reverse = false;
     private STATE state = STATE.RETRACTING;
@@ -40,7 +42,7 @@ public class Intaker implements Updatable {
         return instance;
     }
 
-    private Intaker(){
+    private Intaker() {
         intakerMotor.restoreFactoryDefaults();
         intakerMotor.setIdleMode(IdleMode.kBrake);
         intakerMotor.enableVoltageCompensation(12.0);
@@ -51,16 +53,16 @@ public class Intaker implements Updatable {
         intakerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 60000);
     }
 
-    public void spinIntaker(boolean spin){
+    public void spinIntaker(boolean spin) {
         this.spin = spin;
     }
 
-    public void reverseIntaker(boolean reverse){
+    public void reverseIntaker(boolean reverse) {
         this.reverse = reverse;
     }
 
     @Override
-    public synchronized void read(double time, double dt){
+    public synchronized void read(double time, double dt) {
         mPeriodicIO.intakerCurrent = intakerMotor.getOutputCurrent();
     }
 
@@ -68,9 +70,13 @@ public class Intaker implements Updatable {
     public synchronized void update(double time, double dt) {
         switch (state) {
             case EXTENDING:
-                mPeriodicIO.intakerExtenderDemand = DoubleSolenoid.Value.kForward;
-                if(this.spin){
-                    if(this.reverse){
+                if (neutralGasSaverBoolean.update(true, Constants.INTAKER_GAS_SAVER_TIME)) {
+                    mPeriodicIO.intakerExtenderDemand = DoubleSolenoid.Value.kOff;
+                } else {
+                    mPeriodicIO.intakerExtenderDemand = DoubleSolenoid.Value.kForward;
+                }
+                if (this.spin) {
+                    if (this.reverse) {
                         mPeriodicIO.intakerDemand = Constants.INTAKER_REVERSE_INTAKE_PERCENTAGE;
                     } else {
                         mPeriodicIO.intakerDemand = Constants.INTAKER_FAST_INTAKE_PERCENTAGE;
@@ -87,38 +93,42 @@ public class Intaker implements Updatable {
     }
 
     @Override
-    public synchronized void write(double time, double dt){
+    public synchronized void write(double time, double dt) {
         intakerMotor.set(mPeriodicIO.intakerDemand);
         intakerExtender.set(mPeriodicIO.intakerExtenderDemand);
     }
 
     @Override
-    public synchronized void telemetry(){
+    public synchronized void telemetry() {
         SmartDashboard.putNumber("Intaker Current", mPeriodicIO.intakerCurrent);
+        SmartDashboard.putString("Intaker Extender Demand", mPeriodicIO.intakerExtenderDemand.toString());
     }
 
     @Override
-    public synchronized void start(){
+    public synchronized void start() {
     }
 
     @Override
-    public synchronized void stop(){
+    public synchronized void stop() {
         setState(STATE.RETRACTING);
     }
 
     @Override
-    public synchronized void disabled(double time, double dt){
-        
+    public synchronized void disabled(double time, double dt) {
+
     }
 
     public void extend() {
-        if (getState() == STATE.RETRACTING){
+        if (getState() == STATE.RETRACTING) {
             setState(STATE.EXTENDING);
+            neutralGasSaverBoolean.update(false, 0.0); // Reset Gas Saver Boolean
         }
     }
+
     public void retract() {
-        if (getState() == STATE.EXTENDING){
+        if (getState() == STATE.EXTENDING) {
             setState(STATE.RETRACTING);
+            neutralGasSaverBoolean.update(false, 0.0); // Reset Gas Saver Boolean
         }
     }
 

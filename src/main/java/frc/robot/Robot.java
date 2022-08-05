@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.frcteam6941.looper.UpdateManager;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -40,7 +41,7 @@ import frc.robot.subsystems.Turret;
 public class Robot extends TimedRobot {
     private UpdateManager updateManager;
     private AutoSelector mAutoSelector = new AutoSelector();
-    // private ShuffleBoardInteractions mShuffleBoardInteractions = ShuffleBoardInteractions.getInstance();
+    private ShuffleBoardInteractions mShuffleBoardInteractions = ShuffleBoardInteractions.getInstance();
 
     /**
      * This function is run when the robot is first started up and should be used
@@ -54,21 +55,23 @@ public class Robot extends TimedRobot {
                 SJTUSwerveMK5Drivebase.getInstance(),
                 Intaker.getInstance(),
                 BallPath.getInstance(),
-                // Turret.getInstance(),
+                ColorSensor.getInstance(),
+                Turret.getInstance(),
                 // Hood.getInstance(),
-                // Shooter.getInstance(),
+                Shooter.getInstance(),
                 // Climber.getInstance(),
-                // ColorSensor.getInstance(),
                 // Indicator.getInstance(),
                 // Limelight.getInstance(),
                 // RobotStateEstimator.getInstance(),
                 Superstructure.getInstance());
         this.updateManager.startEnableLoop(Constants.kLooperDt);
+
+        // CameraServer.startAutomaticCapture();
     }
 
     @Override
     public void robotPeriodic() {
-        // mShuffleBoardInteractions.update();
+        mShuffleBoardInteractions.update();
     }
 
     /** This function is called once each time the robot enters Disabled mode. */

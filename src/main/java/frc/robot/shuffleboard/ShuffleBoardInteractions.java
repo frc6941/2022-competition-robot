@@ -9,7 +9,6 @@ import frc.robot.shuffleboard.tabs.BallPathTab;
 import frc.robot.shuffleboard.tabs.ClimberTab;
 import frc.robot.shuffleboard.tabs.HoodTab;
 import frc.robot.shuffleboard.tabs.OperatorTab;
-import frc.robot.shuffleboard.tabs.SwerveTab;
 
 public class ShuffleBoardInteractions {
 
@@ -38,7 +37,6 @@ public class ShuffleBoardInteractions {
 
         if (mDebug) {
             List<ShuffleboardTabBase> optionalTabs = List.of(
-                // new SwerveTab(),
                 new ClimberTab(),
                 new BallPathTab(),
                 new HoodTab()
@@ -56,7 +54,7 @@ public class ShuffleBoardInteractions {
         for (ShuffleboardTabBase tab : mTabs) {
             tab.update();
         }
-        // mFieldView.update();
+        mFieldView.update();
     }
 
     public ShuffleboardTab getOperatorTab() {

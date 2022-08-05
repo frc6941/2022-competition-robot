@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.team254.lib.util.CrashTrackingRunnable;
-
 public final class UpdateManager {
 	private final Object taskRunningLock_ = new Object();
 	public final List<Updatable> updatables = new ArrayList<>();
@@ -25,9 +23,9 @@ public final class UpdateManager {
 
 	private double lastTimestamp = 0.0;
 
-	private CrashTrackingRunnable enableRunnable = new CrashTrackingRunnable() {
+	private Runnable enableRunnable = new Runnable() {
 		@Override
-        public void runCrashTracked() {
+        public void run() {
             synchronized (taskRunningLock_) {
 				final double timestamp = Timer.getFPGATimestamp();
 				final double dt = timestamp - lastTimestamp;
@@ -42,9 +40,9 @@ public final class UpdateManager {
         }
 	};
 
-	private CrashTrackingRunnable disableRunnable = new CrashTrackingRunnable() {
+	private Runnable disableRunnable = new Runnable() {
 		@Override
-        public void runCrashTracked() {
+        public void run() {
             synchronized (taskRunningLock_) {
 				final double timestamp = Timer.getFPGATimestamp();
 				final double dt = timestamp - lastTimestamp;

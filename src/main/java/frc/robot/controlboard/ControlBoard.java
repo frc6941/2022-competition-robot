@@ -137,6 +137,10 @@ public class ControlBoard {
         return driver.getButton(Button.B);
     }
 
+    public boolean getTempEject(){
+        return driver.getButton(Button.Y);
+    }
+
 
     public double getGuessedAimTarget(){
         return new Rotation2d(-operator.getAxis(Side.LEFT, Axis.X), operator.getAxis(Side.LEFT, Axis.Y)).getDegrees() + 90.0;

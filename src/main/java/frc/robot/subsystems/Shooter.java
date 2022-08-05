@@ -4,8 +4,6 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.StatusFrame;
-import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
 import com.team254.lib.util.Util;
 
@@ -46,12 +44,11 @@ public class Shooter implements Updatable {
     }
 
     private Shooter() {
-        SupplyCurrentLimitConfiguration currentLimit = new SupplyCurrentLimitConfiguration(true, 40, 100, 0.02);
-
         shooterLeadMotor.configFactoryDefault();
         shooterLeadMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
-        shooterLeadMotor.configVoltageCompSaturation(12.0, 10);
+        shooterLeadMotor.configVoltageCompSaturation(12.0);
         shooterLeadMotor.enableVoltageCompensation(true);
+        shooterLeadMotor.setInverted(InvertType.InvertMotorOutput);
         shooterLeadMotor.setNeutralMode(NeutralMode.Coast);
         shooterLeadMotor.config_kF(0, Constants.SHOOTER_KF);
         shooterLeadMotor.config_kP(0, Constants.SHOOTER_KP);
@@ -59,17 +56,12 @@ public class Shooter implements Updatable {
         shooterLeadMotor.configVelocityMeasurementWindow(2);
         shooterLeadMotor.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_1Ms);
         shooterLeadMotor.configClosedloopRamp(Constants.SHOOTER_RAMP);
-        shooterLeadMotor.configSupplyCurrentLimit(currentLimit);
 
         shooterFollowerMotor.configFactoryDefault();
-        shooterFollowerMotor.setInverted(InvertType.OpposeMaster);
+        shooterFollowerMotor.setInverted(InvertType.FollowMaster);
         shooterFollowerMotor.setNeutralMode(NeutralMode.Coast);
         shooterFollowerMotor.configVoltageCompSaturation(12.0, 10);
         shooterFollowerMotor.enableVoltageCompensation(true);
-        shooterFollowerMotor.changeMotionControlFramePeriod(255);
-        shooterFollowerMotor.setStatusFramePeriod(StatusFrame.Status_1_General, 255);
-        shooterFollowerMotor.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 255);
-        shooterFollowerMotor.configSupplyCurrentLimit(currentLimit);
     }
 
     public void setShooterPercentage(double percentage) {
@@ -138,12 +130,13 @@ public class Shooter implements Updatable {
         } else {
             shooterLeadMotor.set(ControlMode.PercentOutput, mPeriodicIO.shooterDemand);
         }
-
         shooterFollowerMotor.set(ControlMode.Follower, Constants.CANID.SHOOTER_LEAD_MOTOR);
     }
 
     @Override
     public synchronized void telemetry() {
+        SmartDashboard.putNumber("Shooter Demand", mPeriodicIO.shooterDemand);
+        SmartDashboard.putString("Shooter State",getState().toString());
         SmartDashboard.putNumber("RPM", getShooterRPM());
         SmartDashboard.putBoolean("Spun Up", spunUp());
     }

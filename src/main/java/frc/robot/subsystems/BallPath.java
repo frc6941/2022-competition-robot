@@ -47,7 +47,7 @@ public class BallPath implements Updatable {
 
     private static BallPath instance;
 
-    private boolean enableColorEject = false;
+    private boolean enableColorEject = true;
     private boolean continueProcess = false;
     private boolean isLocking = false;
     private double lockingPositionRecorder = 0.0;
@@ -67,11 +67,16 @@ public class BallPath implements Updatable {
         triggerMotor.setSmartCurrentLimit(25, 5);
         triggerMotor.setInverted(true);
         triggerMotor.setOpenLoopRampRate(0.5);
+        triggerMotor.setClosedLoopRampRate(0.05);
 
         triggerMotor.getPIDController().setP(Constants.TRIGGER_KP_V_SLOT_0, 0);
         triggerMotor.getPIDController().setI(Constants.TRIGGER_KI_V_SLOT_0, 0);
         triggerMotor.getPIDController().setD(Constants.TRIGGER_KD_V_SLOT_0, 0);
         triggerMotor.getPIDController().setFF(Constants.TRIGGER_KF_V_SLOT_0, 0);
+        triggerMotor.getPIDController().setP(Constants.TRIGGER_KP_V_SLOT_1, 1);
+        triggerMotor.getPIDController().setI(Constants.TRIGGER_KI_V_SLOT_1, 1);
+        triggerMotor.getPIDController().setD(Constants.TRIGGER_KD_V_SLOT_1, 1);
+        triggerMotor.getPIDController().setFF(Constants.TRIGGER_KF_V_SLOT_1, 1);
 
         slowProcessBoolean.update(false, 0.0);
     }
@@ -111,38 +116,38 @@ public class BallPath implements Updatable {
         enableColorEject = value;
     }
 
-    public synchronized void setContinueProcess(boolean value)  {
+    public synchronized void setContinueProcess(boolean value) {
         continueProcess = value;
     }
 
-    public synchronized boolean shouldInEject(){
-        return wrongBallAtPositionTwo() || getState() == STATE.EJECTING;
+    public synchronized boolean shouldInEject() {
+        return wrongBallAtPositionTwo();
     }
-    
-    public synchronized void eject(){
-        if(getState() != STATE.EJECTING){ // If not ejecting, enter ejecting
+
+    public synchronized void eject() {
+        if (getState() != STATE.EJECTING && shouldInEject()) { // If not ejecting, enter ejecting
             setState(STATE.EJECTING);
         }
     }
 
-    public synchronized void feed(){
-        if(getState() != STATE.EJECTING){ // Except rejecting, enter feedering
+    public synchronized void feed() {
+        if (getState() != STATE.EJECTING && !wrongBallAtPositionTwo()) { // Except rejecting, enter feedering
             setState(STATE.FEEDING);
         }
     }
 
-    public synchronized void spit(){
+    public synchronized void spit() {
         setState(STATE.SPITTING);
     }
 
-    public synchronized void backToProcess(){
-        if(getState() == STATE.EJECTING || getState() == STATE.FEEDING || getState() == STATE.SPITTING){
+    public synchronized void backToProcess() {
+        if (getState() == STATE.EJECTING || getState() == STATE.FEEDING || getState() == STATE.SPITTING) {
             setState(STATE.PROCESSING);
         }
     }
 
-    public synchronized void continueProcess(){
-        if(!isFull() && getState() == STATE.IDLE){
+    public synchronized void goToProcess() {
+        if (!isFull() && getState() == STATE.IDLE) {
             setState(STATE.PROCESSING);
         }
     }
@@ -166,16 +171,16 @@ public class BallPath implements Updatable {
                 mPeriodicIO.triggerLock = true;
                 break;
             case PROCESSING:
-                if(isFull()){ // If ballpath is full of balls
+                if (isFull()) { // If ballpath is full of balls
                     setState(STATE.IDLE);
                     slowProcessBoolean.update(false, 0.0);
                     mPeriodicIO.feederDemand = 0.0;
                 } else {
-                    if(continueProcess){
+                    if (continueProcess) {
                         mPeriodicIO.feederDemand = Constants.FEEDER_FAST_PERCENTAGE;
                         slowProcessBoolean.update(false, 0.0);
                     } else {
-                        if(slowProcessBoolean.update(true, Constants.BALLPATH_SLOW_PROCESS_TIME)){
+                        if (slowProcessBoolean.update(true, Constants.BALLPATH_SLOW_PROCESS_TIME)) {
                             setState(STATE.IDLE);
                             slowProcessBoolean.update(false, 0.0);
                         }
@@ -186,27 +191,40 @@ public class BallPath implements Updatable {
                 mPeriodicIO.triggerLock = true;
                 break;
             case EJECTING:
-                if(rightBallAtPositionTwo()){ // If has a right Ball
-                    // Enter PROCESSING as now the right ball is at the exit
+                if (rightBallAtPositionTwo()) { // If has a right Ball
                     ejectBoolean.update(false, 0.0); // reset eject controlling boolean
-                    setState(STATE.PROCESSING);
+                    mPeriodicIO.feederDemand = 0.0;
+                    mPeriodicIO.triggerDemand = 0.0;
+                    mPeriodicIO.triggerLock = true;
+                    break;
                 } else if (wrongBallAtPositionTwo()) { // If has a wrong Ball
                     // Do nothing and continue ejecting as the wrong ball is not out yet
                     ejectBoolean.update(false, 0.0); // reset eject controlling boolean
+                    mPeriodicIO.feederDemand = Constants.FEEDER_EJECT_PERCENTAGE;
+                    mPeriodicIO.triggerDemand = Constants.TRIGGER_SLOW_EJECT_VELOCITY;
+                    mPeriodicIO.triggerLock = false;
+                    break;
                 } else { // No Ball
-                    if(ejectBoolean.update(true, Constants.BALLPATH_EXPEL_TIME)){ // Start to count down
-                        // Enter PROCESSING after a certain period of time, as the ballpath is seen to be cleared
-                        setState(STATE.PROCESSING);
+                    if (ejectBoolean.update(true, Constants.BALLPATH_EXPEL_TIME)) { // Start to count down
+                        // Enter PROCESSING after a certain period of time, as the ballpath is seen to
+                        // be cleared
+                        mPeriodicIO.feederDemand = 0.0;
+                        mPeriodicIO.triggerDemand = 0.0;
+                        mPeriodicIO.triggerLock = true;
                         ejectBoolean.update(false, 0.0); // reset eject controlling boolean
+                    } else {
+                        mPeriodicIO.feederDemand = Constants.FEEDER_EJECT_PERCENTAGE;
+                        mPeriodicIO.triggerDemand = Constants.TRIGGER_SLOW_EJECT_VELOCITY;
+                        mPeriodicIO.triggerLock = false;
                     }
+                    break;
                 }
-                mPeriodicIO.feederDemand = Constants.FEEDER_EJECT_PERCENTAGE;
-                mPeriodicIO.triggerDemand = Constants.TRIGGER_SLOW_EJECT_VELOCITY;
-                mPeriodicIO.triggerLock = false;
-                break;
             case FEEDING:
-                if(wrongBallAtPositionTwo()){
-                    setState(STATE.EJECTING);
+                if (wrongBallAtPositionTwo()) { // If has a wrong Ball
+                    // stop feeding
+                    mPeriodicIO.feederDemand = 0.0;
+                    mPeriodicIO.triggerDemand = 0.0;
+                    mPeriodicIO.triggerLock = true;
                     break;
                 }
                 mPeriodicIO.feederDemand = Constants.FEEDER_FEED_PERCENTAGE;
@@ -224,10 +242,16 @@ public class BallPath implements Updatable {
     @Override
     public synchronized void write(double time, double dt) {
         feederMotor.set(ControlMode.PercentOutput, mPeriodicIO.feederDemand);
-        if(mPeriodicIO.triggerLock){
-            triggerMotor.set(0.0);
+        if (mPeriodicIO.triggerLock) {
+            if (!isLocking) {
+                isLocking = true;
+                lockingPositionRecorder = triggerMotor.getEncoder().getPosition();
+            }
+            triggerMotor.getPIDController().setReference(lockingPositionRecorder, ControlType.kPosition, 1);
         } else {
-            triggerMotor.set(mPeriodicIO.triggerDemand);
+            isLocking = false;
+            triggerMotor.getPIDController().setReference(mPeriodicIO.triggerDemand * Constants.TRIGGER_GEAR_RATIO,
+                    ControlType.kVelocity, 0);
         }
     }
 
@@ -237,20 +261,24 @@ public class BallPath implements Updatable {
         SmartDashboard.putBoolean("Correct Color", colorSensor.hasCorrectColor());
         SmartDashboard.putBoolean("Opposite Color", colorSensor.hasOppositeColor());
         SmartDashboard.putBoolean("Sees Ball", colorSensor.seesBall());
+        SmartDashboard.putBoolean("Wrong Ball At Position Two", wrongBallAtPositionTwo());
 
         SmartDashboard.putNumber("Trigger RPM", mPeriodicIO.triggerVelocity);
         SmartDashboard.putNumber("Trigger Demand", mPeriodicIO.triggerDemand);
         SmartDashboard.putBoolean("Trigger Locking", mPeriodicIO.triggerLock);
 
         SmartDashboard.putString("BallPath State", getState().toString());
+        SmartDashboard.putNumber("Locking Position Recorder", lockingPositionRecorder);
     }
 
     @Override
     public synchronized void start() {
+        setState(STATE.IDLE);
     }
 
     @Override
     public synchronized void stop() {
+        setState(STATE.IDLE);
     }
 
     @Override

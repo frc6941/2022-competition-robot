@@ -2,21 +2,19 @@ package frc.robot.subsystems;
 
 import java.util.Map;
 
-import com.ctre.phoenix.CANifier;
-import com.ctre.phoenix.CANifier.LEDChannel;
-
 import org.frcteam6941.looper.UpdateManager.Updatable;
 
+import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.SuppliedValueWidget;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants;
 import frc.robot.utils.led.LEDState;
 import frc.robot.utils.led.Lights;
 import frc.robot.utils.led.TimedLEDState;
 
 public class Indicator implements Updatable {
-    private CANifier ledIndicator = new CANifier(Constants.CANID.LED_CANIFIER);
+    private AddressableLED ledIndicator = new AddressableLED(7);
 
     public static Indicator getInstance() {
         if (instance == null) {
@@ -31,6 +29,7 @@ public class Indicator implements Updatable {
     // Define LED State
     private TimedLEDState currentState = Lights.CALIBRATION;
     private LEDState currentLED = new LEDState(0, 0, 0);
+    private AddressableLEDBuffer currentLedBuffer = new AddressableLEDBuffer(60);
     private STATE state = STATE.ON;
     private SuppliedValueWidget<Boolean> colorWidget = Shuffleboard.getTab("MyBot").addBoolean("Color", () -> true);
 
@@ -38,9 +37,14 @@ public class Indicator implements Updatable {
     private double intensity = 1.0;
 
     public void setLEDs(LEDState color) {
-        ledIndicator.setLEDOutput(color.green * intensity, LEDChannel.LEDChannelB);
-        ledIndicator.setLEDOutput(color.red * intensity, LEDChannel.LEDChannelA);
-        ledIndicator.setLEDOutput(color.blue * intensity, LEDChannel.LEDChannelC);
+        for (var i = 0; i < currentLedBuffer.getLength(); i++) {
+            // Sets the specified LED to the RGB values for red
+            currentLedBuffer.setRGB(i,
+                    (int) (currentLED.red * 255.0 * intensity),
+                    (int) (currentLED.green * 255.0 * intensity),
+                    (int) (currentLED.blue * 255.0 * intensity));
+        }
+        ledIndicator.setData(currentLedBuffer);
     }
 
     public void setIndicatorState(TimedLEDState state) {
@@ -48,10 +52,9 @@ public class Indicator implements Updatable {
     }
 
     @Override
-    public synchronized void read(double time, double dt){
+    public synchronized void read(double time, double dt) {
 
     }
-
 
     @Override
     public synchronized void update(double time, double dt) {
@@ -63,33 +66,35 @@ public class Indicator implements Updatable {
                 currentState.getCurrentLEDState(currentLED, time);
                 break;
         }
-        this.setLEDs(currentLED);
+        setLEDs(currentLED);
     }
 
     @Override
-    public synchronized void write(double time, double dt){
-        
+    public synchronized void write(double time, double dt) {
+
     }
 
     @Override
-    public synchronized void telemetry(){
-        SmartDashboard.putNumberArray("Indicator LED State", new double[] {currentLED.red, currentLED.green, currentLED.blue});
-        colorWidget.withProperties(Map.of("colorWhenTrue", String.format("#%02x%02x%02x", (int) (currentLED.red * 255), (int) (currentLED.green * 255), (int) (currentLED.blue * 255))));
+    public synchronized void telemetry() {
+        SmartDashboard.putNumberArray("Indicator LED State",
+                new double[] { currentLED.red, currentLED.green, currentLED.blue });
+        colorWidget.withProperties(Map.of("colorWhenTrue", String.format("#%02x%02x%02x", (int) (currentLED.red * 255),
+                (int) (currentLED.green * 255), (int) (currentLED.blue * 255))));
     }
 
     @Override
-    public synchronized void start(){
-        
+    public synchronized void start() {
+
     }
 
     @Override
-    public synchronized void stop(){
-        
+    public synchronized void stop() {
+
     }
-    
+
     @Override
-    public synchronized void disabled(double time, double dt){
-        
+    public synchronized void disabled(double time, double dt) {
+
     }
 
     public static enum STATE {

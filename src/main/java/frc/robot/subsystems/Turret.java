@@ -29,8 +29,7 @@ public class Turret implements Updatable {
 
     private LazyTalonFX turretMotor = new LazyTalonFX(Constants.CANID.TURRET_MOTOR);
 
-    private double forwardMaxPosition = Constants.TURRET_FORWARD_MAX_POSITION;
-    private double reverseMaxPosition = Constants.TURRET_REVERSE_MAX_POSITION;
+    private double zeroPosition = 0.0;
 
     private double angleLockTarget = 0.0;
 
@@ -63,7 +62,7 @@ public class Turret implements Updatable {
 
     public synchronized double getTurretAngle() {
         return Conversions.falconToDegrees(
-                mPeriodicIO.turretPosition - ((forwardMaxPosition + reverseMaxPosition) / 2.0),
+                mPeriodicIO.turretPosition - zeroPosition,
                 Constants.TURRET_GEAR_RATIO);
     }
 
@@ -123,11 +122,15 @@ public class Turret implements Updatable {
     
     @Override
     public void update(double time, double dt) {
-        if (mPeriodicIO.turretForwardLimitSwitch && mPeriodicIO.turretReverseLimitSwitch) {
-            forwardMaxPosition = mPeriodicIO.turretPosition;
-            reverseMaxPosition = mPeriodicIO.turretPosition - Constants.TURRET_TRAVEL_DISTANCE;
+        if (mPeriodicIO.turretForwardLimitSwitch && mPeriodicIO.turretReverseLimitSwitch) { 
+            zeroPosition = mPeriodicIO.turretPosition - Constants.TURRET_REVERSE_TO_CENTER_TRAVEL_DISTANCE;
+            
+            turretMotor.configForwardSoftLimitThreshold(zeroPosition + Conversions.degreesToFalcon(Constants.TURRET_MAX_ROTATION_DEGREE, Constants.TURRET_GEAR_RATIO));
+            turretMotor.configReverseSoftLimitThreshold(zeroPosition - Conversions.degreesToFalcon(Constants.TURRET_MAX_ROTATION_DEGREE, Constants.TURRET_GEAR_RATIO));
+            turretMotor.configForwardSoftLimitEnable(true);
+            turretMotor.configReverseSoftLimitEnable(true);
+
             isCalibrated = true;
-            turretMotor.configForwardSoftLimitThreshold(forwardMaxPosition);
         }
 
         // Carry out calibration according to sensor status. Reverse and forward must
@@ -140,7 +143,7 @@ public class Turret implements Updatable {
                 if (this.isCalibrated) {
                     setState(STATE.OFF);
                 } else {
-                    mPeriodicIO.turretDemand = 0.2;
+                    mPeriodicIO.turretDemand = 0.0;
                 }
                 break;
             case PERCENTAGE:
@@ -159,11 +162,11 @@ public class Turret implements Updatable {
                 if (Math.abs(angle) < Constants.TURRET_MAX_ROTATION_DEGREE) {
                     turretMotor.set(ControlMode.MotionMagic,
                             Conversions.degreesToFalcon(angle, Constants.TURRET_GEAR_RATIO)
-                                    + (forwardMaxPosition + reverseMaxPosition) / 2.0);
+                                    + zeroPosition);
                 } else {
                     turretMotor.set(ControlMode.MotionMagic,
                             Conversions.degreesToFalcon(Math.copySign(Constants.TURRET_MAX_ROTATION_DEGREE, angle), Constants.TURRET_GEAR_RATIO)
-                                    + (forwardMaxPosition + reverseMaxPosition) / 2.0);
+                                    + zeroPosition);
                 }
                 break;
             case OFF:
@@ -201,12 +204,12 @@ public class Turret implements Updatable {
                             || (delta <= 0 && this.reverseSafe())) {
                         turretMotor.set(ControlMode.MotionMagic,
                                 Conversions.degreesToFalcon(angle, Constants.TURRET_GEAR_RATIO)
-                                        + (forwardMaxPosition + reverseMaxPosition) / 2.0);
+                                        + zeroPosition);
                     }
                 } else {
                     turretMotor.set(ControlMode.MotionMagic,
                             Conversions.degreesToFalcon(Math.copySign(90.0, angle), Constants.TURRET_GEAR_RATIO)
-                                    + (forwardMaxPosition + reverseMaxPosition) / 2.0);
+                                    + zeroPosition);
                 }
                 break;
             case PERCENTAGE:
@@ -221,13 +224,12 @@ public class Turret implements Updatable {
     
     @Override
     public synchronized void telemetry(){
-        SmartDashboard.putNumber("Forward Max Position", this.forwardMaxPosition);
-        SmartDashboard.putNumber("Reverse Max Position", this.reverseMaxPosition);
         SmartDashboard.putNumber("Current Position", this.turretMotor.getSelectedSensorPosition());
         SmartDashboard.putNumber("Current Angle", this.getTurretAngle());
         SmartDashboard.putNumber("Lock Angle", this.angleLockTarget);
         SmartDashboard.putBoolean("Forward Safe", this.forwardSafe());
         SmartDashboard.putBoolean("Reverse Safe", this.reverseSafe());
+        SmartDashboard.putBoolean("Is Turret Calibrated", this.isCalibrated());
     }
     
     @Override
@@ -244,6 +246,8 @@ public class Turret implements Updatable {
     
     @Override
     public synchronized void disabled(double time, double dt){
+        setState(STATE.OFF);
+        turretMotor.setNeutralMode(NeutralMode.Coast);
     }
 
     public enum STATE {
