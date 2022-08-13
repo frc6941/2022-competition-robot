@@ -2,19 +2,17 @@ package frc.robot;
 
 import com.team254.lib.geometry.Pose2d;
 import com.team254.lib.geometry.Rotation2d;
-
 import com.team254.lib.util.InterpolatingDouble;
 import com.team254.lib.util.InterpolatingTreeMap;
 import com.team254.lib.util.MovingAveragePose2d;
-import com.team254.lib.vision.AimingParameters;
-
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import java.util.*;
+import java.util.Map;
 
 public class RobotState {
     private static RobotState mInstance;
+
     public static RobotState getInstance() {
         if (mInstance == null) {
             mInstance = new RobotState();
@@ -23,9 +21,7 @@ public class RobotState {
         return mInstance;
     }
 
-    private static final int kObservationBufferSize = 1;
-    public static final Pose2d kDefaultFieldRelativeGoalLocation = new Pose2d(8.2296, 4.12155, new Rotation2d());
-    public static final Pose2d kFiveBallStartingLocation = new Pose2d(8.597, 1.529, new Rotation2d());
+    private static final int kObservationBufferSize = 100;
 
     /*
      * RobotState keeps track of the poses of various coordinate frames throughout
@@ -40,85 +36,115 @@ public class RobotState {
      * 2. Vehicle frame: origin is the center of the robot wheelbase, facing
      * forwards
      *
-     * 3. Camera frame: origin is the center of the Limelight imager relative to the
+     * 3. Turret frame: origin is the center of the turret.
+     *
+     * 4. Camera frame: origin is the center of the Limelight relative to the
      * turret.
      *
-     * 4. Goal frame: origin is the center of the vision target, facing outwards
-     * along the normal. Also note that there can be multiple goal frames.
+     * 5. Target frame: origin is the center of the vision target, facing outwards
+     * along the normal.
      *
-     * As a kinematic chain with 4 frames, there are 2 transforms of interest:
+     * As a kinematic chain with 5 frames, there are 4 transforms of interest:
      *
-     * 1. Field-to-robot: This is tracked over time by integrating encoder and
+     * 1. Field-to-vehicle: This is tracked over time by integrating encoder and
      * gyro measurements. It will inevitably drift, but is usually accurate over
      * short time periods.
      *
-     * 2. Camera-to-goal: Measured by the vision system.
-     * 
+     * 2. Vehicle-to-turret: Rotation measured by the turret encoder; translation is
+     * constant.
+     *
+     * 3. Turret-to-camera: This is a constant (per camera).
+     *
+     * 4. Camera-to-target: Measured by the vision system.
      */
 
     // FPGATimestamp -> Pose2d or Rotation2d
     private InterpolatingTreeMap<InterpolatingDouble, Pose2d> field_to_vehicle_;
+    private InterpolatingTreeMap<InterpolatingDouble, Pose2d> vehicle_to_turret_;
     private Pose2d vehicle_velocity_predicted_;
-    private MovingAveragePose2d vehicle_velocity_predicted_filtered_;
     private Pose2d vehicle_velocity_measured_;
+    private MovingAveragePose2d vehicle_velocity_predicted_filtered_;
     private MovingAveragePose2d vehicle_velocity_measured_filtered_;
+    private Pose2d vehicle_acceleration_measured_;
+    private MovingAveragePose2d vehicle_acceleration_measured_filtered_;
     private double distance_driven_;
 
-
     private RobotState() {
-        reset(0.0, Pose2d.identity());
+        reset(0.0, Pose2d.identity(), Pose2d.identity());
     }
 
     /**
      * Resets the field to robot transform (robot's position on the field)
      */
+    public synchronized void reset(double start_time, Pose2d initial_field_to_vehicle,
+            Pose2d initial_vehicle_to_turret) {
+        reset(start_time, initial_field_to_vehicle);
+        vehicle_to_turret_ = new InterpolatingTreeMap<>(kObservationBufferSize);
+        vehicle_to_turret_.put(new InterpolatingDouble(start_time), initial_vehicle_to_turret);
+    }
+
     public synchronized void reset(double start_time, Pose2d initial_field_to_vehicle) {
         field_to_vehicle_ = new InterpolatingTreeMap<>(kObservationBufferSize);
         field_to_vehicle_.put(new InterpolatingDouble(start_time), initial_field_to_vehicle);
         vehicle_velocity_predicted_ = Pose2d.identity();
-        vehicle_velocity_predicted_filtered_ = new MovingAveragePose2d(50);
+        vehicle_velocity_predicted_filtered_ = new MovingAveragePose2d(25);
         vehicle_velocity_measured_ = Pose2d.identity();
-        vehicle_velocity_measured_filtered_ = new MovingAveragePose2d(50);
+        vehicle_velocity_measured_filtered_ = new MovingAveragePose2d(25);
+        vehicle_acceleration_measured_ = Pose2d.identity();
+        vehicle_acceleration_measured_filtered_ = new MovingAveragePose2d(25);
         distance_driven_ = 0.0;
     }
 
     public synchronized void reset() {
-        reset(Timer.getFPGATimestamp(), Pose2d.identity());
-    }
-
-    public synchronized void reset(Pose2d pose) {
-        reset(Timer.getFPGATimestamp(), pose);
+        reset(Timer.getFPGATimestamp(), Pose2d.identity(), Pose2d.identity());
     }
 
     /**
      * Returns the robot's position on the field at a certain time. Linearly
-     * interpolates between stored robot positions to fill in the gaps.
+     * interpolates between stored robot positions
+     * to fill in the gaps.
      */
     public synchronized Pose2d getFieldToVehicle(double timestamp) {
         return field_to_vehicle_.getInterpolated(new InterpolatingDouble(timestamp));
+    }
+
+    public synchronized Pose2d getVehicleToTurret(double timestamp) {
+        return vehicle_to_turret_.getInterpolated(new InterpolatingDouble(timestamp));
+    }
+
+    public synchronized Pose2d getFieldToTurret(double timestamp) {
+        return getFieldToVehicle(timestamp).transformBy(getVehicleToTurret(timestamp));
     }
 
     public synchronized Map.Entry<InterpolatingDouble, Pose2d> getLatestFieldToVehicle() {
         return field_to_vehicle_.lastEntry();
     }
 
+    public synchronized Map.Entry<InterpolatingDouble, Pose2d> getLatestVehicleToTurret() {
+        return vehicle_to_turret_.lastEntry();
+    }
+
     public synchronized Pose2d getPredictedFieldToVehicle(double lookahead_time) {
         return new Pose2d(
-            getLatestFieldToVehicle().getValue()
-                .transformBy(getSmoothedPredictedVelocity().scaled(-lookahead_time)).getTranslation(), new Rotation2d());
+                getLatestFieldToVehicle().getValue()
+                        .transformBy(getSmoothedPredictedVelocity().scaled(-lookahead_time)).getTranslation(),
+                new Rotation2d());
     }
 
     public synchronized void addFieldToVehicleObservation(double timestamp, Pose2d observation) {
         field_to_vehicle_.put(new InterpolatingDouble(timestamp), observation);
     }
 
-    public synchronized void addObservations(double timestamp, Pose2d displacement, Pose2d measured_velocity,
-            Pose2d predicted_velocity) {
+    public synchronized void addVehicleToTurretObservation(double timestamp, Pose2d observation) {
+        vehicle_to_turret_.put(new InterpolatingDouble(timestamp), observation);
+    }
 
+    public synchronized void addObservations(double timestamp, Pose2d displacement, Pose2d measured_velocity,
+            Pose2d predicted_velocity, Pose2d measured_acceleration) {
         distance_driven_ += displacement.getTranslation().norm();
         addFieldToVehicleObservation(timestamp, new Pose2d(
-            getLatestFieldToVehicle().getValue().getTranslation().translateBy(displacement.getTranslation()), 
-            getLatestFieldToVehicle().getValue().getRotation().rotateBy(displacement.getRotation())));
+                getLatestFieldToVehicle().getValue().getTranslation().translateBy(displacement.getTranslation()),
+                getLatestFieldToVehicle().getValue().getRotation().rotateBy(displacement.getRotation())));
 
         vehicle_velocity_measured_ = measured_velocity;
         vehicle_velocity_predicted_ = predicted_velocity;
@@ -127,6 +153,9 @@ public class RobotState {
         vehicle_velocity_measured_filtered_.add(vehicle_velocity_measured_);
         // add predicted velocity to moving average array for filter
         vehicle_velocity_predicted_filtered_.add(vehicle_velocity_predicted_);
+
+        vehicle_acceleration_measured_ = measured_acceleration;
+        vehicle_acceleration_measured_filtered_.add(measured_acceleration);
     }
 
     public synchronized double getDistanceDriven() {
@@ -153,28 +182,21 @@ public class RobotState {
         return vehicle_velocity_predicted_filtered_.getAverage();
     }
 
-    public synchronized Optional<AimingParameters> getAimingParameters(int prev_track_id, double max_track_age) {
-        return Optional.empty();
+    public synchronized Pose2d getMeasuredAcceleration() {
+        return vehicle_acceleration_measured_;
+    }
+
+    public synchronized Pose2d getSmoothedMeasuredAcceleration() {
+        return vehicle_acceleration_measured_filtered_.getAverage();
     }
 
     public Pose2d getRobot() {
         return new Pose2d();
     }
 
-
     public synchronized void outputToSmartDashboard() {
         SmartDashboard.putString("Robot Velocity", getMeasuredVelocity().toString());
-        SmartDashboard.putString("Robot Field to Vehicle", getLatestFieldToVehicle().getValue().toString());
-        SmartDashboard.putNumber("Robot Field To Vehicle X", getLatestFieldToVehicle().getValue().getTranslation().x());
-        SmartDashboard.putNumber("Robot Field To Vehicle Y", getLatestFieldToVehicle().getValue().getTranslation().y());
-        SmartDashboard.putNumber("Robot Field To Vehicle Theta", getLatestFieldToVehicle().getValue().getRotation().getDegrees());
-        SmartDashboard.putString("Smoothed Predicted Velocity", getSmoothedPredictedVelocity().toString());
-
-        Optional<AimingParameters> params = getAimingParameters(-1, Constants.VisionConstants.Turret.MAX_GOAL_TRACK_AGE);
-        SmartDashboard.putBoolean("Has Aiming Parameters", params.isPresent());
-        if (params.isPresent()) {
-            SmartDashboard.putString("Vehicle to Target", params.get().getVehicleToGoal().toString());
-            SmartDashboard.putNumber("Vehicle to Target Angle", params.get().getVehicleToGoalRotation().getDegrees());
-        }
+        SmartDashboard.putString("Robot Acceleration", getSmoothedMeasuredAcceleration().toString());
+        SmartDashboard.putString("Field To Robot", getLatestFieldToVehicle().getValue().toString());
     }
 }

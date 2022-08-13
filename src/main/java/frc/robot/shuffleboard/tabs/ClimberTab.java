@@ -19,6 +19,8 @@ public class ClimberTab extends ShuffleboardTabBase {
     private NetworkTableEntry mClimberCurrent;
     private NetworkTableEntry mClimberIsOpenLoop;
     private NetworkTableEntry mRollAngle;
+    private NetworkTableEntry mClimberState;
+    private NetworkTableEntry mClimberOnTarget;
 
     @Override
     public void createEntries() {
@@ -47,6 +49,14 @@ public class ClimberTab extends ShuffleboardTabBase {
                 .add("Roll Angle", 0.0)
                 .withSize(1, 1)
                 .getEntry();
+        mClimberState = mTab
+                .add("Climber State", "HOMING")
+                .withSize(1, 1)
+                .getEntry();
+        mClimberOnTarget = mTab
+                .add("Climber On Target", false)
+                .withSize(1, 1)
+                .getEntry();
     }
 
     @Override
@@ -56,6 +66,8 @@ public class ClimberTab extends ShuffleboardTabBase {
         mClimberDemand.setDouble(mClimber.mPeriodicIO.climberDemand);
         mClimberCurrent.setDouble(mClimber.mPeriodicIO.climberCurret);
         mClimberIsOpenLoop.setBoolean(mSuperstructure.isClimberOpenLoop());
+        mClimberState.setString(mClimber.getState().toString());
         mRollAngle.setDouble(mDrivebase.getRoll());
+        mClimberOnTarget.setBoolean(mClimber.isClimberOnTarget());
     }
 }

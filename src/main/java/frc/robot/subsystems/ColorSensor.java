@@ -8,7 +8,6 @@ import org.frcteam6941.looper.UpdateManager.Updatable;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.I2C.Port;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
 public class ColorSensor implements Updatable{
@@ -46,7 +45,7 @@ public class ColorSensor implements Updatable{
     } 
 
     private ColorSensor(){
-        colorSensor = new ColorSensorV3(Port.kOnboard);
+        colorSensor = new ColorSensorV3(Port.kMXP);
         matchedColor = ColorChoices.NONE;
     }
 
@@ -131,10 +130,6 @@ public class ColorSensor implements Updatable{
 
     @Override
     public synchronized void telemetry(){
-        SmartDashboard.putNumber("ColorSensor Red", mPeriodicIO.red);
-        SmartDashboard.putNumber("ColorSensor Green", mPeriodicIO.green);
-        SmartDashboard.putNumber("ColorSensor Blue", mPeriodicIO.blue);
-        SmartDashboard.putBoolean("Sees Ball", seesBall());
     }
 
     @Override
@@ -150,5 +145,6 @@ public class ColorSensor implements Updatable{
     @Override
     public synchronized void disabled(double time, double dt){
         updateAllianceColor();
+        updateColorOffset();
     }
 }

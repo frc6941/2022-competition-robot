@@ -4,22 +4,18 @@ import org.frcteam6328.utils.Alert;
 import org.frcteam6328.utils.Alert.AlertType;
 import org.frcteam6941.looper.UpdateManager.Updatable;
 
-import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Turret;
 
 public class Alerts implements Updatable {
+    private boolean alertPresent = false;
+
     /** Define hardware items. */
     Turret turretSubsystem = Turret.getInstance();
-    Climber climberSubsystem = Climber.getInstance();
 
     /** CheckList Items. */
     public Alert turretCalibrationWarning = new Alert(
             "CheckList",
             "Turret is not calibrated.",
-            AlertType.WARNING);
-    public Alert climberCalibrationWarning = new Alert(
-            "CheckList",
-            "Climber is not calibrated.",
             AlertType.WARNING);
     public static Alerts getInstance() {
         if (instance == null) {
@@ -33,10 +29,14 @@ public class Alerts implements Updatable {
     }
 
     private static Alerts instance;
+    
+    public boolean isAlertPresent(){
+        return alertPresent;
+    }
 
     @Override
     public void update(double time, double dt) {
-        
+        alertPresent = !turretSubsystem.isCalibrated();
     }
     
     @Override
@@ -52,7 +52,6 @@ public class Alerts implements Updatable {
     @Override
     public synchronized void telemetry(){
         turretCalibrationWarning.set(!turretSubsystem.isCalibrated());
-        climberCalibrationWarning.set(!climberSubsystem.isClimberCalibrated());
     }
 
     @Override

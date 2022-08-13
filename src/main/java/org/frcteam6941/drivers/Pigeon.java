@@ -63,4 +63,10 @@ public class Pigeon {
     public Rotation2d getUnadjustedRoll() {
         return Rotation2d.fromDegrees(mGyro.getRoll());
     }
+
+    public double getYawAngularVelocity() {
+        double[] xyz_dps = new double[] {0.0, 0.0, 0.0};
+        mGyro.getRawGyro(xyz_dps);
+        return xyz_dps[2];
+    }
 }

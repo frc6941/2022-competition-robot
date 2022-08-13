@@ -7,6 +7,7 @@ import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import frc.robot.auto.modes.AutoModeBase;
+import frc.robot.auto.modes.TestAuto;
 
 public class AutoSelector {
     public enum AUTO_MODES {
@@ -55,7 +56,7 @@ public class AutoSelector {
             return Optional.empty();
 
         case TEST_PATH:
-            return Optional.empty();
+            return Optional.of(new TestAuto());
             
         default:
             System.out.println("ERROR: unexpected auto mode: " + mode);

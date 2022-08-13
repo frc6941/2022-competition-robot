@@ -11,7 +11,7 @@ import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.BallPath;
 import frc.robot.subsystems.Climber;
@@ -25,6 +25,7 @@ import frc.robot.subsystems.Shooter;
 import frc.robot.auto.AutoSelector;
 import frc.robot.auto.modes.AutoModeBase;
 import frc.robot.controlboard.ControlBoard;
+import frc.robot.coordinators.Alerts;
 import frc.robot.coordinators.Superstructure;
 import frc.robot.shuffleboard.ShuffleBoardInteractions;
 import frc.robot.subsystems.Turret;
@@ -57,21 +58,24 @@ public class Robot extends TimedRobot {
                 BallPath.getInstance(),
                 ColorSensor.getInstance(),
                 Turret.getInstance(),
-                // Hood.getInstance(),
+                Hood.getInstance(),
                 Shooter.getInstance(),
                 // Climber.getInstance(),
-                // Indicator.getInstance(),
-                // Limelight.getInstance(),
-                // RobotStateEstimator.getInstance(),
+                Indicator.getInstance(),
+                Limelight.getInstance(),
+                RobotStateEstimator.getInstance(),
+                Alerts.getInstance(),
                 Superstructure.getInstance());
         this.updateManager.startEnableLoop(Constants.kLooperDt);
 
-        // CameraServer.startAutomaticCapture();
+        CameraServer.startAutomaticCapture();
+        SmartDashboard.putData(mAutoSelector.getSendableChooser());
     }
 
     @Override
     public void robotPeriodic() {
         mShuffleBoardInteractions.update();
+        mAutoSelector.updateModeCreator();
     }
 
     /** This function is called once each time the robot enters Disabled mode. */
@@ -139,5 +143,15 @@ public class Robot extends TimedRobot {
 
     @Override
     public void testPeriodic() {
+    }
+
+    @Override
+    public void simulationInit() {
+
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        
     }
 }

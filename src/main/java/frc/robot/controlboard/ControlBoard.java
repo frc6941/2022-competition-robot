@@ -116,43 +116,31 @@ public class ControlBoard {
 
     // Locks wheels in X formation
     public boolean getSwerveBrake() {
-        return driver.getButton(Button.L_JOYSTICK);
+        return driver.getButton(Button.R_JOYSTICK);
     }
 
     // Robot oriented switch
     public boolean getRobotOrientedDrive() {
-        return driver.getController().getRightStickButton();
+        return driver.getButton(Button.L_JOYSTICK);
     }
 
     // Start intake
     public boolean getIntake() {
-        return driver.getButton(Button.RB);
+        return driver.getButton(Button.LB);
     }
 
     public boolean getShoot() {
-        return driver.getButton(Button.X);
+        return driver.getButton(Button.RB);
     }
 
     public boolean getSpit() {
-        return driver.getButton(Button.B);
-    }
-
-    public boolean getTempEject(){
-        return driver.getButton(Button.Y);
-    }
-
-
-    public double getGuessedAimTarget(){
-        return new Rotation2d(-operator.getAxis(Side.LEFT, Axis.X), operator.getAxis(Side.LEFT, Axis.Y)).getDegrees() + 90.0;
-    }
-
-    public boolean getManualEject() {
         return operator.getButton(Button.LB);
     }
 
     // Climber Controls
     public boolean getEnterClimbMode() {
         return operator.getButton(Button.LB) && operator.getButton(Button.RB) && operator.getTriggerBoolean(Side.LEFT) && operator.getTriggerBoolean(Side.RIGHT);
+        // return operator.getButton(Button.LB) && operator.getButton(Button.RB);
     }
 
     public boolean getExitClimbMode() {
@@ -188,11 +176,19 @@ public class ControlBoard {
     }
 
     public boolean getTraversalClimb() {
-        return operator.getButton(Button.LB) && operator.getController().getYButtonPressed();
+        return operator.getController().getYButtonPressed();
     }
     
     public boolean getHighBarClimb() {
-        return operator.getButton(Button.LB) && operator.getController().getBButtonPressed();
+        return operator.getController().getBButtonPressed();
+    }
+
+    public boolean getClimbAutoConfirmation(){
+        return operator.getButton(Button.A);
+    }
+
+    public boolean getClimbAutoAbort(){
+        return operator.getButton(Button.X);
     }
 
 }

@@ -1,8 +1,10 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.team254.lib.util.Util;
 
 import org.frcteam1678.lib.math.Conversions;
@@ -20,11 +22,12 @@ public class Turret implements Updatable {
         public double turretPosition = 0.0;
         public boolean turretForwardLimitSwitch = false;
         public boolean turretReverseLimitSwitch = false;
-    
+
         // OUTPUT
         public double turretDemand = 0.0;
+        public double turretFeedfoward = 0.0;
     }
-    
+
     public PeriodicIO mPeriodicIO = new PeriodicIO();
 
     private LazyTalonFX turretMotor = new LazyTalonFX(Constants.CANID.TURRET_MOTOR);
@@ -48,7 +51,7 @@ public class Turret implements Updatable {
     private Turret() {
         turretMotor.configFactoryDefault();
         turretMotor.setInverted(InvertType.None);
-        turretMotor.setNeutralMode(NeutralMode.Brake);
+        turretMotor.setNeutralMode(NeutralMode.Coast);
         turretMotor.config_kP(0, Constants.TURRET_KP);
         turretMotor.config_kI(0, Constants.TURRET_KI);
         turretMotor.config_kD(0, Constants.TURRET_KD);
@@ -58,6 +61,7 @@ public class Turret implements Updatable {
         turretMotor.configMotionAcceleration(Constants.TURRET_MOTION_ACCELERATION);
         turretMotor.enableVoltageCompensation(true);
         turretMotor.configNeutralDeadband(Constants.TURRET_NEUTRAL_DEADBAND);
+        turretMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 20, 40, 0.01));
     }
 
     public synchronized double getTurretAngle() {
@@ -67,29 +71,39 @@ public class Turret implements Updatable {
     }
 
     public void setTurretPercentage(double power) {
-        if(getState() != STATE.PERCENTAGE && getState() != STATE.HOMING){
+        if (getState() != STATE.PERCENTAGE && getState() != STATE.HOMING) {
             setState(STATE.PERCENTAGE);
         }
         mPeriodicIO.turretDemand = power;
     }
 
     public void setTurretAngle(double angle) {
-        if(getState() != STATE.ANGLE && getState() != STATE.HOMING){
+        if (getState() != STATE.ANGLE && getState() != STATE.HOMING) {
             setState(STATE.ANGLE);
         }
         mPeriodicIO.turretDemand = angle;
+        mPeriodicIO.turretFeedfoward = 0.0;
+    }
+
+    public void setTurretAngle(double angle, double feedforwardVelocity) {
+        if (getState() != STATE.ANGLE && getState() != STATE.HOMING) {
+            setState(STATE.ANGLE);
+        }
+        mPeriodicIO.turretDemand = angle;
+        double ticksPer100ms = Conversions.degreesToFalcon(feedforwardVelocity, Constants.TURRET_GEAR_RATIO) / 10.0;
+        mPeriodicIO.turretFeedfoward = ticksPer100ms * (Constants.TURRET_KF + Constants.TURRET_KD / 100.0) / 1023.0;
     }
 
     public synchronized boolean isOnTarget() {
-        if(getState() == STATE.ANGLE){
+        if (getState() == STATE.ANGLE) {
             return Util.epsilonEquals(getTurretAngle(), mPeriodicIO.turretDemand, Constants.TURRET_ERROR_TOLERANCE);
         } else {
             return false;
         }
-        
+
     }
 
-    public boolean isCalibrated(){
+    public boolean isCalibrated() {
         return isCalibrated;
     }
 
@@ -101,44 +115,44 @@ public class Turret implements Updatable {
         return getTurretAngle() >= -Constants.TURRET_MAX_ROTATION_DEGREE;
     }
 
-    public boolean forwardSafeWithZone(double zone){
+    public boolean forwardSafeWithZone(double zone) {
         zone = Math.abs(zone);
         return getTurretAngle() <= Constants.TURRET_MAX_ROTATION_DEGREE - zone;
     }
 
-    public boolean reverseSafeWithZone(double zone){
+    public boolean reverseSafeWithZone(double zone) {
         zone = Math.abs(zone);
-        return getTurretAngle() >= - Constants.TURRET_MAX_ROTATION_DEGREE + zone;
+        return getTurretAngle() >= -Constants.TURRET_MAX_ROTATION_DEGREE + zone;
     }
 
     @Override
-    public synchronized void read(double time, double dt){
+    public synchronized void read(double time, double dt) {
         mPeriodicIO.turretCurrent = turretMotor.getStatorCurrent();
-        mPeriodicIO.turretVoltage = turretMotor.getMotorOutputVoltage();
         mPeriodicIO.turretPosition = turretMotor.getSelectedSensorPosition();
         mPeriodicIO.turretForwardLimitSwitch = turretMotor.isFwdLimitSwitchClosed() == 1;
         mPeriodicIO.turretReverseLimitSwitch = turretMotor.isRevLimitSwitchClosed() == 1;
     }
-    
+
     @Override
     public void update(double time, double dt) {
-        if (mPeriodicIO.turretForwardLimitSwitch && mPeriodicIO.turretReverseLimitSwitch) { 
+        if (mPeriodicIO.turretForwardLimitSwitch && mPeriodicIO.turretReverseLimitSwitch) {
             zeroPosition = mPeriodicIO.turretPosition - Constants.TURRET_REVERSE_TO_CENTER_TRAVEL_DISTANCE;
-            
-            turretMotor.configForwardSoftLimitThreshold(zeroPosition + Conversions.degreesToFalcon(Constants.TURRET_MAX_ROTATION_DEGREE, Constants.TURRET_GEAR_RATIO));
-            turretMotor.configReverseSoftLimitThreshold(zeroPosition - Conversions.degreesToFalcon(Constants.TURRET_MAX_ROTATION_DEGREE, Constants.TURRET_GEAR_RATIO));
+
+            turretMotor.configForwardSoftLimitThreshold(zeroPosition
+                    + Conversions.degreesToFalcon(Constants.TURRET_MAX_ROTATION_DEGREE, Constants.TURRET_GEAR_RATIO));
+            turretMotor.configReverseSoftLimitThreshold(zeroPosition
+                    - Conversions.degreesToFalcon(Constants.TURRET_MAX_ROTATION_DEGREE, Constants.TURRET_GEAR_RATIO));
+            isCalibrated = true;
             turretMotor.configForwardSoftLimitEnable(true);
             turretMotor.configReverseSoftLimitEnable(true);
-
-            isCalibrated = true;
         }
 
         // Carry out calibration according to sensor status. Reverse and forward must
         // both be calibrated either by hand or through motor before further actions.
-        if(!isCalibrated()){
+        if (!isCalibrated()) {
             setState(STATE.HOMING);
         }
-        switch(state){
+        switch (state) {
             case HOMING:
                 if (this.isCalibrated) {
                     setState(STATE.OFF);
@@ -161,91 +175,41 @@ public class Turret implements Updatable {
                 // the reachable maximum or minimum.
                 if (Math.abs(angle) < Constants.TURRET_MAX_ROTATION_DEGREE) {
                     turretMotor.set(ControlMode.MotionMagic,
-                            Conversions.degreesToFalcon(angle, Constants.TURRET_GEAR_RATIO)
-                                    + zeroPosition);
+                            Conversions.degreesToFalcon(angle, Constants.TURRET_GEAR_RATIO) + zeroPosition,
+                            DemandType.ArbitraryFeedForward, mPeriodicIO.turretFeedfoward);
                 } else {
                     turretMotor.set(ControlMode.MotionMagic,
-                            Conversions.degreesToFalcon(Math.copySign(Constants.TURRET_MAX_ROTATION_DEGREE, angle), Constants.TURRET_GEAR_RATIO)
-                                    + zeroPosition);
+                            Conversions.degreesToFalcon(Math.copySign(Constants.TURRET_MAX_ROTATION_DEGREE, angle),
+                                    Constants.TURRET_GEAR_RATIO) + zeroPosition,
+                            DemandType.ArbitraryFeedForward, mPeriodicIO.turretFeedfoward);
                 }
                 break;
             case OFF:
                 mPeriodicIO.turretDemand = 0.0;
-            
         }
     }
-    
+
     @Override
-    public synchronized void write(double time, double dt){
-        if(!isCalibrated()){
-            setState(STATE.HOMING);
-        }
-        switch(state){
-            case HOMING:
-                turretMotor.set(ControlMode.PercentOutput, mPeriodicIO.turretDemand);
-                break;
-            case ANGLE:
-                double angle = mPeriodicIO.turretDemand;
-                while (angle > 180.0) {
-                    angle -= 360.0;
-                }
-                while (angle < -180.0) {
-                    angle += 360.0;
-                }
-        
-                double delta = angle - this.getTurretAngle();
-        
-                // First, determine if the set angle is out of reach. If so, set the angle to
-                // the reachable maximum or minimum.
-                if (Math.abs(angle) < Constants.TURRET_MAX_ROTATION_DEGREE) {
-                    // Second, judge actively if the turret has reached the limit. If so, actively
-                    // stop the turret from going any further.
-                    if ((delta >= 0 && this.forwardSafe())
-                            || (delta <= 0 && this.reverseSafe())) {
-                        turretMotor.set(ControlMode.MotionMagic,
-                                Conversions.degreesToFalcon(angle, Constants.TURRET_GEAR_RATIO)
-                                        + zeroPosition);
-                    }
-                } else {
-                    turretMotor.set(ControlMode.MotionMagic,
-                            Conversions.degreesToFalcon(Math.copySign(90.0, angle), Constants.TURRET_GEAR_RATIO)
-                                    + zeroPosition);
-                }
-                break;
-            case PERCENTAGE:
-                turretMotor.set(ControlMode.PercentOutput, mPeriodicIO.turretDemand);
-                break;
-            case OFF:
-                turretMotor.set(ControlMode.PercentOutput, 0.0);
-                break;
-            
-        } 
+    public synchronized void write(double time, double dt) {
     }
-    
+
     @Override
-    public synchronized void telemetry(){
-        SmartDashboard.putNumber("Current Position", this.turretMotor.getSelectedSensorPosition());
-        SmartDashboard.putNumber("Current Angle", this.getTurretAngle());
-        SmartDashboard.putNumber("Lock Angle", this.angleLockTarget);
-        SmartDashboard.putBoolean("Forward Safe", this.forwardSafe());
-        SmartDashboard.putBoolean("Reverse Safe", this.reverseSafe());
-        SmartDashboard.putBoolean("Is Turret Calibrated", this.isCalibrated());
+    public synchronized void telemetry() {
     }
-    
+
     @Override
-    public synchronized void start(){
-        setState(STATE.HOMING);
+    public synchronized void start() {
         turretMotor.setNeutralMode(NeutralMode.Brake);
     }
 
     @Override
-    public synchronized void stop(){
+    public synchronized void stop() {
         setState(STATE.OFF);
         turretMotor.setNeutralMode(NeutralMode.Coast);
     }
-    
+
     @Override
-    public synchronized void disabled(double time, double dt){
+    public synchronized void disabled(double time, double dt) {
         setState(STATE.OFF);
         turretMotor.setNeutralMode(NeutralMode.Coast);
     }

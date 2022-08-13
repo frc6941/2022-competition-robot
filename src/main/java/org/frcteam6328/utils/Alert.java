@@ -27,6 +27,10 @@ public class Alert {
   private double activeStartTime = 0.0;
   private String text;
 
+  public boolean isActive() {
+    return active;
+  }
+
   /**
    * Creates a new Alert in the default group - "Alerts". If this is the first to be instantiated,
    * the appropriate entries will be added to NetworkTables.

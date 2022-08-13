@@ -39,7 +39,7 @@ public class CustomXboxController {
     }
 
     public boolean getTriggerBoolean(Side side) {
-        return mController.getRawAxis(side == Side.LEFT ? 2 : 3) > 0.2;
+        return mController.getRawAxis(side == Side.LEFT ? 2 : 3) > 0.5;
     }
     
     public boolean getButton(Button button) {

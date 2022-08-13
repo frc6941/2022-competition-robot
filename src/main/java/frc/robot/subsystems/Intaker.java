@@ -10,13 +10,10 @@ import org.frcteam6941.looper.UpdateManager.Updatable;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
 public class Intaker implements Updatable {
     public static class PeriodicIO {
-        private double intakerCurrent = 0.0;
-
         // OUTPUTS
         private double intakerDemand = 0.0;
         private DoubleSolenoid.Value intakerExtenderDemand = DoubleSolenoid.Value.kReverse;
@@ -30,7 +27,7 @@ public class Intaker implements Updatable {
     private CANSparkMax intakerMotor = new CANSparkMax(Constants.CANID.INTAKER_MOTOR, MotorType.kBrushless);
 
     private static Intaker instance;
-    private TimeDelayedBoolean neutralGasSaverBoolean = new TimeDelayedBoolean();
+    private TimeDelayedBoolean intakerRetractTurningBoolean = new TimeDelayedBoolean();
     private boolean spin = false;
     private boolean reverse = false;
     private STATE state = STATE.RETRACTING;
@@ -44,7 +41,7 @@ public class Intaker implements Updatable {
 
     private Intaker() {
         intakerMotor.restoreFactoryDefaults();
-        intakerMotor.setIdleMode(IdleMode.kBrake);
+        intakerMotor.setIdleMode(IdleMode.kCoast);
         intakerMotor.enableVoltageCompensation(12.0);
         intakerMotor.setSmartCurrentLimit(25, 10);
         intakerMotor.setInverted(true);
@@ -63,18 +60,13 @@ public class Intaker implements Updatable {
 
     @Override
     public synchronized void read(double time, double dt) {
-        mPeriodicIO.intakerCurrent = intakerMotor.getOutputCurrent();
     }
 
     @Override
     public synchronized void update(double time, double dt) {
         switch (state) {
             case EXTENDING:
-                if (neutralGasSaverBoolean.update(true, Constants.INTAKER_GAS_SAVER_TIME)) {
-                    mPeriodicIO.intakerExtenderDemand = DoubleSolenoid.Value.kOff;
-                } else {
-                    mPeriodicIO.intakerExtenderDemand = DoubleSolenoid.Value.kForward;
-                }
+                mPeriodicIO.intakerExtenderDemand = DoubleSolenoid.Value.kForward;
                 if (this.spin) {
                     if (this.reverse) {
                         mPeriodicIO.intakerDemand = Constants.INTAKER_REVERSE_INTAKE_PERCENTAGE;
@@ -84,10 +76,15 @@ public class Intaker implements Updatable {
                 } else {
                     mPeriodicIO.intakerDemand = 0.0;
                 }
+                intakerRetractTurningBoolean.update(false, 0.0);
                 break;
             case RETRACTING:
                 mPeriodicIO.intakerExtenderDemand = DoubleSolenoid.Value.kReverse;
-                mPeriodicIO.intakerDemand = 0.0;
+                if(intakerRetractTurningBoolean.update(true, 0.1)){
+                    mPeriodicIO.intakerDemand = 0.0;
+                } else {
+                    mPeriodicIO.intakerDemand = Constants.INTAKER_FAST_INTAKE_PERCENTAGE;
+                }
                 break;
         }
     }
@@ -100,8 +97,6 @@ public class Intaker implements Updatable {
 
     @Override
     public synchronized void telemetry() {
-        SmartDashboard.putNumber("Intaker Current", mPeriodicIO.intakerCurrent);
-        SmartDashboard.putString("Intaker Extender Demand", mPeriodicIO.intakerExtenderDemand.toString());
     }
 
     @Override
@@ -121,14 +116,12 @@ public class Intaker implements Updatable {
     public void extend() {
         if (getState() == STATE.RETRACTING) {
             setState(STATE.EXTENDING);
-            neutralGasSaverBoolean.update(false, 0.0); // Reset Gas Saver Boolean
         }
     }
 
     public void retract() {
         if (getState() == STATE.EXTENDING) {
             setState(STATE.RETRACTING);
-            neutralGasSaverBoolean.update(false, 0.0); // Reset Gas Saver Boolean
         }
     }
 

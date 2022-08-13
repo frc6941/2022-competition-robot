@@ -4,12 +4,12 @@ import java.util.Optional;
 
 import com.google.errorprone.annotations.concurrent.GuardedBy;
 import com.pathplanner.lib.PathPlannerTrajectory;
+import com.team254.lib.util.MovingAverage;
 
 import org.frcteam6941.control.HolonomicDriveSignal;
 import org.frcteam6941.control.HolonomicTrajectoryFollower;
 import org.frcteam6941.drivers.Pigeon;
 import org.frcteam6941.utils.AngleNormalization;
-import org.frcteam6941.utils.PulseHUD;
 
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Nat;
@@ -68,7 +68,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     @GuardedBy("statusLock")
     private Translation2d translation = new Translation2d();
     @GuardedBy("statusLock")
-    private double angularVelocity = 0.0;
+    private MovingAverage angularVelocity = new MovingAverage(5);
     @GuardedBy("statusLock")
     private Pose2d pose = new Pose2d();
 
@@ -104,20 +104,19 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         };
 
         // Module positions and swerve kinematics
-        swerveModulePositions = new Translation2d[] { 
-            new Translation2d(Constants.DRIVETRAIN_SIDE_WIDTH / 2.0, Constants.DRIVETRAIN_SIDE_WIDTH / 2.0),
-            new Translation2d(Constants.DRIVETRAIN_SIDE_WIDTH / 2.0, -Constants.DRIVETRAIN_SIDE_WIDTH / 2.0),
-            new Translation2d(-Constants.DRIVETRAIN_SIDE_WIDTH / 2.0, Constants.DRIVETRAIN_SIDE_WIDTH / 2.0),
-            new Translation2d(-Constants.DRIVETRAIN_SIDE_WIDTH / 2.0, -Constants.DRIVETRAIN_SIDE_WIDTH / 2.0) };
+        swerveModulePositions = new Translation2d[] {
+                new Translation2d(Constants.DRIVETRAIN_SIDE_WIDTH / 2.0, Constants.DRIVETRAIN_SIDE_WIDTH / 2.0),
+                new Translation2d(Constants.DRIVETRAIN_SIDE_WIDTH / 2.0, -Constants.DRIVETRAIN_SIDE_WIDTH / 2.0),
+                new Translation2d(-Constants.DRIVETRAIN_SIDE_WIDTH / 2.0, Constants.DRIVETRAIN_SIDE_WIDTH / 2.0),
+                new Translation2d(-Constants.DRIVETRAIN_SIDE_WIDTH / 2.0, -Constants.DRIVETRAIN_SIDE_WIDTH / 2.0) };
         swerveKinematics = new SwerveDriveKinematics(swerveModulePositions);
 
         // Advanced kalman filter position estimator
         poseEstimator = new SwerveDrivePoseEstimator(Rotation2d.fromDegrees(getYaw()), new Pose2d(), swerveKinematics,
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.005, 0.005, 0.002), // State Error
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.001, 0.001, 0.001), // State Error
                 new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.005), // Encoder Error
                 new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.01, 0.01, 0.01), // Vision Error,
                 kLooperDt);
-        ;
         this.pose = poseEstimator.getEstimatedPosition();
         headingController.enableContinuousInput(0, 360.0); // Enable continous rotation
     }
@@ -200,14 +199,15 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
             double y = driveSignal.getTranslation().getY();
             double rotation = driveSignal.getRotation();
             if (driveSignal.isFieldOriented()) {
-                
+
                 chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(x, y, rotation, Rotation2d.fromDegrees(getYaw()));
             } else {
                 chassisSpeeds = new ChassisSpeeds(x, y, rotation);
             }
         }
         synchronized (statusLock) {
-            SwerveModuleState[] swerveModuleStates = swerveKinematics.toSwerveModuleStates(chassisSpeeds, new Translation2d());
+            SwerveModuleState[] swerveModuleStates = swerveKinematics.toSwerveModuleStates(chassisSpeeds,
+                    new Translation2d());
             SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, 1.0);
             for (SJTUSwerveModuleMK5 mod : mSwerveMods) {
                 mod.setDesiredState(swerveModuleStates[mod.moduleNumber], true, false);
@@ -228,7 +228,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         synchronized (statusLock) {
             this.pose = poseEstimator.updateWithTime(time, gyro.getYaw(), moduleStates);
             this.translation = new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
-            this.angularVelocity = chassisSpeeds.omegaRadiansPerSecond;
+            this.angularVelocity.addNumber(gyro.getYawAngularVelocity());
         }
     }
 
@@ -261,9 +261,20 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         this.trajectoryFollower.setRequiredOnTarget(requiredOnTarget);
         if (resetOnStart) {
             this.resetOdometry(targetTrajectory.getInitialPose());
+            this.gyro.setYaw(targetTrajectory.getInitialPose().getRotation().getDegrees());
         }
         setState(STATE.PATH_FOLLOWING);
         this.trajectoryFollower.follow(targetTrajectory);
+    }
+
+    /**
+     * Add vision measurement to the kalman pose estimator.
+     * 
+     * @param time       Timestamp of the measurement.
+     * @param visionPose The pose estimated by vision.
+     */
+    public void addVisionMeasurement(double time, Pose2d visionPose) {
+        this.poseEstimator.addVisionMeasurement(visionPose, time);
     }
 
     /**
@@ -296,10 +307,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         }
     }
 
-    public void addVisionObservations(Pose2d visionMeasurement, double time) {
-        poseEstimator.addVisionMeasurement(visionMeasurement, time);
-    }
-
     public Translation2d getTranslation() {
         synchronized (statusLock) {
             return this.translation;
@@ -308,7 +315,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
     public double getAngularVelocity() {
         synchronized (statusLock) {
-            return this.angularVelocity;
+            return this.angularVelocity.getAverage();
         }
     }
 
@@ -434,11 +441,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         for (SJTUSwerveModuleMK5 mod : this.mSwerveMods) {
             SmartDashboard.putNumber("Mod " + mod.moduleNumber, mod.getEncoderUnbound().getDegrees());
         }
-        PulseHUD.putNumberArray("Robot Pose",
-                new double[] { this.pose.getX(), this.pose.getY(), this.pose.getRotation().getDegrees() });
-        PulseHUD.putData("PathFollower", this.trajectoryFollower);
-        SmartDashboard.putString("Swerve State", getState().toString());
-        SmartDashboard.putNumber("Yaw", getYaw());
+        SmartDashboard.putNumber("Yaw Angular", getAngularVelocity());
     }
 
     @Override

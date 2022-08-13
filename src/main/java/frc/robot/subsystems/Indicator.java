@@ -8,13 +8,13 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.SuppliedValueWidget;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants;
 import frc.robot.utils.led.LEDState;
 import frc.robot.utils.led.Lights;
 import frc.robot.utils.led.TimedLEDState;
 
 public class Indicator implements Updatable {
-    private AddressableLED ledIndicator = new AddressableLED(7);
+    private AddressableLED ledIndicator = new AddressableLED(Constants.LED_CONTROL.LED_PORT);
 
     public static Indicator getInstance() {
         if (instance == null) {
@@ -24,17 +24,19 @@ public class Indicator implements Updatable {
     }
 
     private Indicator() {
+        ledIndicator.setLength(Constants.LED_CONTROL.LED_LENGTH);
+        ledIndicator.start();
     }
 
     // Define LED State
     private TimedLEDState currentState = Lights.CALIBRATION;
     private LEDState currentLED = new LEDState(0, 0, 0);
-    private AddressableLEDBuffer currentLedBuffer = new AddressableLEDBuffer(60);
+    private AddressableLEDBuffer currentLedBuffer = new AddressableLEDBuffer(Constants.LED_CONTROL.LED_LENGTH);
     private STATE state = STATE.ON;
     private SuppliedValueWidget<Boolean> colorWidget = Shuffleboard.getTab("MyBot").addBoolean("Color", () -> true);
 
     private static Indicator instance;
-    private double intensity = 1.0;
+    private double intensity = 0.3;
 
     public void setLEDs(LEDState color) {
         for (var i = 0; i < currentLedBuffer.getLength(); i++) {
@@ -76,8 +78,6 @@ public class Indicator implements Updatable {
 
     @Override
     public synchronized void telemetry() {
-        SmartDashboard.putNumberArray("Indicator LED State",
-                new double[] { currentLED.red, currentLED.green, currentLED.blue });
         colorWidget.withProperties(Map.of("colorWhenTrue", String.format("#%02x%02x%02x", (int) (currentLED.red * 255),
                 (int) (currentLED.green * 255), (int) (currentLED.blue * 255))));
     }

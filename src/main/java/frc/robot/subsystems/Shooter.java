@@ -60,8 +60,6 @@ public class Shooter implements Updatable {
         shooterFollowerMotor.configFactoryDefault();
         shooterFollowerMotor.setInverted(InvertType.FollowMaster);
         shooterFollowerMotor.setNeutralMode(NeutralMode.Coast);
-        shooterFollowerMotor.configVoltageCompSaturation(12.0, 10);
-        shooterFollowerMotor.enableVoltageCompensation(true);
     }
 
     public void setShooterPercentage(double percentage) {
@@ -101,11 +99,9 @@ public class Shooter implements Updatable {
     public synchronized void read(double time, double dt) {
         mPeriodicIO.leadCurret = shooterLeadMotor.getSupplyCurrent();
         mPeriodicIO.leadVelocity = shooterLeadMotor.getSelectedSensorVelocity();
-        mPeriodicIO.leadVoltage = shooterLeadMotor.getMotorOutputVoltage();
 
-        mPeriodicIO.followerCurret = shooterLeadMotor.getSupplyCurrent();
-        mPeriodicIO.followerVelocity = shooterLeadMotor.getSelectedSensorVelocity();
-        mPeriodicIO.followerVoltage = shooterLeadMotor.getMotorOutputVoltage();
+        mPeriodicIO.followerCurret = shooterFollowerMotor.getSupplyCurrent();
+        mPeriodicIO.followerVelocity = shooterFollowerMotor.getSelectedSensorVelocity();
     }
 
     @Override
@@ -135,10 +131,7 @@ public class Shooter implements Updatable {
 
     @Override
     public synchronized void telemetry() {
-        SmartDashboard.putNumber("Shooter Demand", mPeriodicIO.shooterDemand);
-        SmartDashboard.putString("Shooter State",getState().toString());
-        SmartDashboard.putNumber("RPM", getShooterRPM());
-        SmartDashboard.putBoolean("Spun Up", spunUp());
+        SmartDashboard.putNumber("Shooter RPM Real", getShooterRPM());
     }
 
     @Override

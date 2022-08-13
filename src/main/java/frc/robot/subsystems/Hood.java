@@ -8,7 +8,6 @@ import org.frcteam1678.lib.math.Conversions;
 import org.frcteam6941.looper.UpdateManager.Updatable;
 import org.frcteam6941.utils.LazyTalonFX;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
 public class Hood implements Updatable{
@@ -32,13 +31,18 @@ public class Hood implements Updatable{
     private Hood() {
         hoodMotor.configFactoryDefault();
         hoodMotor.setNeutralMode(NeutralMode.Coast);
-        hoodMotor.config_kF(0, Constants.HOOD_KF);
         hoodMotor.config_kP(0, Constants.HOOD_KP);
         hoodMotor.config_kI(0, Constants.HOOD_KI);
         hoodMotor.config_kD(0, Constants.HOOD_KD);
+        hoodMotor.config_kF(0, Constants.HOOD_KF);
+        hoodMotor.configMotionCruiseVelocity(Constants.HOOD_CRUISE_V);
+        hoodMotor.configMotionAcceleration(Constants.HOOD_CRUISE_ACC);
+        hoodMotor.enableVoltageCompensation(true);
+        hoodMotor.config_IntegralZone(0, 50);
+        hoodMotor.configNeutralDeadband(0.01);
     }
 
-    private STATE state = STATE.OFF;
+    private STATE state = STATE.HOMING;
 
     public static Hood getInstance() {
         if (instance == null) {
@@ -56,14 +60,14 @@ public class Hood implements Updatable{
     }
 
     public synchronized void setHoodPercentage(double power){
-        if(getState() != STATE.PERCENTAGE && getState() != STATE.HOMING){
+        if(getState() != STATE.PERCENTAGE){
             setState(STATE.PERCENTAGE);
         }
         mPeriodicIO.hoodDemand = power;
     }
 
     public synchronized void setHoodAngle(double angle){
-        if(getState() != STATE.ANGLE && getState() != STATE.HOMING){
+        if(getState() != STATE.ANGLE){
             setState(STATE.ANGLE);
         }
         angle = Util.clamp(angle, Constants.HOOD_MINIMUM_ANGLE, Constants.HOOD_MAXIMUM_ANGLE);
@@ -81,7 +85,6 @@ public class Hood implements Updatable{
     @Override
     public synchronized void read(double time, double dt){
         mPeriodicIO.hoodCurrent = hoodMotor.getStatorCurrent();
-        mPeriodicIO.hoodVoltage = hoodMotor.getMotorOutputVoltage();
         mPeriodicIO.hoodPosition = hoodMotor.getSelectedSensorPosition();
         mPeriodicIO.hoodVelocity = hoodMotor.getSelectedSensorVelocity();
     }
@@ -94,13 +97,12 @@ public class Hood implements Updatable{
 
         switch(state){
             case HOMING:
+                mPeriodicIO.hoodDemand = -0.2;
                 if(isCalibrated){
                     setState(STATE.OFF);
                 }
                 if(mPeriodicIO.hoodCurrent > Constants.HOOD_HOMING_CURRENT_THRESHOLD){
-                    resetHood(Constants.HOOD_MINIMUM_ANGLE);
-                    isCalibrated = true;
-                    setState(STATE.OFF);
+                    resetHood(Constants.HOOD_MINIMUM_ANGLE - 0.5);
                 }
                 break;
             case PERCENTAGE:
@@ -116,7 +118,7 @@ public class Hood implements Updatable{
     public synchronized void write(double time, double dt){
         switch(state){
             case HOMING:
-                hoodMotor.set(ControlMode.PercentOutput, -0.3);
+                hoodMotor.set(ControlMode.PercentOutput, mPeriodicIO.hoodDemand);
                 break;
             case ANGLE:
                 hoodMotor.set(ControlMode.MotionMagic, Conversions.degreesToFalcon(mPeriodicIO.hoodDemand, Constants.HOOD_GEAR_RATIO));
@@ -132,19 +134,16 @@ public class Hood implements Updatable{
     
     @Override
     public synchronized void telemetry(){
-        SmartDashboard.putNumber("Hood Demand", mPeriodicIO.hoodDemand);
-        SmartDashboard.putNumber("Hood Position", mPeriodicIO.hoodPosition);
-        SmartDashboard.putNumber("Hood Angle", getHoodAngle());
-        SmartDashboard.putNumber("Hood Current", mPeriodicIO.hoodCurrent);
     }
     
     @Override
     public synchronized void start(){
+        isCalibrated = false;
+        setState(STATE.HOMING);
     }
     
     @Override
     public synchronized void stop(){
-        isCalibrated = false;
     }
     
     @Override

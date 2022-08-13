@@ -40,7 +40,12 @@ public class ShootingParameters {
         this.shotAngle = shotAngle;
     }
 
-    public void  setShootingVelocity(double shootingVelocity){
+    public void setShootingVelocity(double shootingVelocity){
         this.shootingVelocity = shootingVelocity;
+    }
+
+    @Override
+    public String toString(){
+        return String.format("TAngle: %.2f; SAngle: %.2f; RPM: %.2f", targetAngle, shotAngle, shootingVelocity);
     }
 }

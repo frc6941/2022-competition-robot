@@ -13,7 +13,6 @@ import org.frcteam6941.looper.UpdateManager.Updatable;
 import org.frcteam6941.utils.LazyTalonFX;
 
 import edu.wpi.first.wpilibj.AnalogInput;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
 public class BallPath implements Updatable {
@@ -47,7 +46,7 @@ public class BallPath implements Updatable {
 
     private static BallPath instance;
 
-    private boolean enableColorEject = true;
+    private boolean enableColorEject = false;
     private boolean continueProcess = false;
     private boolean isLocking = false;
     private double lockingPositionRecorder = 0.0;
@@ -66,8 +65,6 @@ public class BallPath implements Updatable {
         triggerMotor.enableVoltageCompensation(12.0);
         triggerMotor.setSmartCurrentLimit(25, 5);
         triggerMotor.setInverted(true);
-        triggerMotor.setOpenLoopRampRate(0.5);
-        triggerMotor.setClosedLoopRampRate(0.05);
 
         triggerMotor.getPIDController().setP(Constants.TRIGGER_KP_V_SLOT_0, 0);
         triggerMotor.getPIDController().setI(Constants.TRIGGER_KI_V_SLOT_0, 0);
@@ -102,7 +99,7 @@ public class BallPath implements Updatable {
 
     public synchronized boolean rightBallAtPositionTwo() {
         if (!enableColorEject) {
-            return true;
+            return ballAtPosition2();
         } else {
             return colorSensor.hasCorrectColor() && ballAtPosition2();
         }
@@ -157,8 +154,6 @@ public class BallPath implements Updatable {
         mPeriodicIO.breakPosition1 = ballPositionOneDetector.getVoltage() > 2.0;
         mPeriodicIO.breakPosition2 = ballPositionTwoDetector.getVoltage() > 2.0;
 
-        mPeriodicIO.triggerCurrent = triggerMotor.getOutputCurrent();
-        mPeriodicIO.triggerVoltage = triggerMotor.getAppliedOutput();
         mPeriodicIO.triggerPosition = triggerMotor.getEncoder().getPosition();
     }
 
@@ -222,7 +217,7 @@ public class BallPath implements Updatable {
             case FEEDING:
                 if (wrongBallAtPositionTwo()) { // If has a wrong Ball
                     // stop feeding
-                    mPeriodicIO.feederDemand = 0.0;
+                    mPeriodicIO.feederDemand = -0.1;
                     mPeriodicIO.triggerDemand = 0.0;
                     mPeriodicIO.triggerLock = true;
                     break;
@@ -257,18 +252,6 @@ public class BallPath implements Updatable {
 
     @Override
     public synchronized void telemetry() {
-        SmartDashboard.putNumber("Feeder Speed", mPeriodicIO.feederDemand);
-        SmartDashboard.putBoolean("Correct Color", colorSensor.hasCorrectColor());
-        SmartDashboard.putBoolean("Opposite Color", colorSensor.hasOppositeColor());
-        SmartDashboard.putBoolean("Sees Ball", colorSensor.seesBall());
-        SmartDashboard.putBoolean("Wrong Ball At Position Two", wrongBallAtPositionTwo());
-
-        SmartDashboard.putNumber("Trigger RPM", mPeriodicIO.triggerVelocity);
-        SmartDashboard.putNumber("Trigger Demand", mPeriodicIO.triggerDemand);
-        SmartDashboard.putBoolean("Trigger Locking", mPeriodicIO.triggerLock);
-
-        SmartDashboard.putString("BallPath State", getState().toString());
-        SmartDashboard.putNumber("Locking Position Recorder", lockingPositionRecorder);
     }
 
     @Override
