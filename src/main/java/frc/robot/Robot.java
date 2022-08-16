@@ -11,7 +11,6 @@ import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.BallPath;
 import frc.robot.subsystems.Climber;
@@ -51,7 +50,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        // mShuffleBoardInteractions.configAutoSelector(mAutoSelector);
+        mShuffleBoardInteractions.configAutoSelector(mAutoSelector);
         this.updateManager = new UpdateManager(
                 SJTUSwerveMK5Drivebase.getInstance(),
                 Intaker.getInstance(),
@@ -69,13 +68,11 @@ public class Robot extends TimedRobot {
         this.updateManager.startEnableLoop(Constants.kLooperDt);
 
         CameraServer.startAutomaticCapture();
-        SmartDashboard.putData(mAutoSelector.getSendableChooser());
     }
 
     @Override
     public void robotPeriodic() {
         mShuffleBoardInteractions.update();
-        mAutoSelector.updateModeCreator();
     }
 
     /** This function is called once each time the robot enters Disabled mode. */
@@ -101,6 +98,10 @@ public class Robot extends TimedRobot {
         Superstructure.getInstance().stop();
 
         this.updateManager.stopDisableLoop();
+
+        Superstructure.getInstance().setWantEject(false);
+        Superstructure.getInstance().setWantMoveAndShoot(false);
+
         CommandScheduler.getInstance().enable();
         this.updateManager.startEnableLoop(Constants.kLooperDt);
 
@@ -124,6 +125,10 @@ public class Robot extends TimedRobot {
         CommandScheduler.getInstance().cancelAll();
         Superstructure.getInstance().stop();
 
+        Superstructure.getInstance().setWantMaintain(false);
+        Superstructure.getInstance().setWantEject(false);
+        Superstructure.getInstance().setWantMoveAndShoot(true);
+
         this.updateManager.stopDisableLoop();
         CommandScheduler.getInstance().enable();
         this.updateManager.startEnableLoop(Constants.kLooperDt);
@@ -134,6 +139,7 @@ public class Robot extends TimedRobot {
     public void teleopPeriodic() {
         CommandScheduler.getInstance().run();
         Superstructure.getInstance().updateDriverAndOperatorCommand();
+        Superstructure.getInstance().updateRumble();
     }
 
     @Override

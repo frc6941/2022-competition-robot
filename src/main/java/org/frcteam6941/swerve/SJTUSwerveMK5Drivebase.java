@@ -113,10 +113,10 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
         // Advanced kalman filter position estimator
         poseEstimator = new SwerveDrivePoseEstimator(Rotation2d.fromDegrees(getYaw()), new Pose2d(), swerveKinematics,
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.001, 0.001, 0.001), // State Error
-                new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.005), // Encoder Error
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.01, 0.01, 0.01), // Vision Error,
-                kLooperDt);
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.005, 0.005, 0.001), // State Error
+                new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.001), // Encoder Error
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.1, 0.1, 0.001), // Visiond Error,
+        kLooperDt);
         this.pose = poseEstimator.getEstimatedPosition();
         headingController.enableContinuousInput(0, 360.0); // Enable continous rotation
     }
@@ -232,6 +232,14 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         }
     }
 
+    public void addVisionObservation(Pose2d estimatedPose, double timestampSeconds){
+        this.poseEstimator.addVisionMeasurement(estimatedPose, timestampSeconds);
+    }
+
+    public void addVisionObservationTranslation(Translation2d translation, double timestampSeconds){
+        addVisionObservation(new Pose2d(translation, gyro.getYaw()), timestampSeconds);
+    }
+
     /**
      * Core method to drive the swerve drive. Note that any trajectory following
      * signal will be canceled when this method is called.
@@ -264,17 +272,8 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
             this.gyro.setYaw(targetTrajectory.getInitialPose().getRotation().getDegrees());
         }
         setState(STATE.PATH_FOLLOWING);
+        this.headingController.reset(getYaw(), getAngularVelocity());
         this.trajectoryFollower.follow(targetTrajectory);
-    }
-
-    /**
-     * Add vision measurement to the kalman pose estimator.
-     * 
-     * @param time       Timestamp of the measurement.
-     * @param visionPose The pose estimated by vision.
-     */
-    public void addVisionMeasurement(double time, Pose2d visionPose) {
-        this.poseEstimator.addVisionMeasurement(visionPose, time);
     }
 
     /**

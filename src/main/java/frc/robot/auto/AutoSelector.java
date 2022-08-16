@@ -6,12 +6,15 @@ import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import frc.robot.auto.modes.ATwoPlusOneAuto;
 import frc.robot.auto.modes.AutoModeBase;
+import frc.robot.auto.modes.DFivePlusOneAuto;
 import frc.robot.auto.modes.TestAuto;
 
 public class AutoSelector {
     public enum AUTO_MODES {
-        FIVE_BALL_AUTO,
+        D_FIVE_PLUS_ONE_AUTO,
+        A_TWO_PLUS_ONE_AUTO,
         TEST_PATH,
         DO_NOTHING
     }
@@ -24,9 +27,10 @@ public class AutoSelector {
 
     public AutoSelector() {
         mModeChooser = new SendableChooser<>();
-        mModeChooser.addOption("Do Nothing", AUTO_MODES.DO_NOTHING);
-        mModeChooser.setDefaultOption("Auto Test", AUTO_MODES.TEST_PATH);
-        mModeChooser.addOption("Five Ball Mode", AUTO_MODES.FIVE_BALL_AUTO);
+        mModeChooser.setDefaultOption("Do Nothing", AUTO_MODES.DO_NOTHING);
+        mModeChooser.addOption("Auto Test", AUTO_MODES.TEST_PATH);
+        mModeChooser.addOption("D - 5+1 Ball Auto", AUTO_MODES.D_FIVE_PLUS_ONE_AUTO);
+        mModeChooser.addOption("A - 2+1 Ball Auto", AUTO_MODES.A_TWO_PLUS_ONE_AUTO);
     }
 
     public void updateModeCreator() {
@@ -52,8 +56,11 @@ public class AutoSelector {
         case DO_NOTHING:
             return Optional.empty();
 
-        case FIVE_BALL_AUTO:
-            return Optional.empty();
+        case D_FIVE_PLUS_ONE_AUTO:
+            return Optional.of(new DFivePlusOneAuto());
+        
+        case A_TWO_PLUS_ONE_AUTO:
+            return Optional.of(new ATwoPlusOneAuto());
 
         case TEST_PATH:
             return Optional.of(new TestAuto());

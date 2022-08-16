@@ -11,14 +11,12 @@ import org.frcteam1678.lib.math.Conversions;
 import org.frcteam6941.looper.UpdateManager.Updatable;
 import org.frcteam6941.utils.LazyTalonFX;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
 public class Turret implements Updatable {
     public static class PeriodicIO {
         // INPUT
         public double turretCurrent = 0.0;
-        public double turretVoltage = 0.0;
         public double turretPosition = 0.0;
         public boolean turretForwardLimitSwitch = false;
         public boolean turretReverseLimitSwitch = false;
@@ -33,8 +31,6 @@ public class Turret implements Updatable {
     private LazyTalonFX turretMotor = new LazyTalonFX(Constants.CANID.TURRET_MOTOR);
 
     private double zeroPosition = 0.0;
-
-    private double angleLockTarget = 0.0;
 
     private boolean isCalibrated = false;
 
@@ -61,7 +57,7 @@ public class Turret implements Updatable {
         turretMotor.configMotionAcceleration(Constants.TURRET_MOTION_ACCELERATION);
         turretMotor.enableVoltageCompensation(true);
         turretMotor.configNeutralDeadband(Constants.TURRET_NEUTRAL_DEADBAND);
-        turretMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 20, 40, 0.01));
+        turretMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 25, 40, 0.01));
     }
 
     public synchronized double getTurretAngle() {

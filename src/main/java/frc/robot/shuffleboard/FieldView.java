@@ -43,13 +43,9 @@ public class FieldView {
         updateSwervePoses();
         mField2d.setRobotPose(mRobotPose);
         mField2d.getObject("Swerve Modules").setPoses(mModulePoses);
-        Optional<AimingParameters> target = Superstructure.getInstance().coreAimParameters;
-        if (target.isPresent()) {
-            Pose2d robotToTarget = target.get().getVehicleToGoal().getWpilibPose2d();
-            mField2d.getObject("Target")
-                    .setPose(new Pose2d(mRobotPose.getTranslation().plus(robotToTarget.getTranslation()),
-                            mRobotPose.getRotation().rotateBy(robotToTarget.getRotation())));
-        }
+        Translation2d target = Superstructure.getInstance().coreAimTargetRelative;
+        mField2d.getObject("Target")
+                .setPose(new Pose2d(mRobotPose.getTranslation().plus(target), new Rotation2d()));
 
         mField2d.getObject("Predicted Robot Pose").setPose(mRobotState.getPredictedFieldToVehicle(0.2).getWpilibPose2d());
     }

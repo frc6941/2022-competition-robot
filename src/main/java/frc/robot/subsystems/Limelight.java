@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +18,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
@@ -30,13 +32,14 @@ public class Limelight implements Updatable {
 
     private int mLatencyCounter = 0;
     public Optional<Double> mDistanceToTarget = Optional.empty();
-    private TimeDelayedBoolean targetIsFocused = new TimeDelayedBoolean();
+    public Optional<TimeStampedTranslation2d> mEstimatedVehicleToField = Optional.empty();
+    public Timer validTargetTimer = new Timer();
 
     public static class LimelightConstants {
         public String kName = "";
         public String kTableName = "limelight";
-        public TunableNumber kHeight = new TunableNumber("Limelight Height", 0.83);
-        public TunableNumber kHorizontalPlaneToLens = new TunableNumber("Limelight Horizontal Plane to Lens", 50.0);
+        public double kHeight = 0.85;
+        public double kHorizontalPlaneToLens = 37.0;
         public Pose2d kTurretToLens = new Pose2d();
     }
 
@@ -124,11 +127,11 @@ public class Limelight implements Updatable {
     }
 
     public double getLensHeight() {
-        return mConstants.kHeight.get();
+        return mConstants.kHeight;
     }
 
     public Rotation2d getHorizontalPlaneToLens() {
-        return Rotation2d.fromDegrees(mConstants.kHorizontalPlaneToLens.get());
+        return Rotation2d.fromDegrees(mConstants.kHorizontalPlaneToLens);
     }
 
     public Pose2d getTurretToLens() {
@@ -224,11 +227,11 @@ public class Limelight implements Updatable {
 
     public void updateDistanceToTarget() {
         double goal_theta = Rotation2d
-                .fromDegrees(Constants.VisionConstants.Turret.LIMELIGHT_CONSTANTS.kHorizontalPlaneToLens.get())
+                .fromDegrees(Constants.VisionConstants.Turret.LIMELIGHT_CONSTANTS.kHorizontalPlaneToLens)
                 .getRadians()
                 + Math.toRadians(mPeriodicIO.yOffset);
         double height_diff = FieldConstants.visionTargetHeightLower
-                - Constants.VisionConstants.Turret.LIMELIGHT_CONSTANTS.kHeight.get();
+                - Constants.VisionConstants.Turret.LIMELIGHT_CONSTANTS.kHeight;
 
         mDistanceToTarget = Optional.of(height_diff / Math.tan(goal_theta) + FieldConstants.visionTargetDiameter * 0.5);
     }
@@ -281,6 +284,10 @@ public class Limelight implements Updatable {
         return mDistanceToTarget;
     }
 
+    public Optional<TimeStampedTranslation2d> getEstimatedVehicleToField(){
+        return mEstimatedVehicleToField;
+    }
+
     @Override
     public synchronized void disabled(double time, double dt) {
 
@@ -289,19 +296,19 @@ public class Limelight implements Updatable {
     private void processFrame(double time) {
         // Exit if no new frame
         if (!mPeriodicIO.has_comms || mPeriodicIO.pipeline != 0) {
+            validTargetTimer.reset();
             return;
         }
         double captureTimestamp = time - mPeriodicIO.latency;
 
         int targetCount = 0;
         if (mPeriodicIO.pipeline == 0) {
-            targetCount = mPeriodicIO.ledMode == 3 ? mPeriodicIO.cornerX.length / 4 : 0;
+            targetCount = mPeriodicIO.ledMode == 3.0 ? mPeriodicIO.cornerX.length / 4 : 0;
         }
         // Calculate camera to target translation
         if (targetCount >= Constants.VisionConstants.Turret.MIN_TARGET_COUNT
                 && mPeriodicIO.cornerX.length == mPeriodicIO.cornerY.length
-                && mPeriodicIO.cornerX.length % 4 == 0
-                && targetIsFocused.update(true, 0.5)) {
+                && mPeriodicIO.cornerX.length % 4 == 0) {
 
             // Calculate individual corner translations
             List<Translation2d> cameraToTargetTranslations = new ArrayList<>();
@@ -329,23 +336,43 @@ public class Limelight implements Updatable {
                     }
                 }
             }
-
             // Combine corner translations to full target translation
             if (cameraToTargetTranslations.size() >= Constants.VisionConstants.Turret.MIN_TARGET_COUNT * 4) {
                 Translation2d cameraToTargetTranslation = CircleFitter.fit(FieldConstants.visionTargetDiameter / 2.0,
                         cameraToTargetTranslations, Constants.VisionConstants.Turret.TARGET_CIRCLE_FIT_PRECISION);
                 SmartDashboard.putString("Camera To Target Translation", cameraToTargetTranslation.toString());
-                
-                Translation2d cameraToTarget = FieldConstants.hubCenter.minus(cameraToTargetTranslation);
-                Pose2d cameraToTargetP = new Pose2d(new com.team254.lib.geometry.Translation2d(cameraToTarget.getX(), cameraToTarget.getY()), new com.team254.lib.geometry.Rotation2d());
-                Pose2d vehicleToTurret = new Pose2d(RobotState.getInstance().getVehicleToTurret(time).getTranslation(), RobotState.getInstance().getFieldToTurret(time).getRotation());
-                Pose2d turretToCamera = mConstants.kTurretToLens;
-                Pose2d estimatedVehicleToTarget = vehicleToTurret.transformBy(turretToCamera).transformBy(cameraToTargetP);
 
-                SmartDashboard.putString("Estimated Vehicle To Field", estimatedVehicleToTarget.toString());
+                Pose2d vehileToTargetPose = new Pose2d(new com.team254.lib.geometry.Translation2d(
+                        cameraToTargetTranslation.getX(), cameraToTargetTranslation.getY()),
+                        new com.team254.lib.geometry.Rotation2d()).transformBy(mConstants.kTurretToLens);
+                com.team254.lib.geometry.Rotation2d turretInFieldHeading = RobotState.getInstance()
+                        .getFieldToTurret(time).getRotation();
+                com.team254.lib.geometry.Translation2d realVehicleFieldToTarget254 = vehileToTargetPose.getTranslation()
+                        .rotateBy(turretInFieldHeading);
+                Translation2d realVehicleFieldToTarget = new Translation2d(realVehicleFieldToTarget254.x(),
+                        realVehicleFieldToTarget254.y());
+                Translation2d estimatedVehicleToField = FieldConstants.hubCenter.minus(realVehicleFieldToTarget);
+
+                if (estimatedVehicleToField.getX() > FieldConstants.fieldWidth
+                        || estimatedVehicleToField.getX() < 0.0
+                        || estimatedVehicleToField.getY() > FieldConstants.fieldLength
+                        || estimatedVehicleToField.getY() < 0.0) {
+                    mEstimatedVehicleToField = Optional.empty();
+                    validTargetTimer.reset();
+                } else {
+                    validTargetTimer.start();
+                    if (validTargetTimer.get() > 0.25) {
+                        mEstimatedVehicleToField = Optional.of(
+                                new TimeStampedTranslation2d(estimatedVehicleToField, captureTimestamp));
+                    } else {
+                        mEstimatedVehicleToField = Optional.empty();
+                    }
+                }
+            } else {
+                validTargetTimer.reset();
             }
         } else {
-            targetIsFocused.update(false, 0.0);
+            validTargetTimer.reset();
         }
     }
 
@@ -426,12 +453,12 @@ public class Limelight implements Updatable {
                 / halfHeightPixels);
 
         Translation2d xzPlaneTranslation = new Translation2d(1.0, Constants.VisionConstants.Turret.VPH / 2.0 * nZ)
-                .rotateBy(Rotation2d.fromDegrees(constant.kHorizontalPlaneToLens.get()));
+                .rotateBy(Rotation2d.fromDegrees(constant.kHorizontalPlaneToLens));
         double x = xzPlaneTranslation.getX();
         double y = Constants.VisionConstants.Turret.VPW / 2.0 * nY;
         double z = xzPlaneTranslation.getY();
 
-        double differentialHeight = constant.kHeight.get() - goalHeight;
+        double differentialHeight = constant.kHeight - goalHeight;
         if ((z < 0.0) == (differentialHeight > 0.0)) {
             double scaling = differentialHeight / -z;
             double distance = Math.hypot(x, y) * scaling;
@@ -449,6 +476,16 @@ public class Limelight implements Updatable {
         public VisionPoint(double x, double y) {
             this.x = x;
             this.y = y;
+        }
+    }
+
+    public static class TimeStampedTranslation2d {
+        public Translation2d translation;
+        public double timestamp;
+
+        public TimeStampedTranslation2d(Translation2d translation, double timestamp) {
+            this.translation = translation;
+            this.timestamp = timestamp;
         }
     }
 }

@@ -48,7 +48,7 @@ public class OperatorTab extends ShuffleboardTabBase {
     public void update() {
         mSupersturctureState.setString(mSuperstructure.getState().toString());
         mHasTarget.setBoolean(mLimelight.hasTarget());
-        mIsAimed.setBoolean(mSuperstructure.isAimed());
+        mIsAimed.setBoolean(mSuperstructure.isOnTarget());
         mIsOnTarget.setBoolean(mSuperstructure.mPeriodicIO.SHOOT);
         mIsFull.setBoolean(mBallPath.isFull());
     }

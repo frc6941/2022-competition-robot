@@ -1,6 +1,5 @@
 package frc.robot.controlboard;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Constants;
 import frc.robot.controlboard.CustomXboxController.Axis;
@@ -99,17 +98,16 @@ public class ControlBoard {
     }
 
     public SwerveCardinal getSwerveSnapRotation() {
-        switch (driver.getController().getPOV()) {
-            case kDpadUp:
-                return SwerveCardinal.FORWARDS;
-            case kDpadLeft:
-                return SwerveCardinal.RIGHT;
-            case kDpadRight:
-                return SwerveCardinal.LEFT;
-            case kDpadDown:
-                return SwerveCardinal.BACKWARDS;
-            default:
-                return SwerveCardinal.NONE;
+        if (driver.getButton(Button.A)) {
+            return SwerveCardinal.BACKWARDS;
+        } else if (driver.getButton(Button.X)) {
+            return SwerveCardinal.RIGHT;
+        } else if (driver.getButton(Button.B)) {
+            return SwerveCardinal.LEFT;
+        } else if (driver.getButton(Button.Y)) {
+            return SwerveCardinal.FORWARDS;
+        } else {
+            return SwerveCardinal.NONE;
         }
             
     }

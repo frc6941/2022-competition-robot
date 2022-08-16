@@ -10,16 +10,17 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.auto.basics.FollowTrajectory;
 import frc.robot.coordinators.Superstructure;
 import frc.robot.coordinators.Superstructure.STATE;
 
-public class FivePlusOneAuto extends AutoModeBase{
-    protected String autoName = "Five Plus One Auto";
-    private PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("5+1 Ball Auto - Part 1", 3.5, 1.5);
-    private PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("5+1 Ball Auto - Part 2", 3.5, 1.5);
-    private PathPlannerTrajectory trajectoryPart3 = PathPlanner.loadPath("5+1 Ball Auto - Part 3", 3.5, 1.5);
-    private PathPlannerTrajectory trajectoryPart4 = PathPlanner.loadPath("5+1 Ball Auto - Part 4", 3.5, 1.5);
+public class DFivePlusOneAuto extends AutoModeBase{
+    protected String autoName = "D - Five Plus One Auto";
+    private PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 1", 3.5, 3.0);
+    private PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 2", 3.5, 3.2);
+    private PathPlannerTrajectory trajectoryPart3 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 3", 3.5, 3.2);
+    private PathPlannerTrajectory trajectoryPart4 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 4", 3.5, 3.0);
     private Superstructure mSuperstructure = Superstructure.getInstance();
     private SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
 
@@ -32,29 +33,42 @@ public class FivePlusOneAuto extends AutoModeBase{
     @Override
     public Command getAutoCommand() {
         return new SequentialCommandGroup(
+            // Start settings
             new InstantCommand(() -> mSuperstructure.setWantEject(false)),
+            new InstantCommand(() -> mSuperstructure.setWantMoveAndShoot(false)),
+            // Part 1: collect 3 cargos and shoot them together
             new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
             new InstantCommand(() -> mSuperstructure.setWantMaintain(true)),
             new FollowTrajectory(mSwerve, trajectoryPart1, true, true, true),
+            new WaitUntilCommand(() -> mSuperstructure.isReady()).withTimeout(0.5),
             new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
-            new WaitCommand(1.5),
+            new WaitCommand(1.0),
+            // Part 2: collect 1 wrong cargo and spit into the hangar
             new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING)),
+            new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
             new FollowTrajectory(mSwerve, trajectoryPart2, true, false, true),
             new InstantCommand(() -> mSuperstructure.setWantSpit(true)),
             new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
-            new WaitCommand(1.5),
+            new WaitCommand(0.5),
             new InstantCommand(() -> mSuperstructure.setWantSpit(false)),
-            new FollowTrajectory(mSwerve, trajectoryPart3, true, false, true),
             new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
-            new WaitCommand(3.0),
+            // Part 3: go to terminal and wait for ball feed
+            new FollowTrajectory(mSwerve, trajectoryPart3, true, false, true),
+            new WaitCommand(1.0),
+            // Part 4: come back and shoot
             new FollowTrajectory(mSwerve, trajectoryPart4, true, false, true),
+            new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
+            new WaitUntilCommand(() -> mSuperstructure.isReady()).withTimeout(0.5),
             new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
-            new WaitCommand(1.5),
+            new WaitCommand(0.8),
             new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING)),
-            new InstantCommand(() -> mSuperstructure.setWantEject(true))
+            // End settings
+            new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
+            new InstantCommand(() -> mSuperstructure.setWantEject(true)),
+            new InstantCommand(() -> mSuperstructure.setWantMoveAndShoot(true))
         );
     };
 
-    public FivePlusOneAuto() {
+    public DFivePlusOneAuto() {
     }
 }

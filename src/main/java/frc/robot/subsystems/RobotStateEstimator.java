@@ -7,13 +7,16 @@ import com.team254.lib.geometry.Translation2d;
 import org.frcteam6941.looper.UpdateManager.Updatable;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.RobotState;
+import frc.robot.subsystems.Limelight.TimeStampedTranslation2d;
 
 public class RobotStateEstimator implements Updatable {
     static RobotStateEstimator mInstance = new RobotStateEstimator();
     private RobotState mRobotState = RobotState.getInstance();
     private SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
     private Turret mTurret = Turret.getInstance();
+    private Limelight mLimelight = Limelight.getInstance();
 
     // status variables
     private Pose2d prev_swerve_pose_ = null;
@@ -59,6 +62,11 @@ public class RobotStateEstimator implements Updatable {
         }
         prev_swerve_pose_ = swerve_pose_;
         prev_swerve_velocity = measured_velocity_filtered;
+
+        if(DriverStation.isTeleop() && mTurret.isCalibrated() && mLimelight.getEstimatedVehicleToField().isPresent()){
+            TimeStampedTranslation2d estimate = mLimelight.getEstimatedVehicleToField().get();
+            mSwerve.addVisionObservationTranslation(estimate.translation, estimate.timestamp);
+        }
     }
     
     @Override

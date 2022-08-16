@@ -27,7 +27,6 @@ import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Indicator;
 import frc.robot.subsystems.Intaker;
-import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
 import frc.robot.utils.led.Lights;
@@ -80,6 +79,9 @@ public class Superstructure implements Updatable {
         public double inHoodAngle = Constants.HOOD_MINIMUM_ANGLE;
         public boolean inHoodCalibrated = false;
 
+        // Shooter Variables
+        public double inShooterRPM = 0.0;
+
         // Climber Variables
         public boolean inClimberOnTarget = false;
 
@@ -118,14 +120,12 @@ public class Superstructure implements Updatable {
     private Intaker mIntaker = Intaker.getInstance();
     private Indicator mIndicator = Indicator.getInstance();
     private Climber mClimber = Climber.getInstance();
-    private Limelight mLimelight = Limelight.getInstance();
 
     // Swerve setting related constants
     private boolean robotOrientedDrive = false;
 
     // Vision delta related
     private PIDController angleDeltaController = new PIDController(0.8, 0.00001, 0.0);
-    private int mTrackId = -1;
 
     // Shooting related tracking constants
     private boolean onTarget = false;
@@ -133,6 +133,7 @@ public class Superstructure implements Updatable {
     private boolean testShot = false;
     private TimeDelayedBoolean ejectDelayedBoolean = new TimeDelayedBoolean();
     private boolean maintainReady = false;
+    private boolean moveAndShoot = true;
 
     // Climbing related tracking constants
     private boolean readyForClimbControls = false; // if all the subsystems is ready for climb
@@ -333,6 +334,14 @@ public class Superstructure implements Updatable {
         }
     }
 
+    public void updateRumble() {
+        if (mBallPath.isFull()) {
+            mControlBoard.setDriverRumble(true);
+        } else {
+            mControlBoard.setDriverRumble(false);
+        }
+    }
+
     public void setWantIntake(boolean value) {
         mPeriodicIO.INTAKE = value;
     }
@@ -347,6 +356,22 @@ public class Superstructure implements Updatable {
 
     public void setWantMaintain(boolean value) {
         maintainReady = value;
+    }
+
+    public void setWantMoveAndShoot(boolean value) {
+        moveAndShoot = value;
+    }
+
+    public boolean isOnTarget() {
+        return onTarget; 
+    }
+
+    public boolean isOnSpeed() {
+        return onSpeed;
+    }
+
+    public boolean isReady() {
+        return onTarget && onSpeed;
     }
 
     /**
@@ -428,32 +453,33 @@ public class Superstructure implements Updatable {
         // }
 
         if (testShot) {
-            TunableNumber distance = new TunableNumber("Test Distance ", 3.0);
             TunableNumber RPM = new TunableNumber("RPM", 1500.0);
             TunableNumber angle = new TunableNumber("Test Angle", 32.0);
             coreShootingParameters = new ShootingParameters(
                     mPeriodicIO.inSwerveFieldHeadingAngle,
                     angle.get(),
-                    RPM.get()
-            );
+                    RPM.get());
         } else {
-            SmartDashboard.putNumber("Calculated Distance", coreAimTargetRelative.getNorm());
-
-            double fixedShotTime = Constants.ShootingConstants.SHOT_TIME_POLYNOMIAL_REGRESSION
-                    .predict(coreAimTargetRelative.getNorm());
             Pose2d robotVelocity = RobotState.getInstance().getSmoothedMeasuredVelocity();
             Pose2d robotAcceleration = RobotState.getInstance().getSmoothedMeasuredAcceleration();
 
-            double virtualGoalX = coreAimTargetRelative.getX()
-                    - fixedShotTime * (robotVelocity.getWpilibPose2d().getX()
-                            + robotAcceleration.getWpilibPose2d().getX()
-                                    * Constants.ShootingConstants.ACCELERATION_COMP_FACTOR);
-            double virtualGoalY = coreAimTargetRelative.getY()
-                    - fixedShotTime * (robotVelocity.getWpilibPose2d().getY()
-                            + robotAcceleration.getWpilibPose2d().getY()
-                                    * Constants.ShootingConstants.ACCELERATION_COMP_FACTOR);
+            Translation2d toMovingGoal;
+            if (moveAndShoot) {
+                double fixedShotTime = Constants.ShootingConstants.SHOT_TIME_POLYNOMIAL_REGRESSION
+                        .predict(coreAimTargetRelative.getNorm());
+                double virtualGoalX = coreAimTargetRelative.getX()
+                        - fixedShotTime * (robotVelocity.getWpilibPose2d().getX()
+                                + robotAcceleration.getWpilibPose2d().getX()
+                                        * Constants.ShootingConstants.ACCELERATION_COMP_FACTOR);
+                double virtualGoalY = coreAimTargetRelative.getY()
+                        - fixedShotTime * (robotVelocity.getWpilibPose2d().getY()
+                                + robotAcceleration.getWpilibPose2d().getY()
+                                        * Constants.ShootingConstants.ACCELERATION_COMP_FACTOR);
+                toMovingGoal = new Translation2d(virtualGoalX, virtualGoalY);
+            } else {
+                toMovingGoal = coreAimTargetRelative;
+            }
 
-            Translation2d toMovingGoal = new Translation2d(virtualGoalX, virtualGoalY);
             double newDist = toMovingGoal.getNorm();
 
             coreShootingParameters
@@ -465,11 +491,9 @@ public class Superstructure implements Updatable {
 
             double tangential_component = new Rotation2d(toMovingGoal.getX(), toMovingGoal.getY()).getSin()
                     * robotVelocity.getWpilibPose2d().getX() / newDist;
-            double angular_component = mSwerve.getAngularVelocity();
+            double angular_component = robotVelocity.getRotation().getDegrees();
             mPeriodicIO.outTurretFeedforwardVelocity = -(angular_component + tangential_component);
-
         }
-
     }
 
     /** Determine whether all subsystem is ready for climb. */
@@ -673,7 +697,7 @@ public class Superstructure implements Updatable {
     public synchronized void updateJudgingConditions() {
         if (Util.epsilonEquals(
                 coreShootingParameters.getTargetAngle(),
-                mPeriodicIO.inTurretFieldHeadingAngle, 2.54)
+                mPeriodicIO.inTurretFieldHeadingAngle, 2.0)
                 && Util.epsilonEquals(
                         coreShootingParameters.getShotAngle(),
                         mPeriodicIO.inHoodAngle, 1.18)) {
@@ -742,14 +766,10 @@ public class Superstructure implements Updatable {
                 if (mPeriodicIO.PREP_EJECT || mPeriodicIO.EJECT) {
                     mPeriodicIO.outIndicatorState = Lights.BALLPATH_WRONG_BALL;
                 } else {
-                    if (onTarget) {
-                        mPeriodicIO.outIndicatorState = Lights.ON_TARGET;
-                    } else {
-                        mPeriodicIO.outIndicatorState = Lights.LOSS_TARGET;
-                    }
-
                     if (onTarget && onSpeed) {
                         mPeriodicIO.outIndicatorState = Lights.READY;
+                    } else {
+                        mPeriodicIO.outIndicatorState = Lights.LOSS;
                     }
                 }
                 break;
@@ -766,10 +786,6 @@ public class Superstructure implements Updatable {
                 break;
         }
         mIndicator.setIndicatorState(mPeriodicIO.outIndicatorState);
-    }
-
-    public synchronized boolean isAimed() {
-        return onTarget;
     }
 
     public synchronized boolean isClimberOpenLoop() {
@@ -818,7 +834,8 @@ public class Superstructure implements Updatable {
             mHood.setHoodAngle(coreShootingParameters.getShotAngle());
 
             if (getState() == STATE.CHASING) {
-                // If in eject mode or the ball path is full, automatically spin up
+                // If: ejeting / ballpath is full / required to maintain velocity, automatically
+                // spin up
                 if (mPeriodicIO.PREP_EJECT || mPeriodicIO.EJECT || mBallPath.isFull() || maintainReady) {
                     mShooter.setShooterRPM(coreShootingParameters.getShootingVelocity());
                     // Otherwise, spin slowly to save electricity
@@ -858,13 +875,12 @@ public class Superstructure implements Updatable {
                     }
                 }
             }
-            if(mClimber.isClimberCalibrated()){
+            if (mClimber.isClimberCalibrated()) {
                 mClimber.setMinimumHeight();
                 mClimber.setHookIn();
             } else {
                 mClimber.setState(Climber.STATE.HOMING);
             }
-            
 
         } else if (getState() == STATE.CLIMB) { // Climb Mode
             mShooter.turnOff();
@@ -917,6 +933,10 @@ public class Superstructure implements Updatable {
     public synchronized void telemetry() {
 
         SmartDashboard.putNumber("Turret Lock Target", mPeriodicIO.outTurretLockTarget);
+        SmartDashboard.putNumber("Turret Angle", mPeriodicIO.inTurretAngle);
+        SmartDashboard.putBoolean("Shoot", mPeriodicIO.SHOOT);
+        SmartDashboard.putBoolean("On Target", onTarget);
+        SmartDashboard.putBoolean("On Speed", onSpeed);
 
         SmartDashboard.putBoolean("Ready For Climb", readyForClimbControls);
         SmartDashboard.putNumber("Climber Step", climbStep);

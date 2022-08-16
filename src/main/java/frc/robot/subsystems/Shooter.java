@@ -7,6 +7,7 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
 import com.team254.lib.util.Util;
 
+import org.checkerframework.checker.units.qual.mPERs;
 import org.frcteam1678.lib.math.Conversions;
 import org.frcteam6941.looper.UpdateManager.Updatable;
 import org.frcteam6941.utils.LazyTalonFX;
@@ -87,7 +88,7 @@ public class Shooter implements Updatable {
     public synchronized boolean spunUp() {
         if (mPeriodicIO.shooterDemand > 0) {
             boolean flywheelSpunUp = Util.epsilonEquals(
-                    Conversions.falconToRPM(mPeriodicIO.leadVelocity, Constants.SHOOTER_GEAR_RATIO),
+                    getShooterRPM(),
                     mPeriodicIO.shooterDemand,
                     Constants.SHOOTER_ERROR_TOLERANCE);
             return flywheelSpunUp;
@@ -132,6 +133,7 @@ public class Shooter implements Updatable {
     @Override
     public synchronized void telemetry() {
         SmartDashboard.putNumber("Shooter RPM Real", getShooterRPM());
+        SmartDashboard.putNumber("Shooter Demand", mPeriodicIO.shooterDemand);
     }
 
     @Override
