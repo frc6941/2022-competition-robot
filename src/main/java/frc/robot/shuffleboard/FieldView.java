@@ -1,9 +1,5 @@
 package frc.robot.shuffleboard;
 
-import java.util.Optional;
-
-import com.team254.lib.vision.AimingParameters;
-
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -11,8 +7,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.FieldConstants;
 import frc.robot.RobotState;
-import frc.robot.coordinators.Superstructure;
+import frc.robot.subsystems.Limelight;
 
 public class FieldView {
     private Field2d mField2d = new Field2d();
@@ -43,10 +40,13 @@ public class FieldView {
         updateSwervePoses();
         mField2d.setRobotPose(mRobotPose);
         mField2d.getObject("Swerve Modules").setPoses(mModulePoses);
-        Translation2d target = Superstructure.getInstance().coreAimTargetRelative;
-        mField2d.getObject("Target")
-                .setPose(new Pose2d(mRobotPose.getTranslation().plus(target), new Rotation2d()));
-
+        mField2d.getObject("Target").setPose(new Pose2d(FieldConstants.hubCenter, new Rotation2d()));
         mField2d.getObject("Predicted Robot Pose").setPose(mRobotState.getPredictedFieldToVehicle(0.2).getWpilibPose2d());
+        if(Limelight.getInstance().getEstimatedVehicleToField().isPresent()){
+            Translation2d estimatedVehicleToFieldTranslation = Limelight.getInstance().getEstimatedVehicleToField().get().translation;
+            mField2d.getObject("Vision Estimated Robot Pose").setPose(
+                new Pose2d(estimatedVehicleToFieldTranslation, mRobotPose.getRotation())
+            );
+        }
     }
 }

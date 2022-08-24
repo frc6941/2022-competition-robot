@@ -7,7 +7,6 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
 import com.team254.lib.util.Util;
 
-import org.checkerframework.checker.units.qual.mPERs;
 import org.frcteam1678.lib.math.Conversions;
 import org.frcteam6941.looper.UpdateManager.Updatable;
 import org.frcteam6941.utils.LazyTalonFX;

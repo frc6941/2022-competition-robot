@@ -8,6 +8,13 @@
       "type": "java",
       "name": "Launch Test",
       "request": "launch",
+      "mainClass": "frc.robot.Test",
+      "projectName": "2022competitionrobot"
+    },
+    {
+      "type": "java",
+      "name": "Launch Test",
+      "request": "launch",
       "mainClass": "frc.robot.coordinators.Test",
       "projectName": "2022CompetitionRobot"
     },

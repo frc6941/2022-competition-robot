@@ -148,7 +148,7 @@ public class Climber implements Updatable {
         if (getState() != STATE.HEIGHT) {
             setState(STATE.HEIGHT);
         }
-        setClimberHeight(0.0254);
+        setClimberHeight(0.02);
     }
 
     public synchronized void setStagingHeight() {
@@ -238,6 +238,7 @@ public class Climber implements Updatable {
 
     @Override
     public synchronized void stop() {
+        isClimberCalibrated = false;
     }
 
     @Override

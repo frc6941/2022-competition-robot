@@ -72,6 +72,9 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     @GuardedBy("statusLock")
     private Pose2d pose = new Pose2d();
 
+    // Lock angle driving
+    private Optional<Double> lockCurrentHeading = Optional.empty();
+
     @GuardedBy("signalLock")
     private HolonomicDriveSignal driveSignal = new HolonomicDriveSignal(new Translation2d(0, 0), 0, true);
     private STATE state = STATE.DRIVE;
@@ -199,7 +202,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
             double y = driveSignal.getTranslation().getY();
             double rotation = driveSignal.getRotation();
             if (driveSignal.isFieldOriented()) {
-
                 chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(x, y, rotation, Rotation2d.fromDegrees(getYaw()));
             } else {
                 chassisSpeeds = new ChassisSpeeds(x, y, rotation);
@@ -270,9 +272,9 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         if (resetOnStart) {
             this.resetOdometry(targetTrajectory.getInitialPose());
             this.gyro.setYaw(targetTrajectory.getInitialPose().getRotation().getDegrees());
+            this.headingController.reset(getYaw(), getAngularVelocity());
         }
         setState(STATE.PATH_FOLLOWING);
-        this.headingController.reset(getYaw(), getAngularVelocity());
         this.trajectoryFollower.follow(targetTrajectory);
     }
 

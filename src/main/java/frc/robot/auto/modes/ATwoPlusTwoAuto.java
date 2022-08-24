@@ -15,10 +15,10 @@ import frc.robot.auto.basics.FollowTrajectory;
 import frc.robot.coordinators.Superstructure;
 import frc.robot.coordinators.Superstructure.STATE;
 
-public class ATwoPlusOneAuto extends AutoModeBase{
-    protected String autoName = "A - Two Plus One Auto";
-    private PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("A 2+1 Ball Auto - Part 1", 3.5, 1.5);
-    private PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("A 2+1 Ball Auto - Part 2", 3.5, 1.5);
+public class ATwoPlusTwoAuto extends AutoModeBase{
+    protected String autoName = "A - Two Plus Two Auto";
+    private PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("A 2+2 Ball Auto - Part 1", 3.5, 1.5);
+    private PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("A 2+2 Ball Auto - Part 2", 3.5, 1.5);
     private Superstructure mSuperstructure = Superstructure.getInstance();
     private SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
 
@@ -43,7 +43,7 @@ public class ATwoPlusOneAuto extends AutoModeBase{
             new WaitCommand(0.8),
             new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING)),
             new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
-            // Part 2: Collect one wrong cargo and spit
+            // Part 2: Collect two wrong cargo and spit
             new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
             new FollowTrajectory(mSwerve, trajectoryPart2, true, false, true),
             new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
@@ -56,6 +56,6 @@ public class ATwoPlusOneAuto extends AutoModeBase{
         );
     };
 
-    public ATwoPlusOneAuto() {
+    public ATwoPlusTwoAuto() {
     }
 }

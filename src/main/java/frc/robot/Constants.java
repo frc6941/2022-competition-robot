@@ -5,15 +5,12 @@
 package frc.robot;
 
 import com.team254.lib.geometry.Pose2d;
-import com.team254.lib.util.InterpolatingDouble;
-import com.team254.lib.util.InterpolatingTreeMap;
 import com.team254.lib.util.PolynomialRegression;
 
 import org.frcteam1678.lib.math.Conversions;
 import org.frcteam6328.utils.TunableNumber;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -159,7 +156,7 @@ public final class Constants {
     public static final double TRIGGER_GEAR_RATIO = 7.0;
     public static final double TRIGGER_SLOW_EJECT_VELOCITY = 1000.0;
     public static final double TRIGGER_FEEDING_VELOCITY = 1200.0;
-    public static final double TRIGGER_REVERSING_VELOCITY = -1000.0;
+    public static final double TRIGGER_REVERSING_VELOCITY = -500.0;
     
     public static final double TRIGGER_KF_V_SLOT_0 = 0.00009;
     public static final double TRIGGER_KP_V_SLOT_0 = 0.0000254;
@@ -186,8 +183,8 @@ public final class Constants {
     public static final double SHOOTER_KF = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_FREE_SPEED_RPM, 1.0);
     public static final double SHOOTER_KP = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_FREE_SPEED_RPM, 1.0) * 16.0;
     public static final double SHOOTER_KD = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_FREE_SPEED_RPM, 1.0) * 20.0 * 5.0;
-    public static final double SHOOTER_ERROR_TOLERANCE = 100.0;
-    public static final double SHOOTER_RAMP = 0.15;
+    public static final double SHOOTER_ERROR_TOLERANCE = 70.0;
+    public static final double SHOOTER_RAMP = 0.5;
 
 
     // Hood Constants

@@ -1,17 +1,14 @@
 package frc.robot.subsystems;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import com.team254.lib.geometry.Pose2d;
-import com.team254.lib.util.TimeDelayedBoolean;
 import com.team254.lib.util.Util;
 import com.team254.lib.vision.TargetInfo;
 
 import org.frcteam6328.utils.CircleFitter;
-import org.frcteam6328.utils.TunableNumber;
 import org.frcteam6941.looper.UpdateManager.Updatable;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -32,6 +29,8 @@ public class Limelight implements Updatable {
 
     private int mLatencyCounter = 0;
     public Optional<Double> mDistanceToTarget = Optional.empty();
+    public Optional<TimeStampedTranslation2d> mTurretToTarget = Optional.empty();
+    public Optional<TimeStampedTranslation2d> mVehicleToTarget = Optional.empty();
     public Optional<TimeStampedTranslation2d> mEstimatedVehicleToField = Optional.empty();
     public Timer validTargetTimer = new Timer();
 
@@ -284,7 +283,15 @@ public class Limelight implements Updatable {
         return mDistanceToTarget;
     }
 
-    public Optional<TimeStampedTranslation2d> getEstimatedVehicleToField(){
+    public Optional<TimeStampedTranslation2d> getTurretToTarget() {
+        return mTurretToTarget;
+    }
+
+    public Optional<TimeStampedTranslation2d> getVehicleToTarget() {
+        return mVehicleToTarget;
+    }
+
+    public Optional<TimeStampedTranslation2d> getEstimatedVehicleToField() {
         return mEstimatedVehicleToField;
     }
 
@@ -338,19 +345,25 @@ public class Limelight implements Updatable {
             }
             // Combine corner translations to full target translation
             if (cameraToTargetTranslations.size() >= Constants.VisionConstants.Turret.MIN_TARGET_COUNT * 4) {
-                Translation2d cameraToTargetTranslation = CircleFitter.fit(FieldConstants.visionTargetDiameter / 2.0,
+                Translation2d cameraToTarget = CircleFitter.fit(FieldConstants.visionTargetDiameter / 2.0,
                         cameraToTargetTranslations, Constants.VisionConstants.Turret.TARGET_CIRCLE_FIT_PRECISION);
-                SmartDashboard.putString("Camera To Target Translation", cameraToTargetTranslation.toString());
+                SmartDashboard.putString("Camera To Target Translation", cameraToTarget.toString());
 
-                Pose2d vehileToTargetPose = new Pose2d(new com.team254.lib.geometry.Translation2d(
-                        cameraToTargetTranslation.getX(), cameraToTargetTranslation.getY()),
-                        new com.team254.lib.geometry.Rotation2d()).transformBy(mConstants.kTurretToLens);
+                Translation2d turretToTarget = new Pose2d(new com.team254.lib.geometry.Translation2d(
+                    cameraToTarget.getX(), cameraToTarget.getY()),
+                    new com.team254.lib.geometry.Rotation2d()).transformBy(mConstants.kTurretToLens).getWpilibPose2d().getTranslation();
+                SmartDashboard.putString("Turret To Target Translation", turretToTarget.toString());
+                mTurretToTarget = Optional.of(new TimeStampedTranslation2d(turretToTarget, captureTimestamp));
+
                 com.team254.lib.geometry.Rotation2d turretInFieldHeading = RobotState.getInstance()
                         .getFieldToTurret(time).getRotation();
-                com.team254.lib.geometry.Translation2d realVehicleFieldToTarget254 = vehileToTargetPose.getTranslation()
-                        .rotateBy(turretInFieldHeading);
-                Translation2d realVehicleFieldToTarget = new Translation2d(realVehicleFieldToTarget254.x(),
-                        realVehicleFieldToTarget254.y());
+                Translation2d realVehicleFieldToTarget = new Translation2d(
+                    turretToTarget.getX() * turretInFieldHeading.cos() + turretToTarget.getY() * turretInFieldHeading.sin(),
+                    turretToTarget.getX() * turretInFieldHeading.sin() + turretToTarget.getY() * turretInFieldHeading.cos()
+                );
+                
+                SmartDashboard.putString("Vehicle To Target Translation", realVehicleFieldToTarget.toString());
+
                 Translation2d estimatedVehicleToField = FieldConstants.hubCenter.minus(realVehicleFieldToTarget);
 
                 if (estimatedVehicleToField.getX() > FieldConstants.fieldWidth
@@ -370,9 +383,13 @@ public class Limelight implements Updatable {
                 }
             } else {
                 validTargetTimer.reset();
+                mTurretToTarget = Optional.empty();
+                mEstimatedVehicleToField = Optional.empty();
             }
         } else {
             validTargetTimer.reset();
+            mTurretToTarget = Optional.empty();
+            mEstimatedVehicleToField = Optional.empty();
         }
     }
 

@@ -29,7 +29,7 @@ public class Indicator implements Updatable {
     }
 
     // Define LED State
-    private TimedLEDState currentState = Lights.CALIBRATION;
+    private TimedLEDState currentState = Lights.WARNING;
     private LEDState currentLED = new LEDState(0, 0, 0);
     private AddressableLEDBuffer currentLedBuffer = new AddressableLEDBuffer(Constants.LED_CONTROL.LED_LENGTH);
     private STATE state = STATE.ON;

@@ -4,6 +4,7 @@ import org.frcteam6328.utils.Alert;
 import org.frcteam6328.utils.Alert.AlertType;
 import org.frcteam6941.looper.UpdateManager.Updatable;
 
+import frc.robot.auto.AutoSelector;
 import frc.robot.subsystems.Turret;
 
 public class Alerts implements Updatable {
@@ -11,12 +12,18 @@ public class Alerts implements Updatable {
 
     /** Define hardware items. */
     Turret turretSubsystem = Turret.getInstance();
+    AutoSelector autoSelector = AutoSelector.getInstance();
 
     /** CheckList Items. */
     public Alert turretCalibrationWarning = new Alert(
             "CheckList",
             "Turret is not calibrated.",
             AlertType.WARNING);
+    public Alert autoWarning = new Alert(
+            "Checklist",
+            "Auto chosen is not valid.",
+            AlertType.WARNING);
+
     public static Alerts getInstance() {
         if (instance == null) {
             instance = new Alerts();
@@ -36,7 +43,7 @@ public class Alerts implements Updatable {
 
     @Override
     public void update(double time, double dt) {
-        alertPresent = !turretSubsystem.isCalibrated();
+        alertPresent = !turretSubsystem.isCalibrated() && autoSelector.getAutoWarning();
     }
     
     @Override
@@ -52,6 +59,7 @@ public class Alerts implements Updatable {
     @Override
     public synchronized void telemetry(){
         turretCalibrationWarning.set(!turretSubsystem.isCalibrated());
+        autoWarning.set(autoSelector.getAutoWarning());
     }
 
     @Override

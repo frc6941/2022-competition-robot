@@ -40,7 +40,7 @@ import frc.robot.subsystems.Turret;
  */
 public class Robot extends TimedRobot {
     private UpdateManager updateManager;
-    private AutoSelector mAutoSelector = new AutoSelector();
+    private AutoSelector mAutoSelector = AutoSelector.getInstance();
     private ShuffleBoardInteractions mShuffleBoardInteractions = ShuffleBoardInteractions.getInstance();
 
     /**
@@ -101,6 +101,7 @@ public class Robot extends TimedRobot {
 
         Superstructure.getInstance().setWantEject(false);
         Superstructure.getInstance().setWantMoveAndShoot(false);
+        Superstructure.getInstance().setWantVisionAim(false);
 
         CommandScheduler.getInstance().enable();
         this.updateManager.startEnableLoop(Constants.kLooperDt);
@@ -128,6 +129,7 @@ public class Robot extends TimedRobot {
         Superstructure.getInstance().setWantMaintain(false);
         Superstructure.getInstance().setWantEject(false);
         Superstructure.getInstance().setWantMoveAndShoot(true);
+        Superstructure.getInstance().setWantVisionAim(true);
 
         this.updateManager.stopDisableLoop();
         CommandScheduler.getInstance().enable();

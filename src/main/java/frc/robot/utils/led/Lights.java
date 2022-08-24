@@ -20,7 +20,7 @@ public class Lights {
 
     public static final BreathingLEDState RED_ALLIANCE= new BreathingLEDState(ALLIANCE_RED, 2.5);
     public static final BreathingLEDState BLUE_ALLIANCE = new BreathingLEDState(ALLIANCE_BLUE, 2.5);
-    public static final BlinkingLEDState CALIBRATION = new BlinkingLEDState(RED, OFF, 1.0);
+    public static final BlinkingLEDState WARNING = new BlinkingLEDState(RED, OFF, 1.0);
     public static final BlinkingLEDState CONNECTING = new BlinkingLEDState(RED, ORANGE, 1.0);
     public static final StaticLEDState NORMAL = new StaticLEDState(IP_BLUE);
     public static final BlinkingLEDState BALLPATH_FULL = new BlinkingLEDState(IP_BLUE, OFF, 0.25);

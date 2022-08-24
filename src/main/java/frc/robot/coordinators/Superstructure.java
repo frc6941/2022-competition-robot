@@ -27,8 +27,10 @@ import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Indicator;
 import frc.robot.subsystems.Intaker;
+import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.Limelight.TimeStampedTranslation2d;
 import frc.robot.utils.led.Lights;
 import frc.robot.utils.led.TimedLEDState;
 import frc.robot.utils.shoot.ShootingParameters;
@@ -98,7 +100,7 @@ public class Superstructure implements Updatable {
         public boolean outIsTurretLimited = true;
 
         // Indicator Variables
-        public TimedLEDState outIndicatorState = Lights.CALIBRATION;
+        public TimedLEDState outIndicatorState = Lights.WARNING;
 
         // Climber Vairables
         public double outClimberDemand = 0.03;
@@ -120,6 +122,7 @@ public class Superstructure implements Updatable {
     private Intaker mIntaker = Intaker.getInstance();
     private Indicator mIndicator = Indicator.getInstance();
     private Climber mClimber = Climber.getInstance();
+    private Limelight mLimelight = Limelight.getInstance();
 
     // Swerve setting related constants
     private boolean robotOrientedDrive = false;
@@ -134,6 +137,7 @@ public class Superstructure implements Updatable {
     private TimeDelayedBoolean ejectDelayedBoolean = new TimeDelayedBoolean();
     private boolean maintainReady = false;
     private boolean moveAndShoot = true;
+    private boolean visionAim = true;
 
     // Climbing related tracking constants
     private boolean readyForClimbControls = false; // if all the subsystems is ready for climb
@@ -245,16 +249,14 @@ public class Superstructure implements Updatable {
         mPeriodicIO.inSwerveBrake = mControlBoard.getSwerveBrake();
         if (mControlBoard.zeroGyro()) {
             mSwerve.resetGyro(0.0);
+            mSwerve.resetOdometry(new edu.wpi.first.math.geometry.Pose2d(mSwerve.getPose().getX(),
+                    mSwerve.getPose().getY(), new Rotation2d()));
         }
 
         mPeriodicIO.SPIT = mControlBoard.getSpit();
         mPeriodicIO.INTAKE = mControlBoard.getIntake() && !mPeriodicIO.SPIT; // When SPIT and INTAKE, SPIT first
 
         robotOrientedDrive = mControlBoard.getRobotOrientedDrive();
-
-        if (getState() != STATE.CLIMB) {
-            mSwerve.resetRoll(0.0);
-        }
 
         if (mControlBoard.getEnterClimbMode()) {
             mPeriodicIO.outClimberDemand = 0.03;
@@ -264,6 +266,8 @@ public class Superstructure implements Updatable {
             openLoopClimbControl = false;
             autoHighBarClimb = false;
             autoTraversalClimb = false;
+            inAutoClimbControl = false;
+            readyForClimbControls = false;
             setState(STATE.CLIMB);
         }
 
@@ -272,7 +276,9 @@ public class Superstructure implements Updatable {
                 setState(STATE.CHASING);
                 autoHighBarClimb = false;
                 autoTraversalClimb = false;
+                inAutoClimbControl = false;
                 openLoopClimbControl = false;
+                readyForClimbControls = false;
                 mPeriodicIO.outClimberDemand = 0.03;
                 mPeriodicIO.outClimberHookOut = false;
             }
@@ -362,8 +368,12 @@ public class Superstructure implements Updatable {
         moveAndShoot = value;
     }
 
+    public void setWantVisionAim(boolean value) {
+        visionAim = value;
+    }
+
     public boolean isOnTarget() {
-        return onTarget; 
+        return onTarget;
     }
 
     public boolean isOnSpeed() {
@@ -435,23 +445,25 @@ public class Superstructure implements Updatable {
 
     public synchronized void updateAimingParameters(double time) {
         Pose2d robotPose = RobotState.getInstance().getFieldToVehicle(time);
+        Optional<TimeStampedTranslation2d> visionEstimatedRobotPose = mLimelight.getEstimatedVehicleToField();
         if (mPeriodicIO.EJECT || mPeriodicIO.PREP_EJECT) {
             coreAimTargetRelative = Targets.getWrongballTarget(robotPose.getWpilibPose2d())
                     .minus(robotPose.getWpilibPose2d().getTranslation());
         } else {
-            coreAimTargetRelative = Targets.getDefaultTarget().minus(robotPose.getWpilibPose2d().getTranslation());
+            if (visionEstimatedRobotPose.isPresent() && visionAim) {
+                Translation2d translationDelta = RobotState.getInstance().getFieldToVehicle(time)
+                        .transformBy(
+                                RobotState.getInstance().getFieldToVehicle(visionEstimatedRobotPose.get().timestamp))
+                        .getWpilibPose2d().getTranslation();
+                coreAimTargetRelative = Targets.getDefaultTarget()
+                        .minus(visionEstimatedRobotPose.get().translation.plus(translationDelta));
+            } else {
+                coreAimTargetRelative = Targets.getDefaultTarget().minus(robotPose.getWpilibPose2d().getTranslation());
+            }
         }
     }
 
     public synchronized void updateShootingParameters(double time) {
-        // if(!mPeriodicIO.PREP_EJECT && !mPeriodicIO.EJECT){
-        // coreShootingParameters = new ShootingParameters(0.0, 51.0, 1690.0);
-        // } else {
-        // coreShootingParameters = new
-        // ShootingParameters(mPeriodicIO.inSwerveFieldHeadingAngle + 45.0, 35.0,
-        // 777.0);
-        // }
-
         if (testShot) {
             TunableNumber RPM = new TunableNumber("RPM", 1500.0);
             TunableNumber angle = new TunableNumber("Test Angle", 32.0);
@@ -739,7 +751,7 @@ public class Superstructure implements Updatable {
     public synchronized void updateIndicator() {
         switch (state) {
             case PIT:
-                if (mTurret.isCalibrated()) {
+                if (!Alerts.getInstance().isAlertPresent()) {
                     if (Constants.FMS.ALLIANCE().equals(Alliance.Red)) {
                         mPeriodicIO.outIndicatorState = Lights.RED_ALLIANCE;
                     } else if (Constants.FMS.ALLIANCE().equals(Alliance.Blue)) {
@@ -748,7 +760,7 @@ public class Superstructure implements Updatable {
                         mPeriodicIO.outIndicatorState = Lights.CONNECTING;
                     }
                 } else {
-                    mPeriodicIO.outIndicatorState = Lights.CALIBRATION;
+                    mPeriodicIO.outIndicatorState = Lights.WARNING;
                 }
                 break;
             case CHASING:
@@ -829,6 +841,8 @@ public class Superstructure implements Updatable {
     @Override
     public synchronized void write(double time, double dt) {
         if (getState() == STATE.CHASING || getState() == STATE.SHOOTING) { // Normal Modes
+            mSwerve.resetRoll(0.0);
+
             // Always let turret and hood be ready to reduce launch waiting time
             mTurret.setTurretAngle(mPeriodicIO.outTurretLockTarget, mPeriodicIO.outTurretFeedforwardVelocity);
             mHood.setHoodAngle(coreShootingParameters.getShotAngle());
@@ -875,12 +889,8 @@ public class Superstructure implements Updatable {
                     }
                 }
             }
-            if (mClimber.isClimberCalibrated()) {
-                mClimber.setMinimumHeight();
-                mClimber.setHookIn();
-            } else {
-                mClimber.setState(Climber.STATE.HOMING);
-            }
+            mClimber.setMinimumHeight();
+            mClimber.setHookIn();
 
         } else if (getState() == STATE.CLIMB) { // Climb Mode
             mShooter.turnOff();
@@ -940,7 +950,6 @@ public class Superstructure implements Updatable {
 
         SmartDashboard.putBoolean("Ready For Climb", readyForClimbControls);
         SmartDashboard.putNumber("Climber Step", climbStep);
-        SmartDashboard.putNumber("Roll", mSwerve.getRoll());
         SmartDashboard.putBoolean("Climber On Target", mPeriodicIO.inClimberOnTarget);
         SmartDashboard.putNumber("Climber Demand", mPeriodicIO.outClimberDemand);
         SmartDashboard.putBoolean("Climber Hoot Out", mPeriodicIO.outClimberHookOut);
@@ -968,6 +977,8 @@ public class Superstructure implements Updatable {
         autoHighBarClimb = false;
         autoTraversalClimb = false;
         openLoopClimbControl = false;
+        inAutoClimbControl = false;
+        readyForClimbControls = false;
         mPeriodicIO.outClimberDemand = 0.03;
         mPeriodicIO.outClimberHookOut = false;
     }
