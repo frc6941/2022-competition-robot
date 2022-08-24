@@ -13,7 +13,6 @@ import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.BallPath;
-import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.ColorSensor;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Indicator;
@@ -23,7 +22,6 @@ import frc.robot.subsystems.RobotStateEstimator;
 import frc.robot.subsystems.Shooter;
 import frc.robot.auto.AutoSelector;
 import frc.robot.auto.modes.AutoModeBase;
-import frc.robot.controlboard.ControlBoard;
 import frc.robot.coordinators.Alerts;
 import frc.robot.coordinators.Superstructure;
 import frc.robot.shuffleboard.ShuffleBoardInteractions;
@@ -151,15 +149,5 @@ public class Robot extends TimedRobot {
 
     @Override
     public void testPeriodic() {
-    }
-
-    @Override
-    public void simulationInit() {
-
-    }
-
-    @Override
-    public void simulationPeriodic() {
-        
     }
 }

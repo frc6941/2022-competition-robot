@@ -72,9 +72,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     @GuardedBy("statusLock")
     private Pose2d pose = new Pose2d();
 
-    // Lock angle driving
-    private Optional<Double> lockCurrentHeading = Optional.empty();
-
     @GuardedBy("signalLock")
     private HolonomicDriveSignal driveSignal = new HolonomicDriveSignal(new Translation2d(0, 0), 0, true);
     private STATE state = STATE.DRIVE;
@@ -176,13 +173,6 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
      */
     public double getHeadingTarget() {
         return this.headingTarget;
-    }
-
-    /**
-     * Convenice method to lock the current direction of the swerve drive.
-     */
-    public void lockCurrentHeading() {
-        this.setHeadingTarget(gyro.getYaw().getDegrees());
     }
 
     /**

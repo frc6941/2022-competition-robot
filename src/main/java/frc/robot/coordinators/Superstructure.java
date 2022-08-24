@@ -126,6 +126,7 @@ public class Superstructure implements Updatable {
 
     // Swerve setting related constants
     private boolean robotOrientedDrive = false;
+    private Optional<Double> swerveSelfLockheadingRecord = Optional.empty();
 
     // Vision delta related
     private PIDController angleDeltaController = new PIDController(0.8, 0.00001, 0.0);
@@ -403,19 +404,25 @@ public class Superstructure implements Updatable {
                 mPeriodicIO.outSwerveLockHeading = false;
                 mPeriodicIO.outSwerveHeadingTarget = 0.0;
                 mPeriodicIO.outTurretLockTarget = 0.0;
+                swerveSelfLockheadingRecord = Optional.empty();
                 break;
             case CHASING:
                 mPeriodicIO.outSwerveTranslation = mPeriodicIO.inSwerveTranslation;
                 mPeriodicIO.outSwerveRotation = mPeriodicIO.inSwerveRotation;
                 if (mPeriodicIO.inSwerveSnapRotation != SwerveCardinal.NONE) {
                     mPeriodicIO.outSwerveLockHeading = true;
-                    mPeriodicIO.outSwerveHeadingTarget = mPeriodicIO.inSwerveSnapRotation.degrees; // When in
-                                                                                                   // chasing mode,
-                    // enable snap rotation
-                    // normally
+                    mPeriodicIO.outSwerveHeadingTarget = mPeriodicIO.inSwerveSnapRotation.degrees;
+                    swerveSelfLockheadingRecord = Optional.empty();
+                } else if (mPeriodicIO.outSwerveRotation == 0.0) {
+                    mPeriodicIO.outSwerveLockHeading = true;
+                    if(swerveSelfLockheadingRecord.isEmpty()){
+                        swerveSelfLockheadingRecord = Optional.of(mPeriodicIO.inSwerveFieldHeadingAngle);
+                    }
+                    mPeriodicIO.outSwerveHeadingTarget = swerveSelfLockheadingRecord.get();
                 } else {
                     mPeriodicIO.outSwerveLockHeading = false;
                     mPeriodicIO.outSwerveHeadingTarget = 0.0;
+                    swerveSelfLockheadingRecord = Optional.empty();
                 }
                 mPeriodicIO.outTurretLockTarget = targetArrayUnLimited[0];
                 break;
@@ -428,9 +435,17 @@ public class Superstructure implements Updatable {
                     mPeriodicIO.outSwerveLockHeading = true;
                     mPeriodicIO.outSwerveHeadingTarget = targetArrayLimited[1];
                     mPeriodicIO.outSwerveRotation = 0.0;
+                    swerveSelfLockheadingRecord = Optional.empty();
+                } else if (mPeriodicIO.outSwerveRotation == 0.0) {
+                    mPeriodicIO.outSwerveLockHeading = true;
+                    if(swerveSelfLockheadingRecord.isEmpty()){
+                        swerveSelfLockheadingRecord = Optional.of(mPeriodicIO.inSwerveFieldHeadingAngle);
+                    }
+                    mPeriodicIO.outSwerveHeadingTarget = swerveSelfLockheadingRecord.get();
                 } else {
                     mPeriodicIO.outSwerveLockHeading = false;
                     mPeriodicIO.outSwerveHeadingTarget = 0.0;
+                    swerveSelfLockheadingRecord = Optional.empty();
                 }
                 break;
             case CLIMB:
@@ -439,6 +454,7 @@ public class Superstructure implements Updatable {
                 mPeriodicIO.outSwerveLockHeading = false;
                 mPeriodicIO.outSwerveHeadingTarget = 0.0;
                 mPeriodicIO.outTurretLockTarget = 90.0;
+                swerveSelfLockheadingRecord = Optional.empty();
                 break;
         }
     }
@@ -941,6 +957,7 @@ public class Superstructure implements Updatable {
 
     @Override
     public synchronized void telemetry() {
+        SmartDashboard.putString("Swerve Self Lock Angle", swerveSelfLockheadingRecord.toString());
 
         SmartDashboard.putNumber("Turret Lock Target", mPeriodicIO.outTurretLockTarget);
         SmartDashboard.putNumber("Turret Angle", mPeriodicIO.inTurretAngle);
