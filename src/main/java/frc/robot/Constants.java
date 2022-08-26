@@ -5,6 +5,8 @@
 package frc.robot;
 
 import com.team254.lib.geometry.Pose2d;
+import com.team254.lib.util.InterpolatingDouble;
+import com.team254.lib.util.InterpolatingTreeMap;
 import com.team254.lib.util.PolynomialRegression;
 
 import org.frcteam1678.lib.math.Conversions;
@@ -321,6 +323,18 @@ public final class Constants {
             public static final double MAX_GOAL_TRACK_SMOOTHING_TIME = 1.5;
             public static final double TARGET_CIRCLE_FIT_PRECISION = 0.01;
             public static final int MIN_TARGET_COUNT = 2;
+
+            public static double[][] VISION_REGRESSION = {
+                /* TEMPLATE REGRESSION */
+                // @x --> adjusted ty
+                // @y --> distance (in meters)
+                { 2.86, 31 },
+                { 3.86, 35 },
+                { 4.86, 38 },
+                { 5.86, 39 },
+                { 6.86, 43 },
+                { 7.36, 46 }
+            };
         }
 
         public static final class Ball {
@@ -369,9 +383,22 @@ public final class Constants {
             { 7.36, 1.05 }  
         };
 
+        public static InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> FLYWHEEL_MAP = new InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble>();
+        public static InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> HOOD_MAP = new InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble>();
+        public static InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> SHOT_TIME_MAP = new InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble>();
 
-        public static PolynomialRegression FLYWHEEL_POLYNOMIAL_REGRESSION = new PolynomialRegression(FLYWHEEL_REGRESSION, 1);
-        public static PolynomialRegression HOOD_POLYNOMIAL_REGRESSION = new PolynomialRegression(HOOD_REGRESSION, 1);
-        public static PolynomialRegression SHOT_TIME_POLYNOMIAL_REGRESSION = new PolynomialRegression(SHOT_TIME_REGRESSION, 2);
+        static {
+            for (double[] pair : FLYWHEEL_REGRESSION) {
+                FLYWHEEL_MAP.put(new InterpolatingDouble(pair[0]), new InterpolatingDouble(pair[1]));
+            }
+
+            for (double[] pair : HOOD_REGRESSION) {
+                HOOD_MAP.put(new InterpolatingDouble(pair[0]), new InterpolatingDouble(pair[1]));
+            }
+
+            for (double[] pair : SHOT_TIME_REGRESSION) {
+                SHOT_TIME_MAP.put(new InterpolatingDouble(pair[0]), new InterpolatingDouble(pair[1]));
+            }
+        }
     }
 }

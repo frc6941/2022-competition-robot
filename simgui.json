@@ -113,5 +113,8 @@
     "limelight": {
       "open": true
     }
+  },
+  "NetworkTables View": {
+    "visible": false
   }
 }
