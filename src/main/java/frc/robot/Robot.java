@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.BallPath;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.ColorSensor;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Indicator;
@@ -104,6 +105,7 @@ public class Robot extends TimedRobot {
         Superstructure.getInstance().setWantEject(false);
         Superstructure.getInstance().setWantMoveAndShoot(false);
         Superstructure.getInstance().setWantVisionAim(false);
+        
 
         CommandScheduler.getInstance().enable();
         this.updateManager.startEnableLoop(Constants.kLooperDt);
@@ -131,7 +133,7 @@ public class Robot extends TimedRobot {
         Superstructure.getInstance().setWantMaintain(false);
         Superstructure.getInstance().setWantEject(false);
         Superstructure.getInstance().setWantMoveAndShoot(true);
-        Superstructure.getInstance().setWantVisionAim(false);
+        Superstructure.getInstance().setWantVisionAim(true);
 
         this.updateManager.stopDisableLoop();
         CommandScheduler.getInstance().enable();
@@ -149,6 +151,7 @@ public class Robot extends TimedRobot {
             Constants.ShootingConstants.HOOD_MAP.getInterpolated(new InterpolatingDouble(Timer.getFPGATimestamp() % 8.0)).value,
             Constants.ShootingConstants.SHOT_TIME_MAP.getInterpolated(new InterpolatingDouble(Timer.getFPGATimestamp() % 8.0)).value,
         });
+        
     }
 
     @Override

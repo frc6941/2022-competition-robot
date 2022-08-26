@@ -137,7 +137,7 @@ public class Superstructure implements Updatable {
     // Shooting related tracking constants
     private boolean onTarget = false;
     private boolean onSpeed = false;
-    private boolean testShot = true;
+    private boolean testShot = false;
     private TimeDelayedBoolean ejectDelayedBoolean = new TimeDelayedBoolean();
     private boolean maintainReady = false;
     private boolean moveAndShoot = true;
@@ -557,7 +557,7 @@ public class Superstructure implements Updatable {
                 } else {
                     angleDeltaMovingAverage = new MovingAverage(5);
                     coreShootingParameters
-                            .setTargetAngle(mPeriodicIO.inTurretFieldHeadingAngle);
+                            .setTargetAngle(mPeriodicIO.inSwerveFieldHeadingAngle);
                     coreShootingParameters
                             .setShotAngle(31.0);
                     coreShootingParameters
@@ -784,7 +784,7 @@ public class Superstructure implements Updatable {
                 && Util.epsilonEquals(
                         coreShootingParameters.getShotAngle(),
                         mPeriodicIO.inHoodAngle, 1.18)
-                && mLimelight.isAutonomousAimed()) { // TODO: Remove this line when pose based aiming is ready
+                && mLimelight.hasTarget()) { // TODO: Remove this line when pose based aiming is ready
             onTarget = true;
         } else {
             onTarget = false;
@@ -1034,6 +1034,8 @@ public class Superstructure implements Updatable {
 
         SmartDashboard.putString("Core Shooting Parameters", coreShootingParameters.toString());
         SmartDashboard.putString("Core Aim Target Relative", coreAimTargetRelative.toString());
+
+        SmartDashboard.putBoolean("visionaim", visionAim);
     }
 
     @Override
