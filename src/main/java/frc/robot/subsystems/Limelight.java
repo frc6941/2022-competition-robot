@@ -345,26 +345,30 @@ public class Limelight implements Updatable {
             }
             // Combine corner translations to full target translation
             if (cameraToTargetTranslations.size() >= Constants.VisionConstants.Turret.MIN_TARGET_COUNT * 4) {
-                Translation2d cameraToTarget = CircleFitter.fit(FieldConstants.visionTargetDiameter / 2.0,
-                        cameraToTargetTranslations, Constants.VisionConstants.Turret.TARGET_CIRCLE_FIT_PRECISION);
-                SmartDashboard.putString("Camera To Target Translation", cameraToTarget.toString());
-
-                Translation2d turretToTarget = new Pose2d(new com.team254.lib.geometry.Translation2d(
-                    cameraToTarget.getX(), cameraToTarget.getY()),
-                    new com.team254.lib.geometry.Rotation2d()).transformBy(mConstants.kTurretToLens).getWpilibPose2d().getTranslation();
-                SmartDashboard.putString("Turret To Target Translation", turretToTarget.toString());
-                mTurretToTarget = Optional.of(new TimeStampedTranslation2d(turretToTarget, captureTimestamp));
-
-                com.team254.lib.geometry.Rotation2d turretInFieldHeading = RobotState.getInstance()
-                        .getFieldToTurret(time).getRotation();
-                Translation2d realVehicleFieldToTarget = new Translation2d(
-                    turretToTarget.getX() * turretInFieldHeading.cos() + turretToTarget.getY() * turretInFieldHeading.sin(),
-                    turretToTarget.getX() * turretInFieldHeading.sin() + turretToTarget.getY() * turretInFieldHeading.cos()
-                );
+                                 Translation2d cameraToTarget = CircleFitter.fit(FieldConstants.visionTargetDiameter / 2.0,
+                                     cameraToTargetTranslations, Constants.VisionConstants.Turret.TARGET_CIRCLE_FIT_PRECISION);
+                                SmartDashboard.putString("Camera To Target Translation", cameraToTarget.toString());
                 
-                SmartDashboard.putString("Vehicle To Target Translation", realVehicleFieldToTarget.toString());
+                                com.team254.lib.geometry.Translation2d turretToTarget = new Pose2d(new com.team254.lib.geometry.Translation2d(
+                                    cameraToTarget.getX(), cameraToTarget.getY()),
+                                     new com.team254.lib.geometry.Rotation2d()).transformBy(mConstants.kTurretToLens).getTranslation();
+                                 SmartDashboard.putString("Turret To Target Translation", turretToTarget.toString());
+                
+                                 com.team254.lib.geometry.Rotation2d turretInFieldHeading = RobotState.getInstance().getFieldToTurret(time).getRotation();
+                                 com.team254.lib.geometry.Translation2d realVehicleFieldToTarget = turretToTarget.rotateBy(turretInFieldHeading.inverse());
 
-                Translation2d estimatedVehicleToField = FieldConstants.hubCenter.minus(realVehicleFieldToTarget);
+                                 SmartDashboard.putString("Vehicle To Target Translation", realVehicleFieldToTarget.toString());
+                
+                                Translation2d estimatedVehicleToField = FieldConstants.hubCenter.minus(
+                                    new Translation2d(
+                                         realVehicleFieldToTarget.x(),
+                                         realVehicleFieldToTarget.y()
+                                     )
+                                 );
+                
+                
+                
+                
 
                 if (estimatedVehicleToField.getX() > FieldConstants.fieldWidth
                         || estimatedVehicleToField.getX() < 0.0

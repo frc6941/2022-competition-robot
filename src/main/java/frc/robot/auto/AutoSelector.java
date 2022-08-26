@@ -110,6 +110,7 @@ public class AutoSelector {
 
     public void resetStartingPosition(Pose2d pose) {
         SJTUSwerveMK5Drivebase.getInstance().resetOdometry(pose);
+        SJTUSwerveMK5Drivebase.getInstance().resetGyro(pose.getRotation().getDegrees());
     }
 
     public Optional<AutoModeBase> getAutoMode() {

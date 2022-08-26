@@ -224,6 +224,10 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         }
     }
 
+    public void resetHeadingController(){
+        headingController.reset(gyro.getYaw().getDegrees(),getAngularVelocity());
+    }
+
     public void addVisionObservation(Pose2d estimatedPose, double timestampSeconds){
         this.poseEstimator.addVisionMeasurement(estimatedPose, timestampSeconds);
     }

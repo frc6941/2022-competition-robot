@@ -43,7 +43,7 @@ public class Alerts implements Updatable {
 
     @Override
     public void update(double time, double dt) {
-        alertPresent = !turretSubsystem.isCalibrated() && autoSelector.getAutoWarning();
+        alertPresent = !turretSubsystem.isCalibrated() || autoSelector.getAutoWarning();
     }
     
     @Override

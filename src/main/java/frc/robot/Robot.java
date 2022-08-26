@@ -127,7 +127,7 @@ public class Robot extends TimedRobot {
         Superstructure.getInstance().setWantMaintain(false);
         Superstructure.getInstance().setWantEject(false);
         Superstructure.getInstance().setWantMoveAndShoot(true);
-        Superstructure.getInstance().setWantVisionAim(true);
+        Superstructure.getInstance().setWantVisionAim(false);
 
         this.updateManager.stopDisableLoop();
         CommandScheduler.getInstance().enable();

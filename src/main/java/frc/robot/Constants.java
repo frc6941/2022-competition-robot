@@ -370,7 +370,7 @@ public final class Constants {
         };
 
 
-        public static PolynomialRegression FLYWHEEL_POLYNOMIAL_REGRESSION = new PolynomialRegression(FLYWHEEL_REGRESSION, 2);
+        public static PolynomialRegression FLYWHEEL_POLYNOMIAL_REGRESSION = new PolynomialRegression(FLYWHEEL_REGRESSION, 1);
         public static PolynomialRegression HOOD_POLYNOMIAL_REGRESSION = new PolynomialRegression(HOOD_REGRESSION, 1);
         public static PolynomialRegression SHOT_TIME_POLYNOMIAL_REGRESSION = new PolynomialRegression(SHOT_TIME_REGRESSION, 2);
     }

@@ -132,7 +132,7 @@ public class ControlBoard {
     }
 
     public boolean getSpit() {
-        return operator.getButton(Button.LB);
+        return operator.getButton(Button.X);
     }
 
     // Climber Controls
