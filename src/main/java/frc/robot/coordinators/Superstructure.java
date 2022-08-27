@@ -559,7 +559,7 @@ public class Superstructure implements Updatable {
                     coreShootingParameters
                             .setTargetAngle(mPeriodicIO.inSwerveFieldHeadingAngle);
                     coreShootingParameters
-                            .setShotAngle(31.0);
+                            .setShotAngle(Constants.HOOD_MINIMUM_ANGLE);
                     coreShootingParameters
                             .setShootingVelocity(500.0);
                 }
@@ -783,8 +783,7 @@ public class Superstructure implements Updatable {
                 mPeriodicIO.inTurretFieldHeadingAngle, 2.0)
                 && Util.epsilonEquals(
                         coreShootingParameters.getShotAngle(),
-                        mPeriodicIO.inHoodAngle, 1.18)
-                && mLimelight.hasTarget()) { // TODO: Remove this line when pose based aiming is ready
+                        mPeriodicIO.inHoodAngle, 1.18)) {
             onTarget = true;
         } else {
             onTarget = false;
@@ -1014,13 +1013,10 @@ public class Superstructure implements Updatable {
 
     @Override
     public synchronized void telemetry() {
-        SmartDashboard.putString("Swerve Self Lock Angle", swerveSelfLockheadingRecord.toString());
-
-        SmartDashboard.putNumber("Turret Lock Target", mPeriodicIO.outTurretLockTarget);
-        SmartDashboard.putNumber("Turret Angle", mPeriodicIO.inTurretAngle);
         SmartDashboard.putBoolean("Shoot", mPeriodicIO.SHOOT);
         SmartDashboard.putBoolean("On Target", onTarget);
         SmartDashboard.putBoolean("On Speed", onSpeed);
+        SmartDashboard.putBoolean("Ready", isReady());
 
         SmartDashboard.putBoolean("Ready For Climb", readyForClimbControls);
         SmartDashboard.putNumber("Climber Step", climbStep);
@@ -1034,8 +1030,6 @@ public class Superstructure implements Updatable {
 
         SmartDashboard.putString("Core Shooting Parameters", coreShootingParameters.toString());
         SmartDashboard.putString("Core Aim Target Relative", coreAimTargetRelative.toString());
-
-        SmartDashboard.putBoolean("visionaim", visionAim);
     }
 
     @Override

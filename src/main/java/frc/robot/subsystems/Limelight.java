@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Optional;
 
 import com.team254.lib.geometry.Pose2d;
+import com.team254.lib.util.InterpolatingDouble;
 import com.team254.lib.util.Util;
 import com.team254.lib.vision.TargetInfo;
 
-import org.frcteam6328.utils.CircleFitter;
 import org.frcteam6941.looper.UpdateManager.Updatable;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -29,8 +29,6 @@ public class Limelight implements Updatable {
 
     private int mLatencyCounter = 0;
     public Optional<Double> mDistanceToTarget = Optional.empty();
-    public Optional<TimeStampedTranslation2d> mTurretToTarget = Optional.empty();
-    public Optional<TimeStampedTranslation2d> mVehicleToTarget = Optional.empty();
     public Optional<TimeStampedTranslation2d> mEstimatedVehicleToField = Optional.empty();
     public Timer validTargetTimer = new Timer();
 
@@ -62,8 +60,11 @@ public class Limelight implements Updatable {
     public synchronized void update(double time, double dt) {
         List<TargetInfo> targetInfo = getTarget();
         if (mPeriodicIO.sees_target && targetInfo != null) {
+            validTargetTimer.start();
             updateDistanceToTarget();
-            processFrame(time);
+        } else {
+            validTargetTimer.stop();
+            validTargetTimer.reset();
         }
 
     }
@@ -185,7 +186,6 @@ public class Limelight implements Updatable {
             mOutputsHaveChanged = true;
         }
         if (mOutputsHaveChanged) {
-
             mNetworkTable.getEntry("ledMode").setNumber(mPeriodicIO.ledMode);
             mNetworkTable.getEntry("camMode").setNumber(mPeriodicIO.camMode);
             mNetworkTable.getEntry("pipeline").setNumber(mPeriodicIO.pipeline);
@@ -202,6 +202,11 @@ public class Limelight implements Updatable {
         SmartDashboard.putNumber(mConstants.kName + ": Pipeline Latency (ms)", mPeriodicIO.latency);
 
         SmartDashboard.putBoolean(mConstants.kName + ": Has Target", mPeriodicIO.sees_target);
+        
+        if(mPeriodicIO.sees_target){
+            SmartDashboard.putString("Estimated Vehicle To Field", getEstimatedVehicleToField().get().translation.toString());
+            SmartDashboard.putNumber("Ty Adj", getOffsetAdjusted()[1]);
+        }
     }
 
     public enum LedMode {
@@ -225,14 +230,25 @@ public class Limelight implements Updatable {
     }
 
     public void updateDistanceToTarget() {
-        double goal_theta = Rotation2d
-                .fromDegrees(Constants.VisionConstants.Turret.LIMELIGHT_CONSTANTS.kHorizontalPlaneToLens)
-                .getRadians()
-                + Math.toRadians(mPeriodicIO.yOffset);
-        double height_diff = FieldConstants.visionTargetHeightLower
-                - Constants.VisionConstants.Turret.LIMELIGHT_CONSTANTS.kHeight;
+        mDistanceToTarget = Optional.of(Constants.VisionConstants.Turret.VISION_MAP.getInterpolated(
+            new InterpolatingDouble(getOffsetAdjusted()[1])
+        ).value);
+    }
 
-        mDistanceToTarget = Optional.of(height_diff / Math.tan(goal_theta) + FieldConstants.visionTargetDiameter * 0.5);
+    public void updateEstimatedVehicleToField(double time) {
+        double[] offsets = getOffsetAdjusted();
+
+        Rotation2d fieldTurretAngle = RobotState.getInstance().getFieldToTurret(time).getWpilibPose2d().getRotation();
+        Rotation2d txAngle = Rotation2d.fromDegrees(-offsets[0]);
+        Rotation2d combinedAngle = fieldTurretAngle.plus(txAngle);
+        double distance = Constants.VisionConstants.Turret.VISION_MAP.getInterpolated(new InterpolatingDouble(offsets[1])).value;
+
+        mEstimatedVehicleToField = Optional.of(new TimeStampedTranslation2d(
+            new Translation2d(
+                FieldConstants.hubCenter.getX() - distance * combinedAngle.getCos(),
+                FieldConstants.hubCenter.getY() - distance * combinedAngle.getSin()
+            ), time
+        ));
     }
 
     public synchronized void triggerOutputs() {
@@ -271,6 +287,12 @@ public class Limelight implements Updatable {
         return new double[] { mPeriodicIO.xOffset, mPeriodicIO.yOffset };
     }
 
+    public double[] getOffsetAdjusted() {
+        double tx = mPeriodicIO.xOffset;
+        double tyadj = (mPeriodicIO.yOffset -0.011496*mPeriodicIO.xOffset*mPeriodicIO.xOffset)/(0.000326*mPeriodicIO.xOffset*mPeriodicIO.xOffset+1);											
+        return new double[] { tx, tyadj };
+    }
+
     public double[] getXCorners() {
         return mPeriodicIO.cornerX;
     }
@@ -283,14 +305,6 @@ public class Limelight implements Updatable {
         return mDistanceToTarget;
     }
 
-    public Optional<TimeStampedTranslation2d> getTurretToTarget() {
-        return mTurretToTarget;
-    }
-
-    public Optional<TimeStampedTranslation2d> getVehicleToTarget() {
-        return mVehicleToTarget;
-    }
-
     public Optional<TimeStampedTranslation2d> getEstimatedVehicleToField() {
         return mEstimatedVehicleToField;
     }
@@ -298,206 +312,6 @@ public class Limelight implements Updatable {
     @Override
     public synchronized void disabled(double time, double dt) {
 
-    }
-
-    private void processFrame(double time) {
-        // Exit if no new frame
-        if (!mPeriodicIO.has_comms || mPeriodicIO.pipeline != 0) {
-            validTargetTimer.reset();
-            return;
-        }
-        double captureTimestamp = time - mPeriodicIO.latency;
-
-        int targetCount = 0;
-        if (mPeriodicIO.pipeline == 0) {
-            targetCount = mPeriodicIO.ledMode == 3.0 ? mPeriodicIO.cornerX.length / 4 : 0;
-        }
-        // Calculate camera to target translation
-        if (targetCount >= Constants.VisionConstants.Turret.MIN_TARGET_COUNT
-                && mPeriodicIO.cornerX.length == mPeriodicIO.cornerY.length
-                && mPeriodicIO.cornerX.length % 4 == 0) {
-
-            // Calculate individual corner translations
-            List<Translation2d> cameraToTargetTranslations = new ArrayList<>();
-            for (int targetIndex = 0; targetIndex < targetCount; targetIndex++) {
-                List<VisionPoint> corners = new ArrayList<>();
-                double totalX = 0.0, totalY = 0.0;
-                for (int i = targetIndex * 4; i < (targetIndex * 4) + 4; i++) {
-                    if (i < mPeriodicIO.cornerX.length && i < mPeriodicIO.cornerY.length) {
-                        corners.add(new VisionPoint(mPeriodicIO.cornerX[i], mPeriodicIO.cornerY[i]));
-                        totalX += mPeriodicIO.cornerX[i];
-                        totalY += mPeriodicIO.cornerY[i];
-                    }
-                }
-
-                VisionPoint targetAvg = new VisionPoint(totalX / 4, totalY / 4);
-                corners = sortCorners(corners, targetAvg);
-
-                for (int i = 0; i < corners.size(); i++) {
-                    Translation2d translation = solveCameraToTargetTranslation(
-                            corners.get(i), i < 2 ? FieldConstants.visionTargetHeightUpper
-                                    : FieldConstants.visionTargetHeightLower,
-                            mConstants);
-                    if (translation != null) {
-                        cameraToTargetTranslations.add(translation);
-                    }
-                }
-            }
-            // Combine corner translations to full target translation
-            if (cameraToTargetTranslations.size() >= Constants.VisionConstants.Turret.MIN_TARGET_COUNT * 4) {
-                                 Translation2d cameraToTarget = CircleFitter.fit(FieldConstants.visionTargetDiameter / 2.0,
-                                     cameraToTargetTranslations, Constants.VisionConstants.Turret.TARGET_CIRCLE_FIT_PRECISION);
-                                SmartDashboard.putString("Camera To Target Translation", cameraToTarget.toString());
-                
-                                com.team254.lib.geometry.Translation2d turretToTarget = new Pose2d(new com.team254.lib.geometry.Translation2d(
-                                    cameraToTarget.getX(), cameraToTarget.getY()),
-                                     new com.team254.lib.geometry.Rotation2d()).transformBy(mConstants.kTurretToLens).getTranslation();
-                                 SmartDashboard.putString("Turret To Target Translation", turretToTarget.toString());
-                
-                                 com.team254.lib.geometry.Rotation2d turretInFieldHeading = RobotState.getInstance().getFieldToTurret(time).getRotation();
-                                 com.team254.lib.geometry.Translation2d realVehicleFieldToTarget = turretToTarget.rotateBy(turretInFieldHeading.inverse());
-
-                                 SmartDashboard.putString("Vehicle To Target Translation", realVehicleFieldToTarget.toString());
-                
-                                Translation2d estimatedVehicleToField = FieldConstants.hubCenter.minus(
-                                    new Translation2d(
-                                         realVehicleFieldToTarget.x(),
-                                         realVehicleFieldToTarget.y()
-                                     )
-                                 );
-                
-                
-                
-                
-
-                if (estimatedVehicleToField.getX() > FieldConstants.fieldWidth
-                        || estimatedVehicleToField.getX() < 0.0
-                        || estimatedVehicleToField.getY() > FieldConstants.fieldLength
-                        || estimatedVehicleToField.getY() < 0.0) {
-                    mEstimatedVehicleToField = Optional.empty();
-                    validTargetTimer.reset();
-                } else {
-                    validTargetTimer.start();
-                    if (validTargetTimer.get() > 0.25) {
-                        mEstimatedVehicleToField = Optional.of(
-                                new TimeStampedTranslation2d(estimatedVehicleToField, captureTimestamp));
-                    } else {
-                        mEstimatedVehicleToField = Optional.empty();
-                    }
-                }
-            } else {
-                validTargetTimer.reset();
-                mTurretToTarget = Optional.empty();
-                mEstimatedVehicleToField = Optional.empty();
-            }
-        } else {
-            validTargetTimer.reset();
-            mTurretToTarget = Optional.empty();
-            mEstimatedVehicleToField = Optional.empty();
-        }
-    }
-
-    private List<VisionPoint> sortCorners(List<VisionPoint> corners,
-            VisionPoint average) {
-
-        // Find top corners
-        Integer topLeftIndex = null;
-        Integer topRightIndex = null;
-        double minPosRads = Math.PI;
-        double minNegRads = Math.PI;
-        for (int i = 0; i < corners.size(); i++) {
-            VisionPoint corner = corners.get(i);
-            double angleRad = new Rotation2d(corner.x - average.x, average.y - corner.y)
-                    .minus(Rotation2d.fromDegrees(90)).getRadians();
-            if (angleRad > 0) {
-                if (angleRad < minPosRads) {
-                    minPosRads = angleRad;
-                    topLeftIndex = i;
-                }
-            } else {
-                if (Math.abs(angleRad) < minNegRads) {
-                    minNegRads = Math.abs(angleRad);
-                    topRightIndex = i;
-                }
-            }
-        }
-
-        // Find lower corners
-        Integer lowerIndex1 = null;
-        Integer lowerIndex2 = null;
-        for (int i = 0; i < corners.size(); i++) {
-            boolean alreadySaved = false;
-            if (topLeftIndex != null) {
-                if (topLeftIndex.equals(i)) {
-                    alreadySaved = true;
-                }
-            }
-            if (topRightIndex != null) {
-                if (topRightIndex.equals(i)) {
-                    alreadySaved = true;
-                }
-            }
-            if (!alreadySaved) {
-                if (lowerIndex1 == null) {
-                    lowerIndex1 = i;
-                } else {
-                    lowerIndex2 = i;
-                }
-            }
-        }
-
-        // Combine final list
-        List<VisionPoint> newCorners = new ArrayList<>();
-        if (topLeftIndex != null) {
-            newCorners.add(corners.get(topLeftIndex));
-        }
-        if (topRightIndex != null) {
-            newCorners.add(corners.get(topRightIndex));
-        }
-        if (lowerIndex1 != null) {
-            newCorners.add(corners.get(lowerIndex1));
-        }
-        if (lowerIndex2 != null) {
-            newCorners.add(corners.get(lowerIndex2));
-        }
-        return newCorners;
-    }
-
-    private Translation2d solveCameraToTargetTranslation(VisionPoint corner,
-            double goalHeight, LimelightConstants constant) {
-
-        double halfWidthPixels = Constants.VisionConstants.Turret.WIDTH_PIXELS / 2.0;
-        double halfHeightPixels = Constants.VisionConstants.Turret.HEIGHT_PIXELS / 2.0;
-        double nY = -((corner.x - halfWidthPixels - 0.0)
-                / halfWidthPixels);
-        double nZ = -((corner.y - halfHeightPixels - 0.0)
-                / halfHeightPixels);
-
-        Translation2d xzPlaneTranslation = new Translation2d(1.0, Constants.VisionConstants.Turret.VPH / 2.0 * nZ)
-                .rotateBy(Rotation2d.fromDegrees(constant.kHorizontalPlaneToLens));
-        double x = xzPlaneTranslation.getX();
-        double y = Constants.VisionConstants.Turret.VPW / 2.0 * nY;
-        double z = xzPlaneTranslation.getY();
-
-        double differentialHeight = constant.kHeight - goalHeight;
-        if ((z < 0.0) == (differentialHeight > 0.0)) {
-            double scaling = differentialHeight / -z;
-            double distance = Math.hypot(x, y) * scaling;
-            Rotation2d angle = new Rotation2d(x, y);
-            return new Translation2d(distance * angle.getCos(),
-                    distance * angle.getSin());
-        }
-        return null;
-    }
-
-    public static class VisionPoint {
-        public final double x;
-        public final double y;
-
-        public VisionPoint(double x, double y) {
-            this.x = x;
-            this.y = y;
-        }
     }
 
     public static class TimeStampedTranslation2d {

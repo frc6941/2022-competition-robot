@@ -7,7 +7,6 @@ package frc.robot;
 import com.team254.lib.geometry.Pose2d;
 import com.team254.lib.util.InterpolatingDouble;
 import com.team254.lib.util.InterpolatingTreeMap;
-import com.team254.lib.util.PolynomialRegression;
 
 import org.frcteam1678.lib.math.Conversions;
 import org.frcteam6328.utils.TunableNumber;
@@ -191,7 +190,7 @@ public final class Constants {
 
     // Hood Constants
     public static final double HOOD_GEAR_RATIO = (50.0 / 8.0) * (284.0 / 11.0);
-    public static final double HOOD_MINIMUM_ANGLE = 30.0;
+    public static final double HOOD_MINIMUM_ANGLE = 25.46;
     public static final double HOOD_MAXIMUM_ANGLE = 54.0;
 
     public static final double HOOD_KP = 0.75;
@@ -335,6 +334,14 @@ public final class Constants {
                 { 6.86, 43 },
                 { 7.36, 46 }
             };
+
+            public static InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> VISION_MAP = new InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble>();
+
+            static {
+                for (double[] pair : VISION_REGRESSION) {
+                    VISION_MAP.put(new InterpolatingDouble(pair[0]), new InterpolatingDouble(pair[1]));
+                }
+            }
         }
 
         public static final class Ball {
