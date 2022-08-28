@@ -97,7 +97,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousInit() {
-        CommandScheduler.getInstance().cancelAll();;
+        CommandScheduler.getInstance().cancelAll();
         Superstructure.getInstance().stop();
 
         this.updateManager.stopDisableLoop();
@@ -105,15 +105,15 @@ public class Robot extends TimedRobot {
         Superstructure.getInstance().setWantEject(false);
         Superstructure.getInstance().setWantMoveAndShoot(false);
         Superstructure.getInstance().setWantVisionAim(false);
-        
+        Superstructure.getInstance().setWantSwerveSelfLocking(false);
 
         CommandScheduler.getInstance().enable();
         this.updateManager.startEnableLoop(Constants.kLooperDt);
 
         Optional<AutoModeBase> autoMode = mAutoSelector.getAutoMode();
-        if(autoMode.isPresent()){
+        if (autoMode.isPresent()) {
             SJTUSwerveMK5Drivebase.getInstance().resetOdometry(autoMode.get().getStartingPose());
-            if(autoMode.get().getAutoCommand() != null){
+            if (autoMode.get().getAutoCommand() != null) {
                 autoMode.get().getAutoCommand().schedule();
             }
         }
@@ -134,6 +134,7 @@ public class Robot extends TimedRobot {
         Superstructure.getInstance().setWantEject(false);
         Superstructure.getInstance().setWantMoveAndShoot(true);
         Superstructure.getInstance().setWantVisionAim(true);
+        Superstructure.getInstance().setWantSwerveSelfLocking(true);
 
         this.updateManager.stopDisableLoop();
         CommandScheduler.getInstance().enable();
@@ -147,17 +148,19 @@ public class Robot extends TimedRobot {
         Superstructure.getInstance().updateDriverAndOperatorCommand();
         Superstructure.getInstance().updateRumble();
         SmartDashboard.putNumberArray("Test Map", new double[] {
-            Constants.ShootingConstants.FLYWHEEL_MAP.getInterpolated(new InterpolatingDouble(Timer.getFPGATimestamp() % 8.0)).value,
-            Constants.ShootingConstants.HOOD_MAP.getInterpolated(new InterpolatingDouble(Timer.getFPGATimestamp() % 8.0)).value,
-            Constants.ShootingConstants.SHOT_TIME_MAP.getInterpolated(new InterpolatingDouble(Timer.getFPGATimestamp() % 8.0)).value,
+                Constants.ShootingConstants.FLYWHEEL_MAP
+                        .getInterpolated(new InterpolatingDouble(Timer.getFPGATimestamp() % 8.0)).value,
+                Constants.ShootingConstants.HOOD_MAP
+                        .getInterpolated(new InterpolatingDouble(Timer.getFPGATimestamp() % 8.0)).value,
+                Constants.ShootingConstants.SHOT_TIME_MAP
+                        .getInterpolated(new InterpolatingDouble(Timer.getFPGATimestamp() % 8.0)).value,
         });
-        
+
     }
 
     @Override
     public void testInit() {
     }
-    
 
     @Override
     public void testPeriodic() {

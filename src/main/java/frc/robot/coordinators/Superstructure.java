@@ -128,6 +128,7 @@ public class Superstructure implements Updatable {
 
     // Swerve setting related constants
     private boolean robotOrientedDrive = false;
+    private boolean swerveSelfLocking = false;
     private Optional<Double> swerveSelfLockheadingRecord = Optional.empty();
 
     // Vision delta related
@@ -378,6 +379,10 @@ public class Superstructure implements Updatable {
         visionAim = value;
     }
 
+    public void setWantSwerveSelfLocking(boolean value) {
+        swerveSelfLocking = value;
+    }
+
     public boolean isOnTarget() {
         return onTarget;
     }
@@ -418,7 +423,7 @@ public class Superstructure implements Updatable {
                     mPeriodicIO.outSwerveLockHeading = true;
                     mPeriodicIO.outSwerveHeadingTarget = mPeriodicIO.inSwerveSnapRotation.degrees;
                     swerveSelfLockheadingRecord = Optional.empty();
-                } else if (mPeriodicIO.outSwerveRotation == 0.0) {
+                } else if (mPeriodicIO.outSwerveRotation == 0.0 && swerveSelfLocking) {
                     mPeriodicIO.outSwerveLockHeading = true;
                     if (swerveSelfLockheadingRecord.isEmpty()) {
                         swerveSelfLockheadingRecord = Optional.of(mPeriodicIO.inSwerveFieldHeadingAngle);
@@ -441,7 +446,7 @@ public class Superstructure implements Updatable {
                     mPeriodicIO.outSwerveHeadingTarget = targetArrayLimited[1];
                     mPeriodicIO.outSwerveRotation = 0.0;
                     swerveSelfLockheadingRecord = Optional.empty();
-                } else if (mPeriodicIO.outSwerveRotation == 0.0) {
+                } else if (mPeriodicIO.outSwerveRotation == 0.0 && swerveSelfLocking) {
                     mPeriodicIO.outSwerveLockHeading = true;
                     if (swerveSelfLockheadingRecord.isEmpty()) {
                         swerveSelfLockheadingRecord = Optional.of(mPeriodicIO.inSwerveFieldHeadingAngle);
@@ -899,9 +904,9 @@ public class Superstructure implements Updatable {
     @Override
     public synchronized void update(double time, double dt) {
         if (getState() == STATE.CHASING || getState() == STATE.SHOOTING || getState() == STATE.PIT) {
-            // updateAimingParameters(time);
-            // updateShootingParameters(time);
-            tempShootingParameters(time);
+            updateAimingParameters(time);
+            updateShootingParameters(time);
+            // tempShootingParameters(time);
         } else if (getState() == STATE.CLIMB) {
             updateClimbReady();
         }

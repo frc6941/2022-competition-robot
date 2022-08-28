@@ -132,8 +132,8 @@ public final class Constants {
     // accordingly.
     public static final SimpleMotorFeedforward DRIVETRAIN_FEEDFORWARD = new SimpleMotorFeedforward(0.60757, 7.6216,
             0.71241);
-    public static final SimpleMotorFeedforward DRIVETRAIN_ANGULAR_FEEDFOWARD = new SimpleMotorFeedforward(0.0, 0.0, 0.0);
-            
+    public static final SimpleMotorFeedforward DRIVETRAIN_ANGULAR_FEEDFOWARD = new SimpleMotorFeedforward(0.0, 0.0,
+            0.0);
 
     // Intaker Constants
     public static final double INTAKER_FAST_INTAKE_PERCENTAGE = 0.6;
@@ -158,7 +158,7 @@ public final class Constants {
     public static final double TRIGGER_SLOW_EJECT_VELOCITY = 1000.0;
     public static final double TRIGGER_FEEDING_VELOCITY = 1200.0;
     public static final double TRIGGER_REVERSING_VELOCITY = -500.0;
-    
+
     public static final double TRIGGER_KF_V_SLOT_0 = 0.00009;
     public static final double TRIGGER_KP_V_SLOT_0 = 0.0000254;
     public static final double TRIGGER_KI_V_SLOT_0 = 0.0000;
@@ -182,11 +182,14 @@ public final class Constants {
     public static final double SHOOTER_MAX_FREE_SPEED_RPM = 6380.0;
 
     public static final double SHOOTER_KF = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_FREE_SPEED_RPM, 1.0);
-    public static final double SHOOTER_KP = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_FREE_SPEED_RPM, 1.0) * 16.0;
-    public static final double SHOOTER_KD = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_FREE_SPEED_RPM, 1.0) * 20.0 * 5.0;
-    public static final double SHOOTER_ERROR_TOLERANCE = 70.0;
+    // public static final double SHOOTER_KP = 1024.0 /
+    // Conversions.RPMToFalcon(SHOOTER_MAX_FREE_SPEED_RPM, 1.0) * 16.0;
+    public static final double SHOOTER_KP = 0.44;
+    // public static final double SHOOTER_KD = 1024.0 /
+    // Conversions.RPMToFalcon(SHOOTER_MAX_FREE_SPEED_RPM, 1.0) * 20.0
+    public static final double SHOOTER_KD = 1.9;
+    public static final double SHOOTER_ERROR_TOLERANCE = 35.0;
     public static final double SHOOTER_RAMP = 0.5;
-
 
     // Hood Constants
     public static final double HOOD_GEAR_RATIO = (50.0 / 8.0) * (284.0 / 11.0);
@@ -200,7 +203,7 @@ public final class Constants {
     public static final double HOOD_CRUISE_V = 30000.0 * 2.0;
     public static final double HOOD_CRUISE_ACC = 30000.0 * 3.0;
 
-    public static final double HOOD_HOMING_CURRENT_THRESHOLD = 15.0;
+    public static final double HOOD_HOMING_CURRENT_THRESHOLD = 12.0;
 
     // Turret Constants
     public static final double TURRET_GEAR_RATIO = 7.0 * 181.0 / 18.0;
@@ -251,9 +254,10 @@ public final class Constants {
     public static final double CLIMBER_EXTENSION_HEIGHT = 0.90;
     public static final double CLIMBER_STAGING_HEIGHT = 0.60;
 
-    public static final TunableNumber CLIMBER_STATIC_OFFSET_UNLOAD = new TunableNumber("Climber Static Offset Unload", 0.05);
-    public static final TunableNumber CLIMBER_STATIC_OFFSET_LOAD = new TunableNumber("Climber Static Offset Load", 0.05);;
-
+    public static final TunableNumber CLIMBER_STATIC_OFFSET_UNLOAD = new TunableNumber("Climber Static Offset Unload",
+            0.05);
+    public static final TunableNumber CLIMBER_STATIC_OFFSET_LOAD = new TunableNumber("Climber Static Offset Load",
+            0.05);;
 
     /* Control Board Constants */
     public static final int DRIVER_CONTROLLER_PORT = 0;
@@ -297,24 +301,25 @@ public final class Constants {
 
         public static final class Turret {
             public static final LimelightConstants LIMELIGHT_CONSTANTS = new LimelightConstants();
-                static{
-                    LIMELIGHT_CONSTANTS.kName = "Turret Limelight";
-                    LIMELIGHT_CONSTANTS.kTableName = "limelight";
-                    LIMELIGHT_CONSTANTS.kHeight = 0.83;
-                    LIMELIGHT_CONSTANTS.kHorizontalPlaneToLens = 37.0;
-                    LIMELIGHT_CONSTANTS.kTurretToLens = new Pose2d(0.16, 0.0, new com.team254.lib.geometry.Rotation2d());
-                }
+            static {
+                LIMELIGHT_CONSTANTS.kName = "Turret Limelight";
+                LIMELIGHT_CONSTANTS.kTableName = "limelight";
+                LIMELIGHT_CONSTANTS.kHeight = 0.83;
+                LIMELIGHT_CONSTANTS.kHorizontalPlaneToLens = 37.0;
+                LIMELIGHT_CONSTANTS.kTurretToLens = new Pose2d(0.16, 0.0, new com.team254.lib.geometry.Rotation2d());
+            }
 
-            public static final com.team254.lib.geometry.Translation2d VEHICLE_TO_TURRET_TRANSLATION = new com.team254.lib.geometry.Translation2d(0.01, 0.0);
+            public static final com.team254.lib.geometry.Translation2d VEHICLE_TO_TURRET_TRANSLATION = new com.team254.lib.geometry.Translation2d(
+                    0.01, 0.0);
             public static final double TURRET_RADIUS = 0.20;
 
             public static final double WIDTH_PIXELS = 960;
             public static final double HEIGHT_PIXELS = 720;
             public static final double HORIZONTAL_FOV = 59.6; // degrees
-		    public static final double VERTICAL_FOV = 49.7; // degrees
+            public static final double VERTICAL_FOV = 49.7; // degrees
             public static final double VPW = 2.0 * Math.tan(Math.toRadians(HORIZONTAL_FOV) / 2.0);
             public static final double VPH = 2.0 * Math.tan(Math.toRadians(VERTICAL_FOV) / 2.0);
-		    public static final double LATENCY = 11.0 / 1000.0; // seconds
+            public static final double LATENCY = 11.0 / 1000.0; // seconds
             public static final double FRAME_RATE = 90.0;
 
             public static final double MAX_TRACKING_DISTANCE = 8.0;
@@ -324,15 +329,15 @@ public final class Constants {
             public static final int MIN_TARGET_COUNT = 2;
 
             public static double[][] VISION_REGRESSION = {
-                /* TEMPLATE REGRESSION */
-                // @x --> adjusted ty
-                // @y --> distance (in meters)
-                { 2.86, 31 },
-                { 3.86, 35 },
-                { 4.86, 38 },
-                { 5.86, 39 },
-                { 6.86, 43 },
-                { 7.36, 46 }
+                    /* TEMPLATE REGRESSION */
+                    // @x --> adjusted ty
+                    // @y --> distance (in meters)
+                    { 2.86, 31 },
+                    { 3.86, 35 },
+                    { 4.86, 38 },
+                    { 5.86, 39 },
+                    { 6.86, 43 },
+                    { 7.36, 46 }
             };
 
             public static InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> VISION_MAP = new InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble>();
@@ -353,41 +358,47 @@ public final class Constants {
     public static class ShootingConstants {
         public static final double EPISILON = 2.54;
         public static final double ACCELERATION_COMP_FACTOR = 0.02;
-    
+
         public static double[][] FLYWHEEL_REGRESSION = {
-            /* TEMPLATE REGRESSION */
-            // @x --> distance from target (in meters)
-            // @y --> shooter velocity (in rpm)
-            { 2.86, 2250 },
-            { 3.86, 2450 },
-            { 4.86, 2950 },
-            { 5.86, 3150 },
-            { 6.86, 3550 },
-            { 7.36, 3850 }
+                /* TEMPLATE REGRESSION */
+                // @x --> distance from target (in meters)
+                // @y --> shooter velocity (in rpm)
+                { 2.29, 2180 },
+                { 2.80, 2360 },
+                { 3.52, 2390 },
+                { 4.32, 2460 },
+                { 4.80, 2615 },
+                { 5.30, 2850 },
+                { 5.80, 2960 },
+                { 6.30, 3070 },
+                { 6.80, 3170 }
         };
 
         public static double[][] HOOD_REGRESSION = {
-            /* TEMPLATE REGRESSION */
-            // @x --> distance from target (in meters)
-            // @y --> hood angle (in degree)
-            { 2.86, 31 },
-            { 3.86, 35 },
-            { 4.86, 38 },
-            { 5.86, 39 },
-            { 6.86, 43 },
-            { 7.36, 46 }
+                /* TEMPLATE REGRESSION */
+                // @x --> distance from target (in meters)
+                // @y --> hood angle (in degree)
+                { 2.29, 25.5 },
+                { 2.80, 26.5 },
+                { 3.52, 29.0 },
+                { 4.32, 42.0 },
+                { 4.80, 41.0 },
+                { 5.30, 36.0 },
+                { 5.80, 38.0 },
+                { 6.30, 37.0 },
+                { 6.80, 40.0 }
         };
 
-        public static double[][] SHOT_TIME_REGRESSION  = {
-          /* TEMPLATE REGRESSION */
-            // @x --> distance from target (in meters)
-            // @y --> shot time (in seconds)
-            { 2.86, 0.8 },
-            { 3.86, 0.82 },
-            { 4.86, 0.85 },
-            { 5.86, 0.9 },
-            { 6.86, 0.95 },
-            { 7.36, 1.05 }  
+        public static double[][] SHOT_TIME_REGRESSION = {
+                /* TEMPLATE REGRESSION */
+                // @x --> distance from target (in meters)
+                // @y --> shot time (in seconds)
+                { 2.86, 0.8 },
+                { 3.86, 0.82 },
+                { 4.86, 0.85 },
+                { 5.86, 0.9 },
+                { 6.86, 0.95 },
+                { 7.36, 1.05 }
         };
 
         public static InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> FLYWHEEL_MAP = new InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble>();

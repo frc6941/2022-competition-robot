@@ -57,46 +57,46 @@ public class AutoSelector {
         if (mCachedDesiredMode != desiredMode) {
             System.out.println("Auto Selection Changed:" + desiredMode.name());
             mAutoMode = getAutoModeForParams(desiredMode);
-            if(mAutoMode.isPresent()){
+            if (mAutoMode.isPresent()) {
                 resetStartingPosition(mAutoMode.get().getStartingPose());
             } else {
                 resetStartingPosition(new Pose2d());
             }
-            
+
         }
         mCachedDesiredMode = desiredMode;
     }
 
     private Optional<AutoModeBase> getAutoModeForParams(AUTO_MODES mode) {
         switch (mode) {
-        case DO_NOTHING:
-            autoWarning = true;
-            return Optional.empty();
+            case DO_NOTHING:
+                autoWarning = true;
+                return Optional.empty();
 
-        case D_FIVE_AUTO:
-            autoWarning = false;
-            return Optional.of(new DFiveAuto());
+            case D_FIVE_AUTO:
+                autoWarning = false;
+                return Optional.of(new DFiveAuto());
 
-        case D_FIVE_PLUS_ONE_AUTO:
-            autoWarning = false;
-            return Optional.of(new DFivePlusOneAuto());
-        
-        case A_TWO_PLUS_ONE_AUTO:
-            autoWarning = false;
-            return Optional.of(new ATwoPlusOneAuto());
+            case D_FIVE_PLUS_ONE_AUTO:
+                autoWarning = false;
+                return Optional.of(new DFivePlusOneAuto());
 
-        case A_TWO_PLUS_TWO_AUTO:
-            autoWarning = false;
-            return Optional.of(new ATwoPlusTwoAuto());
+            case A_TWO_PLUS_ONE_AUTO:
+                autoWarning = false;
+                return Optional.of(new ATwoPlusOneAuto());
 
-        case TEST_PATH:
-            autoWarning = true;
-            return Optional.of(new TestAuto());
-            
-        default:
-            autoWarning = true;
-            System.out.println("ERROR: unexpected auto mode: " + mode);
-            break;
+            case A_TWO_PLUS_TWO_AUTO:
+                autoWarning = false;
+                return Optional.of(new ATwoPlusTwoAuto());
+
+            case TEST_PATH:
+                autoWarning = true;
+                return Optional.of(new TestAuto());
+
+            default:
+                autoWarning = true;
+                System.out.println("ERROR: unexpected auto mode: " + mode);
+                break;
         }
         autoWarning = true;
         System.err.println("No valid auto mode found for  " + mode);
@@ -110,7 +110,7 @@ public class AutoSelector {
 
     public void resetStartingPosition(Pose2d pose) {
         SJTUSwerveMK5Drivebase.getInstance().resetOdometry(pose);
-        SJTUSwerveMK5Drivebase.getInstance().resetGyro(pose.getRotation().getDegrees());
+        // SJTUSwerveMK5Drivebase.getInstance().resetGyro(pose.getRotation().getDegrees());
     }
 
     public Optional<AutoModeBase> getAutoMode() {
@@ -120,7 +120,7 @@ public class AutoSelector {
         return mAutoMode;
     }
 
-    public SendableChooser<AUTO_MODES> getSendableChooser(){
+    public SendableChooser<AUTO_MODES> getSendableChooser() {
         return mModeChooser;
     }
 

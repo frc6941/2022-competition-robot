@@ -202,9 +202,10 @@ public class Limelight implements Updatable {
         SmartDashboard.putNumber(mConstants.kName + ": Pipeline Latency (ms)", mPeriodicIO.latency);
 
         SmartDashboard.putBoolean(mConstants.kName + ": Has Target", mPeriodicIO.sees_target);
-        
-        if(mPeriodicIO.sees_target){
-            SmartDashboard.putString("Estimated Vehicle To Field", getEstimatedVehicleToField().get().translation.toString());
+
+        if (mPeriodicIO.sees_target) {
+            // SmartDashboard.putString("Estimated Vehicle To Field",
+            // getEstimatedVehicleToField().get().translation.toString());
             SmartDashboard.putNumber("Ty Adj", getOffsetAdjusted()[1]);
         }
     }
@@ -231,8 +232,7 @@ public class Limelight implements Updatable {
 
     public void updateDistanceToTarget() {
         mDistanceToTarget = Optional.of(Constants.VisionConstants.Turret.VISION_MAP.getInterpolated(
-            new InterpolatingDouble(getOffsetAdjusted()[1])
-        ).value);
+                new InterpolatingDouble(getOffsetAdjusted()[1])).value);
     }
 
     public void updateEstimatedVehicleToField(double time) {
@@ -241,14 +241,14 @@ public class Limelight implements Updatable {
         Rotation2d fieldTurretAngle = RobotState.getInstance().getFieldToTurret(time).getWpilibPose2d().getRotation();
         Rotation2d txAngle = Rotation2d.fromDegrees(-offsets[0]);
         Rotation2d combinedAngle = fieldTurretAngle.plus(txAngle);
-        double distance = Constants.VisionConstants.Turret.VISION_MAP.getInterpolated(new InterpolatingDouble(offsets[1])).value;
+        double distance = Constants.VisionConstants.Turret.VISION_MAP
+                .getInterpolated(new InterpolatingDouble(offsets[1])).value;
 
         mEstimatedVehicleToField = Optional.of(new TimeStampedTranslation2d(
-            new Translation2d(
-                FieldConstants.hubCenter.getX() - distance * combinedAngle.getCos(),
-                FieldConstants.hubCenter.getY() - distance * combinedAngle.getSin()
-            ), time
-        ));
+                new Translation2d(
+                        FieldConstants.hubCenter.getX() - distance * combinedAngle.getCos(),
+                        FieldConstants.hubCenter.getY() - distance * combinedAngle.getSin()),
+                time));
     }
 
     public synchronized void triggerOutputs() {
@@ -289,7 +289,8 @@ public class Limelight implements Updatable {
 
     public double[] getOffsetAdjusted() {
         double tx = mPeriodicIO.xOffset;
-        double tyadj = (mPeriodicIO.yOffset -0.011496*mPeriodicIO.xOffset*mPeriodicIO.xOffset)/(0.000326*mPeriodicIO.xOffset*mPeriodicIO.xOffset+1);											
+        double tyadj = (mPeriodicIO.yOffset - 0.011496 * mPeriodicIO.xOffset * mPeriodicIO.xOffset)
+                / (0.000326 * mPeriodicIO.xOffset * mPeriodicIO.xOffset + 1);
         return new double[] { tx, tyadj };
     }
 
