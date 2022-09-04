@@ -37,6 +37,7 @@ public class AutoSelector {
         mModeChooser.addOption("D - 5 Ball Auto", AUTO_MODES.D_FIVE_AUTO);
         mModeChooser.addOption("D - 5+1 Ball Auto", AUTO_MODES.D_FIVE_PLUS_ONE_AUTO);
         mModeChooser.addOption("A - 2+1 Ball Auto", AUTO_MODES.A_TWO_PLUS_ONE_AUTO);
+        mModeChooser.addOption("A - 2+2 Ball Auto", AUTO_MODES.A_TWO_PLUS_TWO_AUTO);
         mModeChooser.addOption("Auto Test", AUTO_MODES.TEST_PATH);
     }
 

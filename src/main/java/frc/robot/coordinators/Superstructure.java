@@ -9,6 +9,7 @@ import com.team254.lib.util.TimeDelayedBoolean;
 import com.team254.lib.util.Util;
 import com.team254.lib.vision.AimingParameters;
 
+import org.frcteam1678.lib.math.Conversions;
 import org.frcteam6328.utils.TunableNumber;
 import org.frcteam6941.looper.UpdateManager.Updatable;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
@@ -17,6 +18,10 @@ import org.frcteam6941.utils.AngleNormalization;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.PneumaticHub;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
@@ -32,7 +37,6 @@ import frc.robot.subsystems.Intaker;
 import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
-import frc.robot.subsystems.Limelight.TimeStampedTranslation2d;
 import frc.robot.utils.led.Lights;
 import frc.robot.utils.led.TimedLEDState;
 import frc.robot.utils.shoot.ShootingParameters;
@@ -71,6 +75,7 @@ public class Superstructure implements Updatable {
         public boolean inSwerveBrake = false;
         public double inSwerveFieldHeadingAngle = 0.0;
         public double inSwerveRollAngle = 0.0;
+        public double inSwerveAngularVelocity = 0.0;
 
         // Turret Variables
         public double inTurretAngle = 0.0;
@@ -99,6 +104,7 @@ public class Superstructure implements Updatable {
         // Turret Variables
         public double outTurretLockTarget = 0.0;
         public double outTurretFeedforwardVelocity = 0.0;
+        public double outTurretFeedforwardAcceleration = 0.0;
         public boolean outIsTurretLimited = true;
 
         // Indicator Variables
@@ -114,6 +120,8 @@ public class Superstructure implements Updatable {
     public Translation2d coreAimTargetRelative = FieldConstants.hubCenter;
     public Optional<AimingParameters> coreAimParameters = Optional.empty();
     public ShootingParameters coreShootingParameters = new ShootingParameters(0.0, 45.0, 1000.0);
+    public double coreShootingTolerance = 50.0;
+    public double coreShootingAdjustmentAngle = -1.0;
 
     private ControlBoard mControlBoard = ControlBoard.getInstance();
     private SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
@@ -130,6 +138,7 @@ public class Superstructure implements Updatable {
     private boolean robotOrientedDrive = false;
     private boolean swerveSelfLocking = false;
     private Optional<Double> swerveSelfLockheadingRecord = Optional.empty();
+    private TimeDelayedBoolean swerveCanSelfLock = new TimeDelayedBoolean();
 
     // Vision delta related
     private PIDController angleDeltaController = new PIDController(0.7, 0.0, 0.0);
@@ -139,6 +148,7 @@ public class Superstructure implements Updatable {
     private boolean onTarget = false;
     private boolean onSpeed = false;
     private boolean testShot = false;
+    private boolean testLock = false;
     private TimeDelayedBoolean ejectDelayedBoolean = new TimeDelayedBoolean();
     private boolean maintainReady = false;
     private boolean moveAndShoot = true;
@@ -263,7 +273,17 @@ public class Superstructure implements Updatable {
         mPeriodicIO.SPIT = mControlBoard.getSpit();
         mPeriodicIO.INTAKE = mControlBoard.getIntake() && !mPeriodicIO.SPIT; // When SPIT and INTAKE, SPIT first
 
-        robotOrientedDrive = mControlBoard.getRobotOrientedDrive();
+        if (mControlBoard.getSwitchRobotOrientedDrive()) {
+            robotOrientedDrive = !robotOrientedDrive;
+        }
+
+        if (mControlBoard.getIncreaseShotAdjutment()) {
+            coreShootingAdjustmentAngle += 0.02;
+        }
+
+        if (mControlBoard.getDecreaseShotAdjustment()) {
+            coreShootingAdjustmentAngle -= 0.02;
+        }
 
         if (mControlBoard.getEnterClimbMode()) {
             mPeriodicIO.outClimberDemand = 0.03;
@@ -337,6 +357,7 @@ public class Superstructure implements Updatable {
         } else if (getState() == STATE.CHASING || getState() == STATE.SHOOTING) {
             // Mode switch in normal teleop game mode
             if (getState() == STATE.CHASING && mControlBoard.getShoot()) {
+                mBallPath.clearReverse();
                 setState(STATE.SHOOTING);
             }
             if (getState() == STATE.SHOOTING && !mControlBoard.getShoot()) {
@@ -348,10 +369,17 @@ public class Superstructure implements Updatable {
     }
 
     public void updateRumble() {
+        double time = Timer.getFPGATimestamp();
+        mControlBoard.getDriverController().updateRumble(time);
+        mControlBoard.getOperatorController().updateRumble(time);
         if (mBallPath.isFull()) {
-            mControlBoard.setDriverRumble(true);
+            mControlBoard.setDriverRumble(1.0, 0.0);
         } else {
-            mControlBoard.setDriverRumble(false);
+            if(robotOrientedDrive){
+                mControlBoard.setDriverRumble(0.5, 0.25);
+            } else {
+                mControlBoard.setDriverRumble(0.0, 0.0);
+            }
         }
     }
 
@@ -404,11 +432,11 @@ public class Superstructure implements Updatable {
      * decided.
      */
     public synchronized void updateSwerveAndTurretCoordination() {
-        double[] targetArrayLimited = calculateTurretDrivetrainAngle(coreShootingParameters.getTargetAngle(), true);
         double[] targetArrayUnLimited = calculateTurretDrivetrainAngle(coreShootingParameters.getTargetAngle(), false);
 
         switch (state) {
             case PIT:
+                swerveCanSelfLock.update(false, 0.0);
                 mPeriodicIO.outSwerveTranslation = new Translation2d();
                 mPeriodicIO.outSwerveRotation = 0.0;
                 mPeriodicIO.outSwerveLockHeading = false;
@@ -420,16 +448,22 @@ public class Superstructure implements Updatable {
                 mPeriodicIO.outSwerveTranslation = mPeriodicIO.inSwerveTranslation;
                 mPeriodicIO.outSwerveRotation = mPeriodicIO.inSwerveRotation;
                 if (mPeriodicIO.inSwerveSnapRotation != SwerveCardinal.NONE) {
+                    swerveCanSelfLock.update(false, 0.0);
                     mPeriodicIO.outSwerveLockHeading = true;
                     mPeriodicIO.outSwerveHeadingTarget = mPeriodicIO.inSwerveSnapRotation.degrees;
                     swerveSelfLockheadingRecord = Optional.empty();
-                } else if (mPeriodicIO.outSwerveRotation == 0.0 && swerveSelfLocking) {
+                } else if (swerveCanSelfLock.update(
+                        mPeriodicIO.outSwerveRotation == 0.0
+                                && mPeriodicIO.inSwerveAngularVelocity < 0.8,
+                        0.5)
+                        && swerveSelfLocking) {
                     mPeriodicIO.outSwerveLockHeading = true;
                     if (swerveSelfLockheadingRecord.isEmpty()) {
                         swerveSelfLockheadingRecord = Optional.of(mPeriodicIO.inSwerveFieldHeadingAngle);
                     }
                     mPeriodicIO.outSwerveHeadingTarget = swerveSelfLockheadingRecord.get();
                 } else {
+                    swerveCanSelfLock.update(false, 0.0);
                     mPeriodicIO.outSwerveLockHeading = false;
                     mPeriodicIO.outSwerveHeadingTarget = 0.0;
                     swerveSelfLockheadingRecord = Optional.empty();
@@ -437,21 +471,16 @@ public class Superstructure implements Updatable {
                 mPeriodicIO.outTurretLockTarget = targetArrayUnLimited[0];
                 break;
             case SHOOTING:
+                swerveCanSelfLock.update(false, 0.0);
                 mPeriodicIO.outSwerveTranslation = mPeriodicIO.inSwerveTranslation;
                 mPeriodicIO.outTurretLockTarget = targetArrayUnLimited[0];
                 mPeriodicIO.outSwerveRotation = mPeriodicIO.inSwerveRotation;
                 mPeriodicIO.outSwerveLockHeading = false;
-                if (Double.isFinite(targetArrayLimited[1]) && Math.abs(mPeriodicIO.inSwerveRotation) < 0.30) {
+                if (Double.isFinite(targetArrayUnLimited[1]) && Math.abs(mPeriodicIO.inSwerveRotation) < 0.40) {
                     mPeriodicIO.outSwerveLockHeading = true;
-                    mPeriodicIO.outSwerveHeadingTarget = targetArrayLimited[1];
+                    mPeriodicIO.outSwerveHeadingTarget = targetArrayUnLimited[1];
                     mPeriodicIO.outSwerveRotation = 0.0;
                     swerveSelfLockheadingRecord = Optional.empty();
-                } else if (mPeriodicIO.outSwerveRotation == 0.0 && swerveSelfLocking) {
-                    mPeriodicIO.outSwerveLockHeading = true;
-                    if (swerveSelfLockheadingRecord.isEmpty()) {
-                        swerveSelfLockheadingRecord = Optional.of(mPeriodicIO.inSwerveFieldHeadingAngle);
-                    }
-                    mPeriodicIO.outSwerveHeadingTarget = swerveSelfLockheadingRecord.get();
                 } else {
                     mPeriodicIO.outSwerveLockHeading = false;
                     mPeriodicIO.outSwerveHeadingTarget = 0.0;
@@ -459,6 +488,7 @@ public class Superstructure implements Updatable {
                 }
                 break;
             case CLIMB:
+                swerveCanSelfLock.update(false, 0.0);
                 mPeriodicIO.outSwerveTranslation = mPeriodicIO.inSwerveTranslation;
                 mPeriodicIO.outSwerveRotation = mPeriodicIO.inSwerveRotation;
                 mPeriodicIO.outSwerveLockHeading = false;
@@ -471,21 +501,12 @@ public class Superstructure implements Updatable {
 
     public synchronized void updateAimingParameters(double time) {
         Pose2d robotPose = RobotState.getInstance().getFieldToVehicle(time);
-        Optional<TimeStampedTranslation2d> visionEstimatedRobotPose = mLimelight.getEstimatedVehicleToField();
         if (mPeriodicIO.EJECT || mPeriodicIO.PREP_EJECT) {
-            coreAimTargetRelative = Targets.getWrongballTarget(robotPose.getWpilibPose2d())
+            coreAimTargetRelative = Targets
+                    .getWrongballTarget(robotPose.getWpilibPose2d(), getState() == STATE.SHOOTING)
                     .minus(robotPose.getWpilibPose2d().getTranslation());
         } else {
-            if (visionEstimatedRobotPose.isPresent() && visionAim) {
-                Translation2d translationDelta = RobotState.getInstance().getFieldToVehicle(time)
-                        .transformBy(
-                                RobotState.getInstance().getFieldToVehicle(visionEstimatedRobotPose.get().timestamp))
-                        .getWpilibPose2d().getTranslation();
-                coreAimTargetRelative = Targets.getDefaultTarget()
-                        .minus(visionEstimatedRobotPose.get().translation.plus(translationDelta));
-            } else {
-                coreAimTargetRelative = Targets.getDefaultTarget().minus(robotPose.getWpilibPose2d().getTranslation());
-            }
+            coreAimTargetRelative = Targets.getDefaultTarget().minus(robotPose.getWpilibPose2d().getTranslation());
         }
     }
 
@@ -493,10 +514,22 @@ public class Superstructure implements Updatable {
         if (testShot) {
             TunableNumber RPM = new TunableNumber("RPM", 1500.0);
             TunableNumber angle = new TunableNumber("Test Angle", 32.0);
+            TunableNumber tolerance = new TunableNumber("Tolerance", 50.0);
+
             coreShootingParameters = new ShootingParameters(
-                    mPeriodicIO.inSwerveFieldHeadingAngle,
+                    new Rotation2d(coreAimTargetRelative.getX(), coreAimTargetRelative.getY()).getDegrees() + coreShootingAdjustmentAngle,
                     angle.get(),
                     RPM.get());
+            coreShootingTolerance = tolerance.get();
+        } else if (testLock) {
+            Pose2d robotVelocity = RobotState.getInstance().getSmoothedMeasuredVelocity();
+            Pose2d robotAcceleration = RobotState.getInstance().getSmoothedMeasuredAcceleration();
+            coreShootingParameters = new ShootingParameters(0.0, 30.0, 600.0);
+            double angularVelocitycomponent = robotVelocity.getRotation().getDegrees();
+            mPeriodicIO.outTurretFeedforwardVelocity = -(angularVelocitycomponent);
+
+            double angularAccelerationComponent = robotAcceleration.getRotation().getDegrees();
+            mPeriodicIO.outTurretFeedforwardAcceleration = -(angularAccelerationComponent);
         } else {
             Pose2d robotVelocity = RobotState.getInstance().getSmoothedMeasuredVelocity();
             Pose2d robotAcceleration = RobotState.getInstance().getSmoothedMeasuredAcceleration();
@@ -521,7 +554,7 @@ public class Superstructure implements Updatable {
             double newDist = toMovingGoal.getNorm();
 
             coreShootingParameters
-                    .setTargetAngle(new Rotation2d(toMovingGoal.getX(), toMovingGoal.getY()).getDegrees());
+                    .setTargetAngle(new Rotation2d(toMovingGoal.getX(), toMovingGoal.getY()).getDegrees() + coreShootingAdjustmentAngle);
             coreShootingParameters
                     .setShotAngle(Constants.ShootingConstants.HOOD_MAP.getInterpolated(
                             new InterpolatingDouble(newDist)).value);
@@ -529,10 +562,19 @@ public class Superstructure implements Updatable {
                     .setShootingVelocity(Constants.ShootingConstants.FLYWHEEL_MAP.getInterpolated(
                             new InterpolatingDouble(newDist)).value);
 
-            double tangential_component = new Rotation2d(toMovingGoal.getX(), toMovingGoal.getY()).getSin()
+            coreShootingTolerance = Constants.ShootingConstants.TOLERANCE_MAP.getInterpolated(
+                    new InterpolatingDouble(newDist)).value;
+
+            double tangentialVelocityComponent = new Rotation2d(toMovingGoal.getX(), toMovingGoal.getY()).getSin()
                     * robotVelocity.getWpilibPose2d().getX() / newDist;
-            double angular_component = robotVelocity.getRotation().getDegrees();
-            mPeriodicIO.outTurretFeedforwardVelocity = -(angular_component + tangential_component);
+            double angularVelocitycomponent = robotVelocity.getRotation().getDegrees();
+            mPeriodicIO.outTurretFeedforwardVelocity = -(angularVelocitycomponent + tangentialVelocityComponent);
+
+            double tangentialAccelerationComponent = new Rotation2d(toMovingGoal.getX(), toMovingGoal.getY()).getSin()
+                    * robotAcceleration.getWpilibPose2d().getX() / newDist;
+            double angularAccelerationComponent = robotAcceleration.getRotation().getDegrees();
+            mPeriodicIO.outTurretFeedforwardAcceleration = -(angularAccelerationComponent
+                    + tangentialAccelerationComponent);
         }
     }
 
@@ -541,7 +583,7 @@ public class Superstructure implements Updatable {
             TunableNumber RPM = new TunableNumber("RPM", 1500.0);
             TunableNumber angle = new TunableNumber("Test Angle", 32.0);
             coreShootingParameters = new ShootingParameters(
-                    mPeriodicIO.inSwerveFieldHeadingAngle,
+                    mPeriodicIO.inSwerveFieldHeadingAngle + coreShootingAdjustmentAngle,
                     angle.get(),
                     RPM.get());
         } else {
@@ -552,7 +594,7 @@ public class Superstructure implements Updatable {
                     SmartDashboard.putNumber("distance", distance);
                     double dAngle = angleDeltaController.calculate(angleDeltaMovingAverage.getAverage(), 0.0);
                     coreShootingParameters
-                            .setTargetAngle(mPeriodicIO.inTurretFieldHeadingAngle + dAngle);
+                            .setTargetAngle(mPeriodicIO.inTurretFieldHeadingAngle + dAngle + coreShootingAdjustmentAngle);
                     coreShootingParameters
                             .setShotAngle(Constants.ShootingConstants.HOOD_MAP.getInterpolated(
                                     new InterpolatingDouble(distance)).value);
@@ -573,7 +615,7 @@ public class Superstructure implements Updatable {
                 coreAimTargetRelative = Targets.getDefaultTarget().minus(robotPose.getWpilibPose2d().getTranslation());
                 coreShootingParameters
                         .setTargetAngle(new Rotation2d(coreAimTargetRelative.getX(), coreAimTargetRelative.getY())
-                                .getDegrees());
+                                .getDegrees() + coreShootingAdjustmentAngle);
                 coreShootingParameters
                         .setShotAngle(Constants.ShootingConstants.HOOD_MAP.getInterpolated(
                                 new InterpolatingDouble(coreAimTargetRelative.getNorm())).value);
@@ -785,23 +827,34 @@ public class Superstructure implements Updatable {
     public synchronized void updateJudgingConditions() {
         if (Util.epsilonEquals(
                 coreShootingParameters.getTargetAngle(),
-                mPeriodicIO.inTurretFieldHeadingAngle, 2.0)
+                mPeriodicIO.inTurretFieldHeadingAngle, 3.5)
                 && Util.epsilonEquals(
                         coreShootingParameters.getShotAngle(),
-                        mPeriodicIO.inHoodAngle, 1.18)) {
+                        mPeriodicIO.inHoodAngle, 0.5)) {
             onTarget = true;
         } else {
             onTarget = false;
         }
 
-        if (mShooter.spunUp()) {
+        if (Util.epsilonEquals(
+                coreShootingParameters.getShootingVelocity(),
+                mPeriodicIO.inShooterRPM,
+                coreShootingTolerance)) {
             onSpeed = true;
         } else {
             onSpeed = false;
         }
 
-        if (getState() == STATE.SHOOTING && onTarget && onSpeed) {
-            mPeriodicIO.SHOOT = true;
+        if (getState() == STATE.SHOOTING) {
+            if (onTarget) {
+                if (onSpeed) {
+                    mPeriodicIO.SHOOT = true;
+                } else {
+                    // Ready then clear the ballpath, only stop when angle is not right
+                }
+            } else {
+                mPeriodicIO.SHOOT = false;
+            }
         } else {
             mPeriodicIO.SHOOT = false;
         }
@@ -816,7 +869,7 @@ public class Superstructure implements Updatable {
             }
         }
 
-        if (mPeriodicIO.PREP_EJECT && (onTarget || !mTurret.forwardSafe() || !mTurret.reverseSafe()) && onSpeed) {
+        if (mPeriodicIO.PREP_EJECT && onTarget && onSpeed) {
             mPeriodicIO.EJECT = true;
         } else {
             mPeriodicIO.EJECT = false;
@@ -843,10 +896,15 @@ public class Superstructure implements Updatable {
                 if (mPeriodicIO.PREP_EJECT || mPeriodicIO.EJECT) {
                     mPeriodicIO.outIndicatorState = Lights.BALLPATH_WRONG_BALL;
                 } else {
-                    if (mBallPath.isFull()) {
-                        mPeriodicIO.outIndicatorState = Lights.BALLPATH_FULL;
+                    if (coreAimTargetRelative.getNorm() < Constants.ShootingConstants.MIN_SHOOTING_DISTANCE
+                            || coreAimTargetRelative.getNorm() > Constants.ShootingConstants.MAX_SHOOTING_DISTANCE) {
+                        mPeriodicIO.outIndicatorState = Lights.OUT_OF_RANGE;
                     } else {
-                        mPeriodicIO.outIndicatorState = Lights.NORMAL;
+                        if (!mLimelight.hasTarget()) {
+                            mPeriodicIO.outIndicatorState = Lights.FINDING_TARGET;
+                        } else {
+                            mPeriodicIO.outIndicatorState = Lights.LOCK_ON;
+                        }
                     }
                 }
                 break;
@@ -854,10 +912,19 @@ public class Superstructure implements Updatable {
                 if (mPeriodicIO.PREP_EJECT || mPeriodicIO.EJECT) {
                     mPeriodicIO.outIndicatorState = Lights.BALLPATH_WRONG_BALL;
                 } else {
-                    if (onTarget && onSpeed) {
-                        mPeriodicIO.outIndicatorState = Lights.READY;
+                    if (coreAimTargetRelative.getNorm() < Constants.ShootingConstants.MIN_SHOOTING_DISTANCE
+                            || coreAimTargetRelative.getNorm() > Constants.ShootingConstants.MAX_SHOOTING_DISTANCE) {
+                        mPeriodicIO.outIndicatorState = Lights.OUT_OF_RANGE;
                     } else {
-                        mPeriodicIO.outIndicatorState = Lights.LOSS;
+                        if (!mLimelight.hasTarget()) {
+                            mPeriodicIO.outIndicatorState = Lights.FINDING_TARGET;
+                        } else {
+                            if(isReady()){
+                                mPeriodicIO.outIndicatorState = Lights.READY;
+                            } else {
+                                mPeriodicIO.outIndicatorState = Lights.LOCK_ON;
+                            }
+                        }
                     }
                 }
                 break;
@@ -888,12 +955,15 @@ public class Superstructure implements Updatable {
     public synchronized void read(double time, double dt) {
         mPeriodicIO.inSwerveFieldHeadingAngle = mSwerve.getYaw();
         mPeriodicIO.inSwerveRollAngle = mSwerve.getRoll();
+        mPeriodicIO.inSwerveAngularVelocity = mSwerve.getAngularVelocity();
 
         mPeriodicIO.inTurretAngle = mTurret.getTurretAngle();
         mPeriodicIO.inTurretFieldHeadingAngle = mPeriodicIO.inSwerveFieldHeadingAngle + mPeriodicIO.inTurretAngle;
         mPeriodicIO.inTurretReachesLimit = !mTurret.forwardSafe() || !mTurret.reverseSafe();
         mPeriodicIO.inTurretOnTarget = mTurret.isOnTarget();
         mPeriodicIO.inTurretCalibrated = mTurret.isCalibrated();
+
+        mPeriodicIO.inShooterRPM = mShooter.getShooterRPM();
 
         mPeriodicIO.inHoodAngle = mHood.getHoodAngle();
         mPeriodicIO.inHoodCalibrated = mHood.isCalibrated();
@@ -921,7 +991,8 @@ public class Superstructure implements Updatable {
             mSwerve.resetRoll(0.0);
 
             // Always let turret and hood be ready to reduce launch waiting time
-            mTurret.setTurretAngle(mPeriodicIO.outTurretLockTarget, mPeriodicIO.outTurretFeedforwardVelocity);
+            mTurret.setTurretAngle(mPeriodicIO.outTurretLockTarget - mPeriodicIO.outTurretFeedforwardVelocity * dt,
+                    mPeriodicIO.outTurretFeedforwardVelocity, mPeriodicIO.outTurretFeedforwardAcceleration);
             mHood.setHoodAngle(coreShootingParameters.getShotAngle());
 
             if (getState() == STATE.CHASING) {
@@ -1035,6 +1106,11 @@ public class Superstructure implements Updatable {
 
         SmartDashboard.putString("Core Shooting Parameters", coreShootingParameters.toString());
         SmartDashboard.putString("Core Aim Target Relative", coreAimTargetRelative.toString());
+        SmartDashboard.putNumber("Core Shooting Adjustment Angle", coreShootingAdjustmentAngle);
+        SmartDashboard.putNumber("Estimated Distance", coreAimTargetRelative.getNorm());
+
+        SmartDashboard.putNumber("Turret Field Heading", mPeriodicIO.inTurretFieldHeadingAngle);
+        SmartDashboard.putNumber("Target Angle", coreShootingParameters.getTargetAngle());
     }
 
     @Override

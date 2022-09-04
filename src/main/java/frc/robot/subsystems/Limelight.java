@@ -62,6 +62,9 @@ public class Limelight implements Updatable {
         if (mPeriodicIO.sees_target && targetInfo != null) {
             validTargetTimer.start();
             updateDistanceToTarget();
+            if (validTargetTimer.get() > 0.5) {
+                updateEstimatedVehicleToField(time - getLatency());
+            }
         } else {
             validTargetTimer.stop();
             validTargetTimer.reset();
@@ -204,8 +207,13 @@ public class Limelight implements Updatable {
         SmartDashboard.putBoolean(mConstants.kName + ": Has Target", mPeriodicIO.sees_target);
 
         if (mPeriodicIO.sees_target) {
-            // SmartDashboard.putString("Estimated Vehicle To Field",
-            // getEstimatedVehicleToField().get().translation.toString());
+            if (getEstimatedVehicleToField().isPresent()) {
+                SmartDashboard.putString("Estimated Vehicle To Field",
+                        getEstimatedVehicleToField().get().translation.toString());
+            }
+            if (getLimelightDistanceToTarget().isPresent()) {
+                SmartDashboard.putNumber("Estimated Distance", getLimelightDistanceToTarget().get());
+            }
             SmartDashboard.putNumber("Ty Adj", getOffsetAdjusted()[1]);
         }
     }
@@ -244,11 +252,16 @@ public class Limelight implements Updatable {
         double distance = Constants.VisionConstants.Turret.VISION_MAP
                 .getInterpolated(new InterpolatingDouble(offsets[1])).value;
 
-        mEstimatedVehicleToField = Optional.of(new TimeStampedTranslation2d(
-                new Translation2d(
-                        FieldConstants.hubCenter.getX() - distance * combinedAngle.getCos(),
-                        FieldConstants.hubCenter.getY() - distance * combinedAngle.getSin()),
-                time));
+        if (Math.abs(mPeriodicIO.xOffset) < 15.0) {
+            mEstimatedVehicleToField = Optional.of(new TimeStampedTranslation2d(
+                    new Translation2d(
+                            FieldConstants.hubCenter.getX() - distance * combinedAngle.getCos(),
+                            FieldConstants.hubCenter.getY() - distance * combinedAngle.getSin()),
+                    time));
+        } else {
+            mEstimatedVehicleToField = Optional.empty();
+        }
+
     }
 
     public synchronized void triggerOutputs() {
@@ -289,8 +302,8 @@ public class Limelight implements Updatable {
 
     public double[] getOffsetAdjusted() {
         double tx = mPeriodicIO.xOffset;
-        double tyadj = (mPeriodicIO.yOffset - 0.011496 * mPeriodicIO.xOffset * mPeriodicIO.xOffset)
-                / (0.000326 * mPeriodicIO.xOffset * mPeriodicIO.xOffset + 1);
+        double tyadj = (mPeriodicIO.yOffset - 0.008127 * mPeriodicIO.xOffset * mPeriodicIO.xOffset)
+                / (0.000304 * mPeriodicIO.xOffset * mPeriodicIO.xOffset + 1);
         return new double[] { tx, tyadj };
     }
 

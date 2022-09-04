@@ -8,6 +8,7 @@ import org.frcteam1678.lib.math.Conversions;
 import org.frcteam6941.looper.UpdateManager.Updatable;
 import org.frcteam6941.utils.LazyTalonFX;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
 public class Hood implements Updatable{
@@ -134,6 +135,8 @@ public class Hood implements Updatable{
     
     @Override
     public synchronized void telemetry(){
+        SmartDashboard.putNumber("Hood Demand", mPeriodicIO.hoodDemand);
+        SmartDashboard.putNumber("Hood Angle", getHoodAngle());
     }
     
     @Override

@@ -54,13 +54,12 @@ public class ControlBoard {
         return operator;
     }
     
-    public void setDriverRumble(boolean on) {
-        driver.setRumble(on);
+    public void setDriverRumble(double power, double interval) {
+        driver.setRumble(power, interval);
     }
-
     
-    public void setOperatorRumble(boolean on) {
-        operator.setRumble(on);
+    public void setOperatorRumble(double power, double interval) {
+        operator.setRumble(power, interval);
     }
 
     /* DRIVER METHODS */
@@ -112,14 +111,18 @@ public class ControlBoard {
             
     }
 
+    public boolean getSwitchEject() {
+        return driver.getController().getPOV() == kDpadDown;
+    } 
+
     // Locks wheels in X formation
     public boolean getSwerveBrake() {
         return driver.getButton(Button.R_JOYSTICK);
     }
 
     // Robot oriented switch
-    public boolean getRobotOrientedDrive() {
-        return driver.getButton(Button.L_JOYSTICK);
+    public boolean getSwitchRobotOrientedDrive() {
+        return driver.getController().getLeftStickButtonPressed();
     }
 
     // Start intake
@@ -132,7 +135,15 @@ public class ControlBoard {
     }
 
     public boolean getSpit() {
-        return operator.getButton(Button.X);
+        return driver.getController().getPOV() == kDpadDown;
+    }
+
+    public boolean getDecreaseShotAdjustment() {
+        return driver.getController().getPOV() == kDpadRight;
+    }
+
+    public boolean getIncreaseShotAdjutment() {
+        return driver.getController().getPOV() == kDpadLeft;
     }
 
     // Climber Controls
@@ -188,5 +199,4 @@ public class ControlBoard {
     public boolean getClimbAutoAbort(){
         return operator.getButton(Button.X);
     }
-
 }

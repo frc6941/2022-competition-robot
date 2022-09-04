@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -13,6 +14,7 @@ import org.frcteam6941.looper.UpdateManager.Updatable;
 import org.frcteam6941.utils.LazyTalonFX;
 
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
 public class BallPath implements Updatable {
@@ -51,6 +53,8 @@ public class BallPath implements Updatable {
     private boolean isLocking = false;
     private double lockingPositionRecorder = 0.0;
     private TimeDelayedBoolean slowProcessBoolean = new TimeDelayedBoolean();
+    private TimeDelayedBoolean launchReverseBoolean = new TimeDelayedBoolean();
+    private boolean hasReversed = false;
     private TimeDelayedBoolean ejectBoolean = new TimeDelayedBoolean();
     private STATE state = STATE.IDLE;
 
@@ -70,12 +74,17 @@ public class BallPath implements Updatable {
         triggerMotor.getPIDController().setI(Constants.TRIGGER_KI_V_SLOT_0, 0);
         triggerMotor.getPIDController().setD(Constants.TRIGGER_KD_V_SLOT_0, 0);
         triggerMotor.getPIDController().setFF(Constants.TRIGGER_KF_V_SLOT_0, 0);
+        triggerMotor.getPIDController().setIZone(Constants.TRIGGER_IZONE_SLOT_0, 0);
         triggerMotor.getPIDController().setP(Constants.TRIGGER_KP_V_SLOT_1, 1);
         triggerMotor.getPIDController().setI(Constants.TRIGGER_KI_V_SLOT_1, 1);
         triggerMotor.getPIDController().setD(Constants.TRIGGER_KD_V_SLOT_1, 1);
         triggerMotor.getPIDController().setFF(Constants.TRIGGER_KF_V_SLOT_1, 1);
 
+        feederMotor.setStatusFramePeriod(StatusFrame.Status_1_General, 100);
+        feederMotor.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 100);
+
         slowProcessBoolean.update(false, 0.0);
+        launchReverseBoolean.update(false, 0.0);
     }
 
     public static BallPath getInstance() {
@@ -149,16 +158,115 @@ public class BallPath implements Updatable {
         }
     }
 
+    public synchronized void clearReverse() {
+        hasReversed = false;
+        launchReverseBoolean.update(false, 0.0);
+    }
+
     @Override
     public synchronized void read(double time, double dt) {
         mPeriodicIO.breakPosition1 = ballPositionOneDetector.getVoltage() > 2.0;
         mPeriodicIO.breakPosition2 = ballPositionTwoDetector.getVoltage() > 2.0;
 
         mPeriodicIO.triggerPosition = triggerMotor.getEncoder().getPosition();
+        mPeriodicIO.triggerVelocity = triggerMotor.getEncoder().getVelocity();
     }
 
     @Override
     public synchronized void update(double time, double dt) {
+        // switch (state) {
+        //     case IDLE:
+        //         mPeriodicIO.feederDemand = 0.0;
+        //         mPeriodicIO.triggerDemand = 0.0;
+        //         mPeriodicIO.triggerLock = true;
+        //         slowProcessBoolean.update(false, 0.0);
+        //         break;
+        //     case PROCESSING:
+        //         if(isFull()){
+        //             if (slowProcessBoolean.update(true, Constants.BALLPATH_SLOW_PROCESS_TIME)) {
+        //                 setState(STATE.IDLE);
+        //                 slowProcessBoolean.update(false, 0.0);
+        //             } else {
+        //                 mPeriodicIO.feederDemand = 0.0;
+        //                 mPeriodicIO.triggerDemand = Constants.TRIGGER_REVERSING_VELOCITY;
+        //             }
+        //         } else {
+        //             if (continueProcess) {
+        //                 mPeriodicIO.feederDemand = Constants.FEEDER_FAST_PERCENTAGE;
+        //                 mPeriodicIO.triggerDemand = Constants.TRIGGER_REVERSING_VELOCITY;
+        //                 mPeriodicIO.triggerLock = false;
+        //                 slowProcessBoolean.update(false, 0.0);
+        //             } else {
+        //                 if (slowProcessBoolean.update(true, Constants.BALLPATH_SLOW_PROCESS_TIME)) {
+        //                     setState(STATE.IDLE);
+        //                     slowProcessBoolean.update(false, 0.0);
+        //                 } else {
+        //                     mPeriodicIO.feederDemand = 0.0;
+        //                     mPeriodicIO.triggerDemand = Constants.TRIGGER_REVERSING_VELOCITY;
+        //                 }
+        //             }
+        //         }
+        //         break;
+        //     case EJECTING:
+        //         if (rightBallAtPositionTwo()) { // If has a right Ball
+        //             ejectBoolean.update(false, 0.0); // reset eject controlling boolean
+        //             mPeriodicIO.feederDemand = 0.0;
+        //             if (slowProcessBoolean.update(true, Constants.BALLPATH_SLOW_PROCESS_TIME)) {
+        //                 setState(STATE.IDLE);
+        //                 slowProcessBoolean.update(false, 0.0);
+        //             }
+        //             mPeriodicIO.feederDemand = Constants.FEEDER_SLOW_PERCENTAGE;
+        //             mPeriodicIO.triggerDemand = Constants.TRIGGER_REVERSING_VELOCITY;
+        //             mPeriodicIO.triggerLock = false;
+        //             break;
+        //         } else if (wrongBallAtPositionTwo()) { // If has a wrong Ball
+        //             // Do nothing and continue ejecting as the wrong ball is not out yet
+        //             ejectBoolean.update(false, 0.0); // reset eject controlling boolean
+        //             mPeriodicIO.feederDemand = Constants.FEEDER_EJECT_PERCENTAGE;
+        //             mPeriodicIO.triggerDemand = Constants.TRIGGER_SLOW_EJECT_VELOCITY;
+        //             mPeriodicIO.triggerLock = false;
+        //             break;
+        //         } else { // No Ball
+        //             if (ejectBoolean.update(true, Constants.BALLPATH_EXPEL_TIME)) { // Start to count down
+        //                 // Enter PROCESSING after a certain period of time, as the ballpath is seen to
+        //                 // be cleared
+        //                 mPeriodicIO.feederDemand = 0.0;
+        //                 mPeriodicIO.triggerDemand = 0.0;
+        //                 mPeriodicIO.triggerLock = true;
+        //                 ejectBoolean.update(false, 0.0); // reset eject controlling boolean
+        //             } else {
+        //                 mPeriodicIO.feederDemand = Constants.FEEDER_EJECT_PERCENTAGE;
+        //                 mPeriodicIO.triggerDemand = Constants.TRIGGER_SLOW_EJECT_VELOCITY;
+        //                 mPeriodicIO.triggerLock = false;
+        //             }
+        //             break;
+        //         }
+        //     case FEEDING:
+        //         if (wrongBallAtPositionTwo()) { // If has a wrong Ball
+        //             // stop feeding
+        //             mPeriodicIO.feederDemand = -0.1;
+        //             mPeriodicIO.triggerDemand = 0.0;
+        //             mPeriodicIO.triggerLock = true;
+        //             slowProcessBoolean.update(false, 0.0);
+        //             break;
+        //         }
+        //         if (slowProcessBoolean.update(true, Constants.BALLPATH_SLOW_PROCESS_TIME)) {
+        //             mPeriodicIO.feederDemand = Constants.FEEDER_FEED_PERCENTAGE;
+        //             mPeriodicIO.triggerLock = false;
+        //             mPeriodicIO.triggerDemand = Constants.TRIGGER_FEEDING_VELOCITY.get();
+        //         } else {
+        //             mPeriodicIO.feederDemand = Constants.FEEDER_SLOW_PERCENTAGE;
+        //             mPeriodicIO.triggerDemand = Constants.TRIGGER_REVERSING_VELOCITY;
+        //             mPeriodicIO.triggerLock = false;
+        //         }
+        //         break;
+        //     case SPITTING:
+        //         mPeriodicIO.feederDemand = Constants.FEEDER_SPIT_PERCENTAGE;
+        //         mPeriodicIO.triggerLock = false;
+        //         mPeriodicIO.triggerDemand = Constants.TRIGGER_REVERSING_VELOCITY;
+        //         slowProcessBoolean.update(false, 0.0);
+        //         break;
+        // }
         switch (state) {
             case IDLE:
                 mPeriodicIO.feederDemand = 0.0;
@@ -173,6 +281,8 @@ public class BallPath implements Updatable {
                 } else {
                     if (continueProcess) {
                         mPeriodicIO.feederDemand = Constants.FEEDER_FAST_PERCENTAGE;
+                        mPeriodicIO.triggerDemand = 0.0;
+                        mPeriodicIO.triggerLock = true;
                         slowProcessBoolean.update(false, 0.0);
                     } else {
                         if (slowProcessBoolean.update(true, Constants.BALLPATH_SLOW_PROCESS_TIME)) {
@@ -180,10 +290,10 @@ public class BallPath implements Updatable {
                             slowProcessBoolean.update(false, 0.0);
                         }
                         mPeriodicIO.feederDemand = Constants.FEEDER_SLOW_PERCENTAGE;
+                        mPeriodicIO.triggerDemand = 0.0;
+                        mPeriodicIO.triggerLock = true;
                     }
                 }
-                mPeriodicIO.triggerDemand = 0.0;
-                mPeriodicIO.triggerLock = true;
                 break;
             case EJECTING:
                 if (rightBallAtPositionTwo()) { // If has a right Ball
@@ -215,16 +325,29 @@ public class BallPath implements Updatable {
                     break;
                 }
             case FEEDING:
-                if (wrongBallAtPositionTwo()) { // If has a wrong Ball
-                    // stop feeding
-                    mPeriodicIO.feederDemand = -0.1;
-                    mPeriodicIO.triggerDemand = 0.0;
-                    mPeriodicIO.triggerLock = true;
-                    break;
+                if(!hasReversed){
+                    if (launchReverseBoolean.update(true, Constants.BALLPATH_FEEDING_REVERSE_TIME)){
+                        hasReversed = true;
+                    } else {
+                        mPeriodicIO.feederDemand = Constants.FEEDER_FEED_REVERSE_PERCENTAGE;
+                        mPeriodicIO.triggerLock = false;
+                        mPeriodicIO.triggerDemand = Constants.TRIGGER_REVERSING_VELOCITY;
+                    }
+                } else {
+                    if (wrongBallAtPositionTwo()) { // If has a wrong Ball
+                        // stop feeding
+                        mPeriodicIO.feederDemand = 0.0;
+                        mPeriodicIO.triggerDemand = 0.0;
+                        mPeriodicIO.triggerLock = true;
+                        launchReverseBoolean.update(false, 0.0);
+                        break;
+                    } else {
+                        mPeriodicIO.feederDemand = Constants.FEEDER_FEED_PERCENTAGE;
+                        mPeriodicIO.triggerLock = false;
+                        mPeriodicIO.triggerDemand = Constants.TRIGGER_FEEDING_VELOCITY;
+                    }
                 }
-                mPeriodicIO.feederDemand = Constants.FEEDER_FEED_PERCENTAGE;
-                mPeriodicIO.triggerLock = false;
-                mPeriodicIO.triggerDemand = Constants.TRIGGER_FEEDING_VELOCITY;
+                
                 break;
             case SPITTING:
                 mPeriodicIO.feederDemand = Constants.FEEDER_SPIT_PERCENTAGE;
@@ -232,6 +355,7 @@ public class BallPath implements Updatable {
                 mPeriodicIO.triggerDemand = Constants.TRIGGER_REVERSING_VELOCITY;
                 break;
         }
+
     }
 
     @Override
@@ -240,7 +364,7 @@ public class BallPath implements Updatable {
         if (mPeriodicIO.triggerLock) {
             if (!isLocking) {
                 isLocking = true;
-                lockingPositionRecorder = triggerMotor.getEncoder().getPosition();
+                lockingPositionRecorder = triggerMotor.getEncoder().getPosition() - 2.0;
             }
             triggerMotor.getPIDController().setReference(lockingPositionRecorder, ControlType.kPosition, 1);
         } else {
@@ -252,6 +376,8 @@ public class BallPath implements Updatable {
 
     @Override
     public synchronized void telemetry() {
+        SmartDashboard.putNumber("Trigger Velocity", mPeriodicIO.triggerVelocity / Constants.TRIGGER_GEAR_RATIO);
+        SmartDashboard.putNumber("Trigger Demand", mPeriodicIO.triggerDemand);
     }
 
     @Override

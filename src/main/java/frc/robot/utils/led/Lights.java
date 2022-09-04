@@ -22,11 +22,17 @@ public class Lights {
     public static final BreathingLEDState BLUE_ALLIANCE = new BreathingLEDState(ALLIANCE_BLUE, 2.5);
     public static final BlinkingLEDState WARNING = new BlinkingLEDState(RED, OFF, 1.0);
     public static final BlinkingLEDState CONNECTING = new BlinkingLEDState(RED, ORANGE, 1.0);
-    public static final StaticLEDState NORMAL = new StaticLEDState(IP_BLUE);
-    public static final BlinkingLEDState BALLPATH_FULL = new BlinkingLEDState(IP_BLUE, OFF, 0.25);
-    public static final BlinkingLEDState BALLPATH_WRONG_BALL = new BlinkingLEDState(ORANGE, OFF, 0.25);
-    public static final BlinkingLEDState LOSS = new BlinkingLEDState(RED, OFF, 0.25);
+
+    public static final StaticLEDState BALLPATH_FULL = new StaticLEDState(IP_BLUE);
+    public static final StaticLEDState NORMAL = new StaticLEDState(ORANGE);
+    public static final StaticLEDState LOSS = new StaticLEDState(RED);
+
+    public static final BlinkingLEDState BALLPATH_WRONG_BALL = new BlinkingLEDState(RED, OFF, 0.1);
+    public static final BlinkingLEDState OUT_OF_RANGE = new BlinkingLEDState(RED, OFF, 0.2);
+    public static final BlinkingLEDState FINDING_TARGET = new BlinkingLEDState(ORANGE, OFF, 0.2);
+    public static final BlinkingLEDState LOCK_ON = new BlinkingLEDState(IP_BLUE, OFF, 0.2);
     public static final StaticLEDState READY = new StaticLEDState(GREEN);
+
     public static final RainbowLEDState CLIMBING_MANUAL = new RainbowLEDState(5.0);
     public static final BlinkingLEDState CLIMBING_HIGH = new BlinkingLEDState(WHITE, OFF, 0.5);
     public static final BlinkingLEDState CLIMBING_TRAVERSAL = new BlinkingLEDState(WHITE, OFF, 0.25);

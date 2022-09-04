@@ -13,11 +13,17 @@ public final class UpdateManager {
 
 	public interface Updatable {
 		void read(double time, double dt);
+
 		void update(double time, double dt);
+
 		void write(double time, double dt);
+
 		void telemetry();
+
 		void start();
+
 		void stop();
+
 		void disabled(double time, double dt);
 	}
 
@@ -25,8 +31,8 @@ public final class UpdateManager {
 
 	private Runnable enableRunnable = new Runnable() {
 		@Override
-        public void run() {
-            synchronized (taskRunningLock_) {
+		public void run() {
+			synchronized (taskRunningLock_) {
 				final double timestamp = Timer.getFPGATimestamp();
 				final double dt = timestamp - lastTimestamp;
 				lastTimestamp = timestamp;
@@ -36,14 +42,15 @@ public final class UpdateManager {
 					s.write(timestamp, dt);
 					s.telemetry();
 				});
-            }
-        }
+
+			}
+		}
 	};
 
 	private Runnable disableRunnable = new Runnable() {
 		@Override
-        public void run() {
-            synchronized (taskRunningLock_) {
+		public void run() {
+			synchronized (taskRunningLock_) {
 				final double timestamp = Timer.getFPGATimestamp();
 				final double dt = timestamp - lastTimestamp;
 				lastTimestamp = timestamp;
@@ -53,8 +60,9 @@ public final class UpdateManager {
 					s.update(timestamp, dt);
 					s.telemetry();
 				});
-            }
-        }
+
+			}
+		}
 	};
 
 	private final Notifier updaterEnableThread = new Notifier(enableRunnable);

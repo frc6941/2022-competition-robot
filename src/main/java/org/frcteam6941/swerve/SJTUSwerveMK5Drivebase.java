@@ -113,12 +113,13 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
         // Advanced kalman filter position estimator
         poseEstimator = new SwerveDrivePoseEstimator(Rotation2d.fromDegrees(getYaw()), new Pose2d(), swerveKinematics,
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.005, 0.005, 0.001), // State Error
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.001, 0.001, 0.001), // State Error
                 new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.001), // Encoder Error
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.1, 0.1, 0.001), // Visiond Error,
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.002, 0.002, 0.001), // Vision Error,
         kLooperDt);
         this.pose = poseEstimator.getEstimatedPosition();
         headingController.enableContinuousInput(0, 360.0); // Enable continous rotation
+        headingController.setTolerance(2.0);
     }
 
     /**
@@ -173,6 +174,10 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
      */
     public double getHeadingTarget() {
         return this.headingTarget;
+    }
+
+    public boolean isHeadingOnTarget() {
+        return this.headingController.atSetpoint();
     }
 
     /**

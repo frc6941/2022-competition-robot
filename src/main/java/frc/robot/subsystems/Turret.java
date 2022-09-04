@@ -5,6 +5,7 @@ import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
+import com.team254.lib.util.MovingAverage;
 import com.team254.lib.util.Util;
 
 import org.frcteam1678.lib.math.Conversions;
@@ -23,7 +24,7 @@ public class Turret implements Updatable {
 
         // OUTPUT
         public double turretDemand = 0.0;
-        public double turretFeedfoward = 0.0;
+        public double turretFeedforward = 0.0;
     }
 
     public PeriodicIO mPeriodicIO = new PeriodicIO();
@@ -31,6 +32,7 @@ public class Turret implements Updatable {
     private LazyTalonFX turretMotor = new LazyTalonFX(Constants.CANID.TURRET_MOTOR);
 
     private double zeroPosition = 0.0;
+    private MovingAverage feedforwardMovingAverage = new MovingAverage(10);
 
     private boolean isCalibrated = false;
 
@@ -78,16 +80,16 @@ public class Turret implements Updatable {
             setState(STATE.ANGLE);
         }
         mPeriodicIO.turretDemand = angle;
-        mPeriodicIO.turretFeedfoward = 0.0;
+        mPeriodicIO.turretFeedforward = 0.0;
     }
 
-    public void setTurretAngle(double angle, double feedforwardVelocity) {
+    public void setTurretAngle(double angle, double drivetrainAngularVelocity, double drivetrainAngularAcceleration) {
         if (getState() != STATE.ANGLE && getState() != STATE.HOMING) {
             setState(STATE.ANGLE);
         }
         mPeriodicIO.turretDemand = angle;
-        double ticksPer100ms = Conversions.degreesToFalcon(feedforwardVelocity, Constants.TURRET_GEAR_RATIO) / 10.0;
-        mPeriodicIO.turretFeedfoward = ticksPer100ms * (Constants.TURRET_KF + Constants.TURRET_KD / 100.0) / 1023.0;
+        feedforwardMovingAverage.addNumber(Constants.TURRET_FEEDFORWARD.calculate(drivetrainAngularVelocity, drivetrainAngularAcceleration) / 12.0);
+        mPeriodicIO.turretFeedforward = feedforwardMovingAverage.getAverage();
     }
 
     public synchronized boolean isOnTarget() {
@@ -172,12 +174,12 @@ public class Turret implements Updatable {
                 if (Math.abs(angle) < Constants.TURRET_MAX_ROTATION_DEGREE) {
                     turretMotor.set(ControlMode.MotionMagic,
                             Conversions.degreesToFalcon(angle, Constants.TURRET_GEAR_RATIO) + zeroPosition,
-                            DemandType.ArbitraryFeedForward, mPeriodicIO.turretFeedfoward);
+                            DemandType.ArbitraryFeedForward, mPeriodicIO.turretFeedforward);
                 } else {
                     turretMotor.set(ControlMode.MotionMagic,
                             Conversions.degreesToFalcon(Math.copySign(Constants.TURRET_MAX_ROTATION_DEGREE, angle),
                                     Constants.TURRET_GEAR_RATIO) + zeroPosition,
-                            DemandType.ArbitraryFeedForward, mPeriodicIO.turretFeedfoward);
+                            DemandType.ArbitraryFeedForward, mPeriodicIO.turretFeedforward);
                 }
                 break;
             case OFF:

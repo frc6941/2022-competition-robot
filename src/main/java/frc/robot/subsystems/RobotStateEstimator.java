@@ -66,7 +66,7 @@ public class RobotStateEstimator implements Updatable {
         if(DriverStation.isTeleop() && mTurret.isCalibrated() && mLimelight.getEstimatedVehicleToField().isPresent()){
             TimeStampedTranslation2d estimate = mLimelight.getEstimatedVehicleToField().get();
             if(RobotState.getInstance().getSmoothedMeasuredVelocity().getTranslation().norm() < 1.0){
-                // mSwerve.addVisionObservationTranslation(estimate.translation, estimate.timestamp);
+                mSwerve.addVisionObservationTranslation(estimate.translation, estimate.timestamp);
             }
         }
     }

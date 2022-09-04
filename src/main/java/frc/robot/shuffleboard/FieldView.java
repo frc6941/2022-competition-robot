@@ -9,7 +9,9 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.FieldConstants;
 import frc.robot.RobotState;
+import frc.robot.coordinators.Superstructure;
 import frc.robot.subsystems.Limelight;
+import frc.robot.utils.shoot.Targets;
 
 public class FieldView {
     private Field2d mField2d = new Field2d();
@@ -41,6 +43,7 @@ public class FieldView {
         mField2d.setRobotPose(mRobotPose);
         mField2d.getObject("Swerve Modules").setPoses(mModulePoses);
         mField2d.getObject("Target").setPose(new Pose2d(FieldConstants.hubCenter, new Rotation2d()));
+        mField2d.getObject("Raw Wrong Ball Target").setPose(new Pose2d(Targets.getRawWrongballTarget(mRobotPose, Superstructure.getInstance().getState() == Superstructure.STATE.SHOOTING), new Rotation2d()));
         mField2d.getObject("Predicted Robot Pose").setPose(mRobotState.getPredictedFieldToVehicle(0.2).getWpilibPose2d());
         if(Limelight.getInstance().getEstimatedVehicleToField().isPresent()){
             Translation2d estimatedVehicleToFieldTranslation = Limelight.getInstance().getEstimatedVehicleToField().get().translation;

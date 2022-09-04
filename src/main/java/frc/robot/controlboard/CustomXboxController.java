@@ -6,6 +6,9 @@ import edu.wpi.first.wpilibj.XboxController;
 public class CustomXboxController {
     private final XboxController mController;
 
+    private double rumblePower = 0.0;
+    private double rumbleInterval = 0.0;
+
     public enum Side {
         LEFT, RIGHT
     }
@@ -46,8 +49,17 @@ public class CustomXboxController {
         return mController.getRawButton(button.id);
     }
 
-    public void setRumble(boolean on) {
-        mController.setRumble(RumbleType.kRightRumble, on ? 1 : 0);
+    public void setRumble(double power, double interval){
+        rumblePower = power;
+        rumbleInterval = interval;
+    }
+
+    public void updateRumble(double time){
+        if(Math.floor(time / rumbleInterval) % 2 == 0) {
+            mController.setRumble(RumbleType.kRightRumble, rumblePower);
+        } else {
+            mController.setRumble(RumbleType.kRightRumble, 0.0);
+        }
     }
 
     public XboxController getController() {

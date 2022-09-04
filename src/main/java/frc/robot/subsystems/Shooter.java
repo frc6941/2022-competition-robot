@@ -18,11 +18,11 @@ public class Shooter implements Updatable {
     public static class PeriodicIO {
         // INPUTS
         public double leadVelocity = 0.0;
-        public double leadVoltage = 0.0;
         public double leadCurret = 0.0;
+        public double leadTemperature = 0.0;
         public double followerVelocity = 0.0;
-        public double followerVoltage = 0.0;
         public double followerCurret = 0.0;
+        public double followerTemperature = 0.0;
 
         // OUTPUTS
         public double shooterDemand = 0.0;
@@ -52,12 +52,16 @@ public class Shooter implements Updatable {
         shooterLeadMotor.setNeutralMode(NeutralMode.Coast);
         shooterLeadMotor.config_kF(0, Constants.SHOOTER_KF);
         shooterLeadMotor.config_kP(0, Constants.SHOOTER_KP);
+        shooterLeadMotor.config_kI(0, Constants.SHOOTER_KI);
         shooterLeadMotor.config_kD(0, Constants.SHOOTER_KD);
+        shooterLeadMotor.config_IntegralZone(0, Constants.SHOOTER_IZONE);
         shooterLeadMotor.configVelocityMeasurementWindow(2);
         shooterLeadMotor.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_1Ms);
         shooterLeadMotor.configClosedloopRamp(Constants.SHOOTER_RAMP);
 
         shooterFollowerMotor.configFactoryDefault();
+        shooterFollowerMotor.configVoltageCompSaturation(12.0);
+        shooterFollowerMotor.enableVoltageCompensation(true);
         shooterFollowerMotor.setInverted(InvertType.FollowMaster);
         shooterFollowerMotor.setNeutralMode(NeutralMode.Coast);
     }
@@ -99,9 +103,11 @@ public class Shooter implements Updatable {
     public synchronized void read(double time, double dt) {
         mPeriodicIO.leadCurret = shooterLeadMotor.getSupplyCurrent();
         mPeriodicIO.leadVelocity = shooterLeadMotor.getSelectedSensorVelocity();
+        mPeriodicIO.leadTemperature = shooterLeadMotor.getTemperature();
 
         mPeriodicIO.followerCurret = shooterFollowerMotor.getSupplyCurrent();
         mPeriodicIO.followerVelocity = shooterFollowerMotor.getSelectedSensorVelocity();
+        mPeriodicIO.followerTemperature = shooterFollowerMotor.getTemperature();
     }
 
     @Override
@@ -133,6 +139,8 @@ public class Shooter implements Updatable {
     public synchronized void telemetry() {
         SmartDashboard.putNumber("Shooter RPM Real", getShooterRPM());
         SmartDashboard.putNumber("Shooter Demand", mPeriodicIO.shooterDemand);
+        SmartDashboard.putNumber("Lead Temperature", mPeriodicIO.leadTemperature);
+        SmartDashboard.putNumber("Follow Temperature", mPeriodicIO.followerTemperature);
     }
 
     @Override
