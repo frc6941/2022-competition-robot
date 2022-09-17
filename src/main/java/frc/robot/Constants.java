@@ -181,12 +181,12 @@ public final class Constants {
     public static final double SHOOTER_MAX_FREE_SPEED_RPM = 6380.0;
 
     public static final double SHOOTER_KF = 1024.0 / Conversions.RPMToFalcon(SHOOTER_MAX_FREE_SPEED_RPM, 1.0);
-    public static final double SHOOTER_KP = 0.17;
-    public static final double SHOOTER_KI = 0.001;
-    public static final double SHOOTER_KD = 0.0;
+    public static final double SHOOTER_KP = 0.41;
+    public static final double SHOOTER_KI = 0.02;
+    public static final double SHOOTER_KD = 1.3;
     public static final double SHOOTER_IZONE = Conversions.RPMToFalcon(100, 1.0);
     public static final double SHOOTER_RAMP = 0.25;
-    public static final double SHOOTER_ERROR_TOLERANCE = 100.0;
+    public static final double SHOOTER_ERROR_TOLERANCE = 35.0;
 
     // Hood Constants
     public static final double HOOD_GEAR_RATIO = (50.0 / 8.0) * (284.0 / 11.0);
@@ -370,32 +370,32 @@ public final class Constants {
                 /* TEMPLATE REGRESSION */
                 // @x --> distance from target (in meters)
                 // @y --> shooter velocity (in rpm)
-                { 2.511, 2200 },
-                { 3.107, 2400 },
-                { 3.622, 2550 },
-                { 4.028, 2660 },
-                { 4.500, 2890 },
-                { 5.083, 3100 },
-                { 5.554, 3270 },
-                { 6.047, 3350 },
-                { 6.584, 3520 },
-                { 7.067, 3690 }
+                { 2.100, 2060 },
+                { 2.300, 2130 },
+                { 2.800, 2180 },
+                { 3.300, 2275 },
+                { 3.800, 2450 },
+                { 4.300, 2640 },
+                { 4.800, 2710 },
+                { 5.300, 2810 },
+                { 5.800, 2950 },
+                { 6.300, 3200 }
         };
 
         public static double[][] HOOD_REGRESSION = {
                 /* TEMPLATE REGRESSION */
                 // @x --> distance from target (in meters)
                 // @y --> hood angle (in degree)
-                { 2.511, 25.5 },
-                { 3.107, 25.5 },
-                { 3.622, 25.5 },
-                { 4.028, 27 },
-                { 4.500, 30 },
-                { 5.083, 30.5 },
-                { 5.554, 30.5 },
-                { 6.047, 30.5 },
-                { 6.584, 32.5 },
-                { 7.067, 33 }
+                { 2.100, 25.5 },
+                { 2.300, 26.0 },
+                { 2.800, 27.5 },
+                { 3.300, 28.0 },
+                { 3.800, 29.0 },
+                { 4.300, 30.0 },
+                { 4.800, 32.0 },
+                { 5.300, 34.0 },
+                { 5.800, 36.0 },
+                { 6.300, 38.0 }
         };
 
         public static double[][] TOLERANCE_REGRESSION = {

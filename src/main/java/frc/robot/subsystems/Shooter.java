@@ -80,7 +80,7 @@ public class Shooter implements Updatable {
         mPeriodicIO.shooterDemand = rpm;
     }
 
-    public void turnOff(){
+    public void turnOff() {
         setState(STATE.OFF);
     }
 
@@ -141,11 +141,13 @@ public class Shooter implements Updatable {
         SmartDashboard.putNumber("Shooter Demand", mPeriodicIO.shooterDemand);
         SmartDashboard.putNumber("Lead Temperature", mPeriodicIO.leadTemperature);
         SmartDashboard.putNumber("Follow Temperature", mPeriodicIO.followerTemperature);
+        SmartDashboard.putNumber("Shooter Lead Voltage", shooterLeadMotor.getMotorOutputVoltage());
+        SmartDashboard.putNumber("Shooter Follower Voltage", shooterFollowerMotor.getMotorOutputVoltage());
     }
 
     @Override
-    public synchronized void start(){
-        
+    public synchronized void start() {
+
     }
 
     @Override

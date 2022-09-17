@@ -62,7 +62,7 @@ public class Robot extends TimedRobot {
                 Turret.getInstance(),
                 Hood.getInstance(),
                 Shooter.getInstance(),
-                // Climber.getInstance(),
+                Climber.getInstance(),
                 Indicator.getInstance(),
                 Limelight.getInstance(),
                 RobotStateEstimator.getInstance(),
