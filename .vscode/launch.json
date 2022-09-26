@@ -6,6 +6,69 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Launch Test",
+      "request": "launch",
+      "mainClass": "frc.robot.Test",
+      "projectName": "2022competitionrobot"
+    },
+    {
+      "type": "java",
+      "name": "Launch Test",
+      "request": "launch",
+      "mainClass": "frc.robot.coordinators.Test",
+      "projectName": "2022CompetitionRobot"
+    },
+    {
+      "type": "java",
+      "name": "Launch TestKinematics",
+      "request": "launch",
+      "mainClass": "org.frcteam6941.utils.TestKinematics",
+      "projectName": "2022CompetitionRobot"
+    },
+    {
+      "type": "java",
+      "name": "Launch Constants$VisionConstants",
+      "request": "launch",
+      "mainClass": "frc.robot.Constants$VisionConstants",
+      "projectName": "2022competitionrobot"
+    },
+    {
+      "type": "java",
+      "name": "Launch VisionTest",
+      "request": "launch",
+      "mainClass": "VisionTest",
+      "projectName": "2022competitionrobot"
+    },
+    {
+      "type": "java",
+      "name": "Launch RobotStateEstimator",
+      "request": "launch",
+      "mainClass": "frc.robot.coordinators.RobotStateEstimator",
+      "projectName": "2022CompetitionRobot"
+    },
+    {
+      "type": "java",
+      "name": "Launch Test",
+      "request": "launch",
+      "mainClass": "frc.robot.Test",
+      "projectName": "2022CompetitionRobot"
+    },
+    {
+      "type": "java",
+      "name": "Launch VisionTargetCalculations",
+      "request": "launch",
+      "mainClass": "org.frcteam6941.utils.VisionTargetCalculations",
+      "projectName": "2022CompetitionRobot"
+    },
+    {
+      "type": "java",
+      "name": "Launch Test",
+      "request": "launch",
+      "mainClass": "frc.robot.commands.auto.Test",
+      "projectName": "2022CompetitionRobot"
+    },
+    {
+      "type": "java",
       "name": "Launch Constants",
       "request": "launch",
       "mainClass": "frc.robot.Constants",

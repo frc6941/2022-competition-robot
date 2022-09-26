@@ -2,6 +2,7 @@ package com.team254.lib.geometry;
 
 import com.team254.lib.util.Util;
 
+
 /**
  * Represents a 2d pose (rigid transform) containing translational and rotational elements.
  * <p>
@@ -10,7 +11,7 @@ import com.team254.lib.util.Util;
 public class Pose2d implements IPose2d<Pose2d> {
     protected static final Pose2d kIdentity = new Pose2d();
 
-    public static Pose2d identity() {
+    public static final Pose2d identity() {
         return kIdentity;
     }
 
@@ -23,6 +24,12 @@ public class Pose2d implements IPose2d<Pose2d> {
         translation_ = new Translation2d();
         rotation_ = new Rotation2d();
     }
+
+    public Pose2d(edu.wpi.first.math.geometry.Pose2d pose2d) {
+        translation_ = new Translation2d(pose2d.getTranslation());
+        rotation_ = new Rotation2d(pose2d.getRotation());
+    }
+
 
     public Pose2d(double x, double y, final Rotation2d rotation) {
         translation_ = new Translation2d(x, y);
@@ -37,6 +44,10 @@ public class Pose2d implements IPose2d<Pose2d> {
     public Pose2d(final Pose2d other) {
         translation_ = new Translation2d(other.translation_);
         rotation_ = new Rotation2d(other.rotation_);
+    }
+
+    public edu.wpi.first.math.geometry.Pose2d getWpilibPose2d() {
+        return new edu.wpi.first.math.geometry.Pose2d(new edu.wpi.first.math.geometry.Translation2d(translation_.x(), translation_.y()), edu.wpi.first.math.geometry.Rotation2d.fromDegrees(rotation_.getDegrees()));
     }
 
     public static Pose2d fromTranslation(final Translation2d translation) {
@@ -199,11 +210,8 @@ public class Pose2d implements IPose2d<Pose2d> {
 
     @Override
     public boolean equals(final Object other) {
-        if (!(other instanceof Pose2d)) {
-            return false;
-        }
-
-        return epsilonEquals((Pose2d) other, Util.kEpsilon);
+        if (other == null || !(other instanceof Pose2d)) return false;
+        return epsilonEquals((Pose2d)other, Util.kEpsilon);
     }
 
     @Override
@@ -214,5 +222,9 @@ public class Pose2d implements IPose2d<Pose2d> {
     @Override
     public Pose2d mirror() {
         return new Pose2d(new Translation2d(getTranslation().x(), -getTranslation().y()), getRotation().inverse());
+    }
+
+    public Pose2d scaled(double scale) {
+        return new Pose2d(translation_.x() * scale, translation_.y() * scale, new Rotation2d(rotation_.getDegrees() * scale));
     }
 }
