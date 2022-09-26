@@ -48,11 +48,13 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
     /**
      * Constructor function for the module.
      * 
-     * @param moduleNumber The number of the module. This will be correspondent to the position of its {@link Translation2d}
-     * in {@link SwerveDriveKinematics}.
+     * @param moduleNumber The number of the module. This will be correspondent to
+     *                     the position of its {@link Translation2d}
+     *                     in {@link SwerveDriveKinematics}.
      * @param driveMotorID CAN ID of the falcon drive motor.
-     * @param angleMotorID CAN ID of the 775pro turning motor along with the TalonSRX motor controller.
-     * @param angleOffset Angle offset for the encoder in degrees.
+     * @param angleMotorID CAN ID of the 775pro turning motor along with the
+     *                     TalonSRX motor controller.
+     * @param angleOffset  Angle offset for the encoder in degrees.
      */
     public SJTUSwerveModuleMK5(int moduleNumber, int driveMotorID, int angleMotorID, double angleOffset) {
         this.moduleNumber = moduleNumber;
@@ -69,41 +71,51 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
     /**
      * Core function to set the state of the swerve module.
      * 
-     * @param d The desired state of the module.
-     * @param isOpenLoop Whether the speed controll will be open loop (voltage control), or close loop (using on-board PIDF control to reach the velocity set point).
+     * @param desiredState   The desired state of the module.
+     * @param isOpenLoop     Whether the speed controll will be open loop (voltage
+     *                       control), or close loop (using on-board PIDF control to
+     *                       reach the velocity set point).
+     * @param overrideMotion Enable angle control even if the speed is lower than
+     *                       the limit. Usually used for BRAKE mode settings.
      */
     @Override
-    public void setDesiredState(SwerveModuleState d, boolean isOpenLoop, boolean overrideMotion) {
-        SwerveModuleState ds = CTREModuleState.optimize(
-            d,
-            Rotation2d.fromDegrees(
-                this.getEncoderUnbound().getDegrees()
-            )
-        );
+    public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop, boolean overrideMotion) {
+        SwerveModuleState optimizedState = CTREModuleState.optimize(
+                desiredState,
+                Rotation2d.fromDegrees(
+                        this.getEncoderUnbound().getDegrees()));
         if (isOpenLoop) {
-            mDriveMotor.set(ControlMode.PercentOutput, ds.speedMetersPerSecond);
+            mDriveMotor.set(ControlMode.PercentOutput, optimizedState.speedMetersPerSecond);
         } else {
-            double velocity = Conversions.MPSToFalcon(ds.speedMetersPerSecond, WHEEL_CIRCUMFERENCE, DRIVE_GEAR_RATIO);
+            double velocity = Conversions.MPSToFalcon(optimizedState.speedMetersPerSecond, WHEEL_CIRCUMFERENCE,
+                    DRIVE_GEAR_RATIO);
             mDriveMotor.set(ControlMode.Velocity, velocity);
         }
-        
-        boolean inMotion;
-        inMotion = Math.abs(ds.speedMetersPerSecond) >= (MAX_SPEED * 0.005); // Preventing jittering and useless resetting.
-        if(inMotion || overrideMotion){
-            double target = ds.angle.getDegrees();
-            mAngleMotor.set(ControlMode.MotionMagic, (target + angleOffset) / 360.0 * 4096.0);
-        } else{
-            mAngleMotor.set(ControlMode.MotionMagic, (this.getEncoderUnbound().getDegrees() + angleOffset) / 360.0 * 4096.0);
+
+        boolean inMotion; // Preventing jittering and useless resetting.
+        if (isOpenLoop) {
+            inMotion = Math.abs(optimizedState.speedMetersPerSecond) >= 0.01;
+        } else {
+            inMotion = Math.abs(optimizedState.speedMetersPerSecond) >= (MAX_SPEED * 0.005);
         }
+
+        if (inMotion || overrideMotion) {
+            double target = optimizedState.angle.getDegrees();
+            mAngleMotor.set(ControlMode.MotionMagic, (target + angleOffset) / 360.0 * 4096.0);
+        } else {
+            mAngleMotor.set(ControlMode.MotionMagic,
+                    (this.getEncoderUnbound().getDegrees() + angleOffset) / 360.0 * 4096.0);
+        }
+
     }
 
     /** Configurations for the angle motor. */
     private void configAngleMotor() {
         mAngleMotor.configFactoryDefault();
         mAngleMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
-        mAngleMotor.setInverted(true);
-        mAngleMotor.setSensorPhase(false);
-        mAngleMotor.setNeutralMode(NeutralMode.Brake);
+        mAngleMotor.setInverted(false);
+        mAngleMotor.setSensorPhase(true);
+        mAngleMotor.setNeutralMode(NeutralMode.Coast);
 
         SupplyCurrentLimitConfiguration curr_lim = new SupplyCurrentLimitConfiguration(true, 15, 40, 0.02);
         mAngleMotor.configSupplyCurrentLimit(curr_lim);
@@ -119,13 +131,11 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
         mAngleMotor.enableVoltageCompensation(true);
     }
 
-
     /** Configurations for the drive motor. */
     private void configDriveMotor() {
         mDriveMotor.configFactoryDefault();
         mDriveMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, 0, 10);
         mDriveMotor.setInverted(true);
-        mAngleMotor.setSensorPhase(true);
         mDriveMotor.setNeutralMode(NeutralMode.Brake);
         mDriveMotor.setSelectedSensorPosition(0);
 
@@ -152,13 +162,15 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
     }
 
     /**
-     * Get the Encoder angle unbound (may be greater than 360 or lower than 0) with angle offset calculated.
+     * Get the Encoder angle unbound (may be greater than 360 or lower than 0) with
+     * angle offset calculated.
      * 
      * @return The raw angle of the encoder in degrees.
      */
     @Override
     public Rotation2d getEncoderUnbound() {
-        return Rotation2d.fromDegrees(Conversions4096.falconToDegrees(mAngleMotor.getSelectedSensorPosition(), 1.0) - angleOffset);
+        return Rotation2d.fromDegrees(
+                Conversions4096.falconToDegrees(mAngleMotor.getSelectedSensorPosition(), 1.0) - angleOffset);
     }
 
     /**
@@ -173,4 +185,5 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
         Rotation2d angle = getEncoder();
         return new SwerveModuleState(velocity, angle);
     }
+
 }
