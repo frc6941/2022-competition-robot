@@ -17,10 +17,10 @@ import frc.robot.coordinators.Superstructure.STATE;
 
 public class DFiveAuto extends AutoModeBase{
     protected String autoName = "D - Five Auto";
-    private PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("D 5 Ball Auto - Part 1", 3.5, 3.0);
-    private PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("D 5 Ball Auto - Part 2", 3.5, 3.2);
-    private PathPlannerTrajectory trajectoryPart3 = PathPlanner.loadPath("D 5 Ball Auto - Part 3", 3.5, 3.2);
-    private PathPlannerTrajectory trajectoryPart4 = PathPlanner.loadPath("D 5 Ball Auto - Part 4", 3.5, 3.0);
+    private PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("D 5 Ball Auto - Part 1", 3.2, 3.0);
+    private PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("D 5 Ball Auto - Part 2", 3.2, 3.2);
+    private PathPlannerTrajectory trajectoryPart3 = PathPlanner.loadPath("D 5 Ball Auto - Part 3", 3.2, 3.2);
+    private PathPlannerTrajectory trajectoryPart4 = PathPlanner.loadPath("D 5 Ball Auto - Part 4", 3.2, 3.0);
     private Superstructure mSuperstructure = Superstructure.getInstance();
     private SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
 
@@ -42,12 +42,12 @@ public class DFiveAuto extends AutoModeBase{
             new FollowTrajectory(mSwerve, trajectoryPart1, true, true, true),
             new WaitUntilCommand(() -> mSuperstructure.isReady()).withTimeout(0.5),
             new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
-            new WaitCommand(1.0),
+            new WaitCommand(1.2),
             new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING)),
             new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
             // Part 2: go to terminal and wait for ball feed
             new FollowTrajectory(mSwerve, trajectoryPart2, true, false, true),
-            new WaitCommand(2.0),
+            new WaitCommand(1.0),
             // Part 3: come back and shoot
             new FollowTrajectory(mSwerve, trajectoryPart3, true, false, true),
             new InstantCommand(() -> mSuperstructure.setWantIntake(false)),

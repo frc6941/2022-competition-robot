@@ -12,6 +12,7 @@ public class Pigeon {
     private boolean inverted = false;
     private Rotation2d yawAdjustmentAngle = new Rotation2d();
     private Rotation2d rollAdjustmentAngle = new Rotation2d();
+    private Rotation2d pitchAdjustmentAngle = new Rotation2d();
 
     public Pigeon(int port) {        
         mGyro = new PigeonIMU(port);
@@ -30,6 +31,10 @@ public class Pigeon {
         return getUnadjustedRoll().minus(rollAdjustmentAngle);
     }
 
+    public Rotation2d getPitch() {
+        return getUnadjustedPitch().minus(pitchAdjustmentAngle);
+    }
+
     /**
      * Sets the yaw register to read the specified value.
      *
@@ -46,6 +51,15 @@ public class Pigeon {
      */
     public void setRoll(double angleDeg) {
         rollAdjustmentAngle = getUnadjustedRoll().rotateBy(Rotation2d.fromDegrees(angleDeg).unaryMinus());
+    }
+
+    /**
+     * Sets the pitch register to read the specified value.
+     *
+     * @param angleDeg New yaw in degrees
+     */
+    public void setPitch(double angleDeg) {
+        pitchAdjustmentAngle = getUnadjustedRoll().rotateBy(Rotation2d.fromDegrees(angleDeg).unaryMinus());
     }
 
     public void setInverted(boolean inv){

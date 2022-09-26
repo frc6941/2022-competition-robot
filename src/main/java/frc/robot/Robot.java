@@ -6,15 +6,11 @@ package frc.robot;
 
 import java.util.Optional;
 
-import com.team254.lib.util.InterpolatingDouble;
-
 import org.frcteam6941.looper.UpdateManager;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.BallPath;
 import frc.robot.subsystems.Climber;
@@ -147,15 +143,6 @@ public class Robot extends TimedRobot {
         CommandScheduler.getInstance().run();
         Superstructure.getInstance().updateDriverAndOperatorCommand();
         Superstructure.getInstance().updateRumble();
-        SmartDashboard.putNumberArray("Test Map", new double[] {
-                Constants.ShootingConstants.FLYWHEEL_MAP
-                        .getInterpolated(new InterpolatingDouble(Timer.getFPGATimestamp() % 8.0)).value,
-                Constants.ShootingConstants.HOOD_MAP
-                        .getInterpolated(new InterpolatingDouble(Timer.getFPGATimestamp() % 8.0)).value,
-                Constants.ShootingConstants.SHOT_TIME_MAP
-                        .getInterpolated(new InterpolatingDouble(Timer.getFPGATimestamp() % 8.0)).value,
-        });
-
     }
 
     @Override

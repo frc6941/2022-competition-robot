@@ -12,6 +12,7 @@ import org.frcteam6941.utils.LazyTalonFX;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
 public class Climber implements Updatable {
@@ -148,7 +149,7 @@ public class Climber implements Updatable {
         if (getState() != STATE.HEIGHT) {
             setState(STATE.HEIGHT);
         }
-        setClimberHeight(0.02);
+        setClimberHeight(0.00);
     }
 
     public synchronized void setStagingHeight() {
@@ -156,6 +157,13 @@ public class Climber implements Updatable {
             setState(STATE.HEIGHT);
         }
         setClimberHeight(Constants.CLIMBER_STAGING_HEIGHT);
+    }
+
+    public synchronized void setDetatchingHeight() {
+        if (getState() != STATE.HEIGHT) {
+            setState(STATE.HEIGHT);
+        }
+        setClimberHeight(Constants.CLIMBER_DETATCHING_HEIGHT);
     }
 
     @Override
@@ -168,8 +176,6 @@ public class Climber implements Updatable {
 
     @Override
     public synchronized void update(double time, double dt) {
-        // Calibration if the switch is closed.
-
         if (!isClimberCalibrated) {
             setState(STATE.HOMING);
         }
@@ -181,7 +187,6 @@ public class Climber implements Updatable {
 
         switch(state){
             case HOMING:
-                mPeriodicIO.climberDemand = -0.2;
                 if (mPeriodicIO.climberCurret > 60.0) {
                     resetClimberPosition();
                     isClimberCalibrated = true;
@@ -203,15 +208,10 @@ public class Climber implements Updatable {
                 }
                 break;
         }
-    }
 
-    
-
-    @Override
-    public synchronized void write(double time, double dt) {
         switch (state) {
             case HOMING:
-                climberMotor.set(ControlMode.PercentOutput, -0.2);
+                climberMotor.set(ControlMode.PercentOutput, -0.3);
                 climberExtender.set(Value.kReverse);
                 break;
             case PERCENTAGE:
@@ -228,17 +228,24 @@ public class Climber implements Updatable {
         }
     }
 
+    
+
     @Override
-    public synchronized void telemetry() {
+    public synchronized void write(double time, double dt) {
+        
     }
 
     @Override
-    public void start() {
+    public synchronized void telemetry() {
+        SmartDashboard.putNumber("Climber Raw Velocity", mPeriodicIO.climberVelocity);
+    }
+
+    @Override
+    public synchronized void start() {
     }
 
     @Override
     public synchronized void stop() {
-        isClimberCalibrated = false;
     }
 
     @Override

@@ -378,6 +378,7 @@ public class BallPath implements Updatable {
     public synchronized void telemetry() {
         SmartDashboard.putNumber("Trigger Velocity", mPeriodicIO.triggerVelocity / Constants.TRIGGER_GEAR_RATIO);
         SmartDashboard.putNumber("Trigger Demand", mPeriodicIO.triggerDemand);
+        SmartDashboard.putBoolean("Wrong Ball At Position 2", wrongBallAtPositionTwo());
     }
 
     @Override

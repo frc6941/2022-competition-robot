@@ -55,7 +55,9 @@ public class CustomXboxController {
     }
 
     public void updateRumble(double time){
-        if(Math.floor(time / rumbleInterval) % 2 == 0) {
+        if(rumbleInterval == 0){
+            mController.setRumble(RumbleType.kRightRumble, rumblePower);
+        } else if(Math.floor(time / rumbleInterval) % 2 == 0) {
             mController.setRumble(RumbleType.kRightRumble, rumblePower);
         } else {
             mController.setRumble(RumbleType.kRightRumble, 0.0);

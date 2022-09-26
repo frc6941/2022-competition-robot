@@ -12,6 +12,7 @@ import org.frcteam1678.lib.math.Conversions;
 import org.frcteam6941.looper.UpdateManager.Updatable;
 import org.frcteam6941.utils.LazyTalonFX;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
 public class Turret implements Updatable {
@@ -19,6 +20,7 @@ public class Turret implements Updatable {
         // INPUT
         public double turretCurrent = 0.0;
         public double turretPosition = 0.0;
+        public double turretVelocity = 0.0;
         public boolean turretForwardLimitSwitch = false;
         public boolean turretReverseLimitSwitch = false;
 
@@ -32,7 +34,7 @@ public class Turret implements Updatable {
     private LazyTalonFX turretMotor = new LazyTalonFX(Constants.CANID.TURRET_MOTOR);
 
     private double zeroPosition = 0.0;
-    private MovingAverage feedforwardMovingAverage = new MovingAverage(10);
+    private MovingAverage feedforwardMovingAverage = new MovingAverage(5);
 
     private boolean isCalibrated = false;
 
@@ -127,6 +129,7 @@ public class Turret implements Updatable {
     public synchronized void read(double time, double dt) {
         mPeriodicIO.turretCurrent = turretMotor.getStatorCurrent();
         mPeriodicIO.turretPosition = turretMotor.getSelectedSensorPosition();
+        mPeriodicIO.turretVelocity = turretMotor.getSelectedSensorVelocity();
         mPeriodicIO.turretForwardLimitSwitch = turretMotor.isFwdLimitSwitchClosed() == 1;
         mPeriodicIO.turretReverseLimitSwitch = turretMotor.isRevLimitSwitchClosed() == 1;
     }
@@ -193,6 +196,7 @@ public class Turret implements Updatable {
 
     @Override
     public synchronized void telemetry() {
+        SmartDashboard.putNumber("Turret Raw Velocity", mPeriodicIO.turretVelocity);
     }
 
     @Override

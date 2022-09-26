@@ -59,9 +59,7 @@ public class Shooter implements Updatable {
         shooterLeadMotor.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_1Ms);
         shooterLeadMotor.configClosedloopRamp(Constants.SHOOTER_RAMP);
 
-        shooterFollowerMotor.configFactoryDefault();
-        shooterFollowerMotor.configVoltageCompSaturation(12.0);
-        shooterFollowerMotor.enableVoltageCompensation(true);
+        shooterFollowerMotor.set(ControlMode.Follower, Constants.CANID.SHOOTER_LEAD_MOTOR);
         shooterFollowerMotor.setInverted(InvertType.FollowMaster);
         shooterFollowerMotor.setNeutralMode(NeutralMode.Coast);
     }
@@ -132,7 +130,6 @@ public class Shooter implements Updatable {
         } else {
             shooterLeadMotor.set(ControlMode.PercentOutput, mPeriodicIO.shooterDemand);
         }
-        shooterFollowerMotor.set(ControlMode.Follower, Constants.CANID.SHOOTER_LEAD_MOTOR);
     }
 
     @Override

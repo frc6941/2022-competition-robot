@@ -115,7 +115,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         poseEstimator = new SwerveDrivePoseEstimator(Rotation2d.fromDegrees(getYaw()), new Pose2d(), swerveKinematics,
                 new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.001, 0.001, 0.001), // State Error
                 new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.001), // Encoder Error
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.002, 0.002, 0.001), // Vision Error,
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.005, 0.005, 0.001), // Vision Error,
         kLooperDt);
         this.pose = poseEstimator.getEstimatedPosition();
         headingController.enableContinuousInput(0, 360.0); // Enable continous rotation
@@ -327,8 +327,16 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         return this.gyro.getRoll().getDegrees();
     }
 
+    public double getPitch() {
+        return this.gyro.getPitch().getDegrees();
+    }
+
     public void resetRoll(double degree) {
         this.gyro.setRoll(degree);
+    }
+
+    public void resetPitch(double degree) {
+        this.gyro.setPitch(degree);
     }
 
     @Override
@@ -441,7 +449,8 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         for (SJTUSwerveModuleMK5 mod : this.mSwerveMods) {
             SmartDashboard.putNumber("Mod " + mod.moduleNumber, mod.getEncoderUnbound().getDegrees());
         }
-        SmartDashboard.putNumber("Yaw Angular", getAngularVelocity());
+        SmartDashboard.putNumber("Picth", getPitch());
+        SmartDashboard.putNumber("Roll", getRoll());
     }
 
     @Override

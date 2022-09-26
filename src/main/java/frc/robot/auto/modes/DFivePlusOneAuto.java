@@ -17,10 +17,10 @@ import frc.robot.coordinators.Superstructure.STATE;
 
 public class DFivePlusOneAuto extends AutoModeBase{
     protected String autoName = "D - Five Plus One Auto";
-    private PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 1", 3.5, 3.0);
-    private PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 2", 3.5, 3.2);
-    private PathPlannerTrajectory trajectoryPart3 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 3", 3.5, 3.2);
-    private PathPlannerTrajectory trajectoryPart4 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 4", 3.5, 3.0);
+    private PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 1", 3.2, 3.0);
+    private PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 2", 3.2, 3.2);
+    private PathPlannerTrajectory trajectoryPart3 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 3", 3.2, 3.2);
+    private PathPlannerTrajectory trajectoryPart4 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 4", 3.2, 3.0);
     private Superstructure mSuperstructure = Superstructure.getInstance();
     private SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
 
@@ -42,14 +42,14 @@ public class DFivePlusOneAuto extends AutoModeBase{
             new FollowTrajectory(mSwerve, trajectoryPart1, true, true, true),
             new WaitUntilCommand(() -> mSuperstructure.isReady()).withTimeout(0.5),
             new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
-            new WaitCommand(1.0),
+            new WaitCommand(1.2),
             // Part 2: collect 1 wrong cargo and spit into the hangar
             new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING)),
             new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
             new FollowTrajectory(mSwerve, trajectoryPart2, true, false, true),
             new InstantCommand(() -> mSuperstructure.setWantSpit(true)),
             new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
-            new WaitCommand(0.5),
+            new WaitCommand(0.8),
             new InstantCommand(() -> mSuperstructure.setWantSpit(false)),
             new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
             // Part 3: go to terminal and wait for ball feed
@@ -59,7 +59,7 @@ public class DFivePlusOneAuto extends AutoModeBase{
             new FollowTrajectory(mSwerve, trajectoryPart4, true, false, true),
             new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
             new InstantCommand(() -> mSuperstructure.setWantMaintain(true)),
-            new WaitUntilCommand(() -> mSuperstructure.isReady()).withTimeout(0.5),
+            new WaitUntilCommand(() -> mSuperstructure.isReady()).withTimeout(2.0),
             new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
             new WaitCommand(0.8),
             new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING)),
