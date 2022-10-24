@@ -134,9 +134,9 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
                 null);
         builder.addDoubleArrayProperty("Starting Position",
                 () -> getCurrentTrajectory()
-                        .map(x -> new double[] { getCurrentTrajectory().get().getInitialPose().getX(),
-                                getCurrentTrajectory().get().getInitialPose().getY(),
-                                getCurrentTrajectory().get().getInitialPose().getRotation().getDegrees() })
+                        .map(plannerTrajectory -> new double[] { plannerTrajectory.getInitialPose().getX(),
+                                plannerTrajectory.getInitialPose().getY(),
+                                plannerTrajectory.getInitialPose().getRotation().getDegrees() })
                         .orElse(new double[] { -6941.0, -6941.0, -6941.0 }),
                 null);
         builder.addDoubleArrayProperty("Ending Position",
