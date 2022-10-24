@@ -273,7 +273,7 @@ public class Superstructure implements Updatable {
             robotOrientedDrive = !robotOrientedDrive;
         }
 
-        if (mControlBoard.getIncreaseShotAdjutment()) {
+        if (mControlBoard.getIncreaseShotAdjustment()) {
             coreShootingAdjustmentAngle += 0.02;
         }
 

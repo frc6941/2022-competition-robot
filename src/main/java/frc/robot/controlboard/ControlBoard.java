@@ -142,7 +142,7 @@ public class ControlBoard {
         return driver.getController().getPOV() == kDpadRight;
     }
 
-    public boolean getIncreaseShotAdjutment() {
+    public boolean getIncreaseShotAdjustment() {
         return driver.getController().getPOV() == kDpadLeft;
     }
 

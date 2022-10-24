@@ -40,7 +40,7 @@ public class DFivePlusOneAuto extends AutoModeBase{
             new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
             new InstantCommand(() -> mSuperstructure.setWantMaintain(true)),
             new FollowTrajectory(mSwerve, trajectoryPart1, true, true, true),
-            new WaitUntilCommand(() -> mSuperstructure.isReady()).withTimeout(0.5),
+            new WaitUntilCommand(mSuperstructure::isReady).withTimeout(0.5),
             new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
             new WaitCommand(1.2),
             // Part 2: collect 1 wrong cargo and spit into the hangar
@@ -59,7 +59,7 @@ public class DFivePlusOneAuto extends AutoModeBase{
             new FollowTrajectory(mSwerve, trajectoryPart4, true, false, true),
             new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
             new InstantCommand(() -> mSuperstructure.setWantMaintain(true)),
-            new WaitUntilCommand(() -> mSuperstructure.isReady()).withTimeout(2.0),
+            new WaitUntilCommand(mSuperstructure::isReady).withTimeout(2.0),
             new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
             new WaitCommand(0.8),
             new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING)),

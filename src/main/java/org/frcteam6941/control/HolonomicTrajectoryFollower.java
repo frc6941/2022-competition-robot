@@ -133,17 +133,18 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
                         : new double[] { -6941.0, -6941.0, -6941.0 },
                 null);
         builder.addDoubleArrayProperty("Starting Position",
-                () -> getCurrentTrajectory().isPresent()
-                        ? new double[] { getCurrentTrajectory().get().getInitialPose().getX(),
+                () -> getCurrentTrajectory()
+                        .map(x -> new double[] { getCurrentTrajectory().get().getInitialPose().getX(),
                                 getCurrentTrajectory().get().getInitialPose().getY(),
-                                getCurrentTrajectory().get().getInitialPose().getRotation().getDegrees() }
-                        : new double[] { -6941.0, -6941.0, -6941.0 },
+                                getCurrentTrajectory().get().getInitialPose().getRotation().getDegrees() })
+                        .orElse(new double[] { -6941.0, -6941.0, -6941.0 }),
                 null);
-        builder.addDoubleArrayProperty("Ending Position", () -> getCurrentTrajectory().isPresent()
-                ? new double[] { getCurrentTrajectory().get().getEndState().poseMeters.getX(),
-                        getCurrentTrajectory().get().getEndState().poseMeters.getY(),
-                        getCurrentTrajectory().get().getEndState().poseMeters.getRotation().getDegrees() }
-                : new double[] { -6941.0, -6941.0, -6941.0 },
+        builder.addDoubleArrayProperty("Ending Position",
+                () -> getCurrentTrajectory()
+                        .map(plannerTrajectory -> new double[] { plannerTrajectory.getEndState().poseMeters.getX(),
+                                plannerTrajectory.getEndState().poseMeters.getY(),
+                                plannerTrajectory.getEndState().poseMeters.getRotation().getDegrees() })
+                        .orElse(new double[] { -6941.0, -6941.0, -6941.0 }),
                 null);
     }
 }

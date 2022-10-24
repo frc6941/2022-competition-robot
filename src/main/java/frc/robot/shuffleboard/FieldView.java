@@ -45,11 +45,12 @@ public class FieldView {
         mField2d.getObject("Target").setPose(new Pose2d(FieldConstants.hubCenter, new Rotation2d()));
         mField2d.getObject("Raw Wrong Ball Target").setPose(new Pose2d(Targets.getRawWrongBallTarget(mRobotPose, Superstructure.getInstance().getState() == Superstructure.STATE.SHOOTING), new Rotation2d()));
         mField2d.getObject("Predicted Robot Pose").setPose(mRobotState.getPredictedFieldToVehicle(0.2).getWpilibPose2d());
-        if(Limelight.getInstance().getEstimatedVehicleToField().isPresent()){
-            Translation2d estimatedVehicleToFieldTranslation = Limelight.getInstance().getEstimatedVehicleToField().get().translation;
-            mField2d.getObject("Vision Estimated Robot Pose").setPose(
-                new Pose2d(estimatedVehicleToFieldTranslation, mRobotPose.getRotation())
-            );
-        }
+        Limelight.getInstance().getEstimatedVehicleToField()
+                .ifPresent(mModulePoses -> {
+                    Translation2d estimatedVehicleToFieldTranslation = mModulePoses.translation;
+                    mField2d.getObject("Vision Estimated Robot Pose").setPose(
+                            new Pose2d(estimatedVehicleToFieldTranslation, mRobotPose.getRotation())
+                    );
+                });
     }
 }

@@ -207,13 +207,12 @@ public class Limelight implements Updatable {
         SmartDashboard.putBoolean(mConstants.kName + ": Has Target", mPeriodicIO.seesTarget);
 
         if (mPeriodicIO.seesTarget) {
-            if (getEstimatedVehicleToField().isPresent()) {
-                SmartDashboard.putString("Estimated Vehicle To Field",
-                        getEstimatedVehicleToField().get().translation.toString());
-            }
-            if (getLimelightDistanceToTarget().isPresent()) {
+            getEstimatedVehicleToField().ifPresent(pose -> {
+                SmartDashboard.putString("Estimated Vehicle To Field", pose.translation.toString());
+            });
+            getLimelightDistanceToTarget().ifPresent(distance -> {
                 SmartDashboard.putNumber("Estimated Distance", getLimelightDistanceToTarget().get());
-            }
+            });
             SmartDashboard.putNumber("Ty Adj", getOffsetAdjusted()[1]);
         }
     }
