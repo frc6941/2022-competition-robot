@@ -449,7 +449,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         for (SJTUSwerveModuleMK5 mod : this.mSwerveMods) {
             SmartDashboard.putNumber("Mod " + mod.moduleNumber, mod.getEncoderUnbound().getDegrees());
         }
-        SmartDashboard.putNumber("Picth", getPitch());
+        SmartDashboard.putNumber("Pitch", getPitch());
         SmartDashboard.putNumber("Roll", getRoll());
     }
 

@@ -18,7 +18,7 @@ import frc.robot.coordinators.Superstructure.STATE;
 
 import static frc.robot.auto.modes.ATwoPlusTwoAuto.getCommand;
 
-public class ATwoPlusOneAuto extends AutoModeBase{
+public class ATwoPlusOneAuto extends AutoModeBase {
     protected String autoName = "A - Two Plus One Auto";
     private final PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("A 2+1 Ball Auto - Part 1", 3.5, 1.5);
     private final PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("A 2+1 Ball Auto - Part 2", 3.5, 1.5);
