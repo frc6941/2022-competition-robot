@@ -39,8 +39,8 @@ import frc.robot.subsystems.Turret;
  */
 public class Robot extends TimedRobot {
     private UpdateManager updateManager;
-    private AutoSelector mAutoSelector = AutoSelector.getInstance();
-    private ShuffleBoardInteractions mShuffleBoardInteractions = ShuffleBoardInteractions.getInstance();
+    private final AutoSelector mAutoSelector = AutoSelector.getInstance();
+    private final ShuffleBoardInteractions mShuffleBoardInteractions = ShuffleBoardInteractions.getInstance();
 
     /**
      * This function is run when the robot is first started up and should be used
@@ -64,7 +64,7 @@ public class Robot extends TimedRobot {
                 RobotStateEstimator.getInstance(),
                 Alerts.getInstance(),
                 Superstructure.getInstance());
-        this.updateManager.startEnableLoop(Constants.kLooperDt);
+        this.updateManager.startEnableLoop(Constants.LOOPER_DT);
 
         CameraServer.startAutomaticCapture();
     }
@@ -80,7 +80,7 @@ public class Robot extends TimedRobot {
         this.updateManager.stopEnableLoop();
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().disable();
-        this.updateManager.startDisableLoop(Constants.kLooperDt);
+        this.updateManager.startDisableLoop(Constants.LOOPER_DT);
     }
 
     @Override
@@ -104,15 +104,15 @@ public class Robot extends TimedRobot {
         Superstructure.getInstance().setWantSwerveSelfLocking(false);
 
         CommandScheduler.getInstance().enable();
-        this.updateManager.startEnableLoop(Constants.kLooperDt);
+        this.updateManager.startEnableLoop(Constants.LOOPER_DT);
 
         Optional<AutoModeBase> autoMode = mAutoSelector.getAutoMode();
-        if (autoMode.isPresent()) {
-            SJTUSwerveMK5Drivebase.getInstance().resetOdometry(autoMode.get().getStartingPose());
-            if (autoMode.get().getAutoCommand() != null) {
-                autoMode.get().getAutoCommand().schedule();
+        autoMode.ifPresent(autoModeBase -> {
+            SJTUSwerveMK5Drivebase.getInstance().resetOdometry(autoModeBase.getStartingPose());
+            if (autoModeBase.getAutoCommand() != null) {
+                autoModeBase.getAutoCommand().schedule();
             }
-        }
+        });
     }
 
     /** This function is called periodically during autonomous. */
@@ -134,7 +134,7 @@ public class Robot extends TimedRobot {
 
         this.updateManager.stopDisableLoop();
         CommandScheduler.getInstance().enable();
-        this.updateManager.startEnableLoop(Constants.kLooperDt);
+        this.updateManager.startEnableLoop(Constants.LOOPER_DT);
     }
 
     /** This function is called periodically during operator control. */

@@ -35,7 +35,7 @@ import frc.robot.subsystems.Limelight.LimelightConstants;
 public final class Constants {
     public static final boolean TUNING = true;
 
-    // FMS Related Informations
+    // FMS Related Information
     public static final class FMS {
         public static Alliance ALLIANCE() {
             return DriverStation.getAlliance();
@@ -43,18 +43,18 @@ public final class Constants {
     }
 
     // Looper Configurations
-    public static final double kLooperDt = 1.0 / 150.0; // The robot is running at 150Hz
+    public static final double LOOPER_DT = 1.0 / 150.0; // The robot is running at 150Hz
 
     // CAN ID Configurations
     public static final class CANID {
-        public static final int DRIVETRAIN_FRONTLEFT_DRIVE_MOTOR = 0;
-        public static final int DRIVETRAIN_FRONTLEFT_STEER_MOTOR = 1;
-        public static final int DRIVETRAIN_FRONTRIGHT_DRIVE_MOTOR = 2;
-        public static final int DRIVETRAIN_FRONTRIGHT_STEER_MOTOR = 3;
-        public static final int DRIVETRAIN_BACKLEFT_DRIVE_MOTOR = 4;
-        public static final int DRIVETRAIN_BACKLEFT_STEER_MOTOR = 5;
-        public static final int DRIVETRAIN_BACKRIGHT_DRIVE_MOTOR = 6;
-        public static final int DRIVETRAIN_BACKRIGHT_STEER_MOTOR = 7;
+        public static final int DRIVETRAIN_FRONT_LEFT_DRIVE_MOTOR = 0;
+        public static final int DRIVETRAIN_FRONT_LEFT_STEER_MOTOR = 1;
+        public static final int DRIVETRAIN_FRONT_RIGHT_DRIVE_MOTOR = 2;
+        public static final int DRIVETRAIN_FRONT_RIGHT_STEER_MOTOR = 3;
+        public static final int DRIVETRAIN_BACK_LEFT_DRIVE_MOTOR = 4;
+        public static final int DRIVETRAIN_BACK_LEFT_STEER_MOTOR = 5;
+        public static final int DRIVETRAIN_BACK_RIGHT_DRIVE_MOTOR = 6;
+        public static final int DRIVETRAIN_BACK_RIGHT_STEER_MOTOR = 7;
 
         public static final int FEEDER_MOTOR = 8;
         public static final int TURRET_MOTOR = 9;

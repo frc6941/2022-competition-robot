@@ -17,7 +17,7 @@ import frc.robot.coordinators.Superstructure.STATE;
 public class TestAuto extends AutoModeBase{
     protected String autoName = "Test Auto";
     public PathPlannerTrajectory testPath = PathPlanner.loadPath("Test Path", 3.5, 1.5);
-    private Superstructure mSuperstructure = Superstructure.getInstance();
+    private final Superstructure mSuperstructure = Superstructure.getInstance();
 
 
     @Override

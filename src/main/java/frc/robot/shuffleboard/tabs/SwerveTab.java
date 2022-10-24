@@ -13,10 +13,10 @@ import frc.robot.Constants;
 import frc.robot.shuffleboard.ShuffleboardTabBase;
 
 public class SwerveTab extends ShuffleboardTabBase {
-    private SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
+    private final SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
 
-    private NetworkTableEntry[] swerveModuleVelocities;
-    private NetworkTableEntry[] swerveModuleAngles;
+    private final NetworkTableEntry[] swerveModuleVelocities;
+    private final NetworkTableEntry[] swerveModuleAngles;
     private NetworkTableEntry gyroAngle;
     private NetworkTableEntry swerveState;
 
@@ -71,6 +71,5 @@ public class SwerveTab extends ShuffleboardTabBase {
         }
         gyroAngle.setDouble(mSwerve.getYaw());
         swerveState.setString(mSwerve.getState().toString());
-        counter = 0;
     }
 }

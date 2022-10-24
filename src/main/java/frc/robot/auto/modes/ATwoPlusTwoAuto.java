@@ -18,10 +18,10 @@ import frc.robot.coordinators.Superstructure.STATE;
 
 public class ATwoPlusTwoAuto extends AutoModeBase{
     protected String autoName = "A - Two Plus Two Auto";
-    private PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("A 2+2 Ball Auto - Part 1", 3.5, 1.5);
-    private PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("A 2+2 Ball Auto - Part 2", 3.5, 1.5);
-    private Superstructure mSuperstructure = Superstructure.getInstance();
-    private SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
+    private final PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("A 2+2 Ball Auto - Part 1", 3.5, 1.5);
+    private final PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("A 2+2 Ball Auto - Part 2", 3.5, 1.5);
+    private final Superstructure mSuperstructure = Superstructure.getInstance();
+    private final SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
 
 
     @Override
@@ -31,6 +31,10 @@ public class ATwoPlusTwoAuto extends AutoModeBase{
 
     @Override
     public Command getAutoCommand() {
+        return getCommand(mSuperstructure, mSwerve, trajectoryPart1, trajectoryPart2);
+    }
+
+    static Command getCommand(Superstructure mSuperstructure, SJTUSwerveMK5Drivebase mSwerve, PathPlannerTrajectory trajectoryPart1, PathPlannerTrajectory trajectoryPart2) {
         return new SequentialCommandGroup(
             // Start Settings
             new InstantCommand(() -> mSuperstructure.setWantEject(false)),
@@ -40,7 +44,7 @@ public class ATwoPlusTwoAuto extends AutoModeBase{
             new FollowTrajectory(mSwerve, trajectoryPart1, true, true, true),
             new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
             new ParallelCommandGroup(
-                new WaitUntilCommand(() -> mSuperstructure.isReady()).withTimeout(1.0),
+                new WaitUntilCommand(mSuperstructure::isReady).withTimeout(1.0),
                 new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING))
             ),
             new WaitCommand(1.0),
@@ -50,7 +54,7 @@ public class ATwoPlusTwoAuto extends AutoModeBase{
             new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
             new InstantCommand(() -> mSwerve.setHeadingTarget(trajectoryPart2.getInitialPose().getRotation().getDegrees())),
             new InstantCommand(() -> mSwerve.setLockHeading(true)),
-            new WaitUntilCommand(() -> mSwerve.isHeadingOnTarget()).withTimeout(2.0),
+            new WaitUntilCommand(mSwerve::isHeadingOnTarget).withTimeout(2.0),
             new InstantCommand(() -> mSwerve.setLockHeading(false)),
             new FollowTrajectory(mSwerve, trajectoryPart2, true, false, true),
             new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
@@ -61,7 +65,9 @@ public class ATwoPlusTwoAuto extends AutoModeBase{
             // End Settings
             new InstantCommand(() -> mSuperstructure.setWantEject(true))
         );
-    };
+    }
+
+    ;
 
     public ATwoPlusTwoAuto() {
     }

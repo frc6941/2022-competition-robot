@@ -31,7 +31,7 @@ import frc.robot.Constants;
  */
 public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     // General Constants
-    public static final double kLooperDt = Constants.kLooperDt;
+    public static final double kLooperDt = Constants.LOOPER_DT;
 
     // Drivetrain Definitions
     public static final double MAX_SPEED = Constants.DRIVE_MAX_VELOCITY;
@@ -93,14 +93,14 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
         // Swerve hardware configurations
         mSwerveMods = new SJTUSwerveModuleMK5[] {
-                new SJTUSwerveModuleMK5(0, Constants.CANID.DRIVETRAIN_FRONTLEFT_DRIVE_MOTOR,
-                        Constants.CANID.DRIVETRAIN_FRONTLEFT_STEER_MOTOR, Constants.FRONT_LEFT_OFFSET),
-                new SJTUSwerveModuleMK5(1, Constants.CANID.DRIVETRAIN_FRONTRIGHT_DRIVE_MOTOR,
-                        Constants.CANID.DRIVETRAIN_FRONTRIGHT_STEER_MOTOR, Constants.FRONT_RIGHT_OFFSET),
-                new SJTUSwerveModuleMK5(2, Constants.CANID.DRIVETRAIN_BACKLEFT_DRIVE_MOTOR,
-                        Constants.CANID.DRIVETRAIN_BACKLEFT_STEER_MOTOR, Constants.BACK_LEFT_OFFSET),
-                new SJTUSwerveModuleMK5(3, Constants.CANID.DRIVETRAIN_BACKRIGHT_DRIVE_MOTOR,
-                        Constants.CANID.DRIVETRAIN_BACKRIGHT_STEER_MOTOR, Constants.BACK_RIGHT_OFFSET)
+                new SJTUSwerveModuleMK5(0, Constants.CANID.DRIVETRAIN_FRONT_LEFT_DRIVE_MOTOR,
+                        Constants.CANID.DRIVETRAIN_FRONT_LEFT_STEER_MOTOR, Constants.FRONT_LEFT_OFFSET),
+                new SJTUSwerveModuleMK5(1, Constants.CANID.DRIVETRAIN_FRONT_RIGHT_DRIVE_MOTOR,
+                        Constants.CANID.DRIVETRAIN_FRONT_RIGHT_STEER_MOTOR, Constants.FRONT_RIGHT_OFFSET),
+                new SJTUSwerveModuleMK5(2, Constants.CANID.DRIVETRAIN_BACK_LEFT_DRIVE_MOTOR,
+                        Constants.CANID.DRIVETRAIN_BACK_LEFT_STEER_MOTOR, Constants.BACK_LEFT_OFFSET),
+                new SJTUSwerveModuleMK5(3, Constants.CANID.DRIVETRAIN_BACK_RIGHT_DRIVE_MOTOR,
+                        Constants.CANID.DRIVETRAIN_BACK_RIGHT_STEER_MOTOR, Constants.BACK_RIGHT_OFFSET)
         };
 
         // Module positions and swerve kinematics

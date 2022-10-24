@@ -32,7 +32,7 @@ public class ColorSensor implements Updatable{
         RED, BLUE, OTHER, NONE
     }
 
-    private ColorSensorV3 colorSensor;
+    private final ColorSensorV3 colorSensor;
     private boolean sawBall = false;
     public ColorChoices allianceColor = ColorChoices.NONE;
     public ColorChoices matchedColor;
@@ -89,10 +89,7 @@ public class ColorSensor implements Updatable{
     }
 
     public boolean seesNewBall() {
-        boolean newBall = false;
-        if ((seesBall() && !sawBall)) {
-            newBall = true;
-        }
+        boolean newBall = seesBall() && !sawBall;
         sawBall = seesBall();
         return newBall;
     }
@@ -114,7 +111,7 @@ public class ColorSensor implements Updatable{
         mPeriodicIO.blue = colorSensor.getBlue();
         mPeriodicIO.adjustedBlue = mPeriodicIO.blue;
         mPeriodicIO.adjustedRed = mPeriodicIO.red + mPeriodicIO.colorOffset;
-        mPeriodicIO.colorRatio = (double) mPeriodicIO.adjustedRed / (double) mPeriodicIO.adjustedBlue;
+        mPeriodicIO.colorRatio = mPeriodicIO.adjustedRed / mPeriodicIO.adjustedBlue;
         mPeriodicIO.proximity = colorSensor.getProximity();
     }
 

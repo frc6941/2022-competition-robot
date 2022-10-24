@@ -27,7 +27,7 @@ public class Intaker implements Updatable {
     private CANSparkMax intakerMotor = new CANSparkMax(Constants.CANID.INTAKER_MOTOR, MotorType.kBrushless);
 
     private static Intaker instance;
-    private TimeDelayedBoolean intakerRetractTurningBoolean = new TimeDelayedBoolean();
+    private final TimeDelayedBoolean intakerRetractTurningBoolean = new TimeDelayedBoolean();
     private boolean spin = false;
     private boolean reverse = false;
     private STATE state = STATE.RETRACTING;

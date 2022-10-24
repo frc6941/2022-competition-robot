@@ -21,7 +21,7 @@ public class RobotState {
         return mInstance;
     }
 
-    private static final int kObservationBufferSize = 100;
+    private static final int OBSERVATION_BUFFER_SIZE = 100;
 
     /*
      * RobotState keeps track of the poses of various coordinate frames throughout
@@ -79,12 +79,12 @@ public class RobotState {
     public synchronized void reset(double start_time, Pose2d initial_field_to_vehicle,
             Pose2d initial_vehicle_to_turret) {
         reset(start_time, initial_field_to_vehicle);
-        vehicle_to_turret_ = new InterpolatingTreeMap<>(kObservationBufferSize);
+        vehicle_to_turret_ = new InterpolatingTreeMap<>(OBSERVATION_BUFFER_SIZE);
         vehicle_to_turret_.put(new InterpolatingDouble(start_time), initial_vehicle_to_turret);
     }
 
     public synchronized void reset(double start_time, Pose2d initial_field_to_vehicle) {
-        field_to_vehicle_ = new InterpolatingTreeMap<>(kObservationBufferSize);
+        field_to_vehicle_ = new InterpolatingTreeMap<>(OBSERVATION_BUFFER_SIZE);
         field_to_vehicle_.put(new InterpolatingDouble(start_time), initial_field_to_vehicle);
         vehicle_velocity_predicted_ = Pose2d.identity();
         vehicle_velocity_predicted_filtered_ = new MovingAveragePose2d(5);

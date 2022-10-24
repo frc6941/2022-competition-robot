@@ -9,7 +9,7 @@ import frc.robot.shuffleboard.ShuffleboardTabBase;
 import frc.robot.subsystems.Hood;
 
 public class HoodTab extends ShuffleboardTabBase {
-    private Hood mHood = Hood.getInstance();
+    private final Hood mHood = Hood.getInstance();
 
     private NetworkTableEntry mHoodState;
     private NetworkTableEntry mHoodDemand;

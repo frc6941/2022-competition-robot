@@ -12,7 +12,7 @@ public class ShootingParameters {
      * Constructor of one set of shooting parameters for a fully defined shot.
      * @param targetAngle Field-oriented angle for shooting. In degrees.
      * @param shotAngle Angle of the hood. In degrees.
-     * @param shootingVelocity Lauching velocity of the flywheel. In RPM.
+     * @param shootingVelocity Launching velocity of the flywheel. In RPM.
      */
     public ShootingParameters(double targetAngle, double shotAngle, double shootingVelocity){
         this.targetAngle = targetAngle;

@@ -35,7 +35,7 @@ public class Targets {
             FieldConstants.hubCenter.plus(new Translation2d(0.0, 2.0))
     };
 
-    public static Translation2d getWrongballTarget(Pose2d robotPose, boolean isShooting) {
+    public static Translation2d getWrongBallTarget(Pose2d robotPose, boolean isShooting) {
         Translation2d rawWrongBallTarget = null;
         if (isShooting) {
             if (isReachable(robotPose, FieldConstants.hubCenter.plus(new Translation2d(0.0, -2.0)))) {
@@ -70,7 +70,7 @@ public class Targets {
     }
 
     
-    public static Translation2d getRawWrongballTarget(Pose2d robotPose, boolean isShooting) {
+    public static Translation2d getRawWrongBallTarget(Pose2d robotPose, boolean isShooting) {
         Translation2d rawWrongBallTarget = null;
         if (isShooting) {
             if (isReachable(robotPose, FieldConstants.hubCenter.plus(new Translation2d(0.0, -1.0)))) {

@@ -16,7 +16,7 @@ public class ControlBoard {
 
     private static ControlBoard instance = null;
 
-    public enum SwerveCardinal {
+    public enum SWERVE_CARDINAL {
         NONE(0),
 
         FORWARDS(0),
@@ -26,7 +26,7 @@ public class ControlBoard {
 
         public final double degrees;
 
-        SwerveCardinal(double degrees) {
+        SWERVE_CARDINAL(double degrees) {
             this.degrees = degrees;
         }
     }
@@ -96,17 +96,17 @@ public class ControlBoard {
         return driver.getButton(Button.START);
     }
 
-    public SwerveCardinal getSwerveSnapRotation() {
+    public SWERVE_CARDINAL getSwerveSnapRotation() {
         if (driver.getButton(Button.A)) {
-            return SwerveCardinal.BACKWARDS;
+            return SWERVE_CARDINAL.BACKWARDS;
         } else if (driver.getButton(Button.X)) {
-            return SwerveCardinal.RIGHT;
+            return SWERVE_CARDINAL.RIGHT;
         } else if (driver.getButton(Button.B)) {
-            return SwerveCardinal.LEFT;
+            return SWERVE_CARDINAL.LEFT;
         } else if (driver.getButton(Button.Y)) {
-            return SwerveCardinal.FORWARDS;
+            return SWERVE_CARDINAL.FORWARDS;
         } else {
-            return SwerveCardinal.NONE;
+            return SWERVE_CARDINAL.NONE;
         }
             
     }

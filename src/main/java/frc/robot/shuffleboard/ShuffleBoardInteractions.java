@@ -12,7 +12,7 @@ import frc.robot.shuffleboard.tabs.OperatorTab;
 
 public class ShuffleBoardInteractions {
 
-    // Trims unneccesary tabs when in competition
+    // Trims unnecessary tabs when in competition
     public final boolean mDebug = true;
 
     /* ShuffleBoardInteractions Instance */
@@ -25,10 +25,10 @@ public class ShuffleBoardInteractions {
         return mInstance;
     }
 
-    private ArrayList<ShuffleboardTabBase> mTabs = new ArrayList<ShuffleboardTabBase>();
+    private final ArrayList<ShuffleboardTabBase> mTabs = new ArrayList<ShuffleboardTabBase>();
 
-    private OperatorTab mOperatorTab;
-    private FieldView mFieldView = new FieldView();
+    private final OperatorTab mOperatorTab;
+    private final FieldView mFieldView = new FieldView();
 
     // instantiate subsystems, tabs, and widgets
     public ShuffleBoardInteractions() {

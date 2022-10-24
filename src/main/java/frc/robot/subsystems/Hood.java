@@ -107,9 +107,7 @@ public class Hood implements Updatable{
                 }
                 break;
             case PERCENTAGE:
-                break;
             case ANGLE:
-                break;
             case OFF:
                 break;
         }
@@ -119,13 +117,11 @@ public class Hood implements Updatable{
     public synchronized void write(double time, double dt){
         switch(state){
             case HOMING:
+            case PERCENTAGE:
                 hoodMotor.set(ControlMode.PercentOutput, mPeriodicIO.hoodDemand);
                 break;
             case ANGLE:
                 hoodMotor.set(ControlMode.MotionMagic, Conversions.degreesToFalcon(mPeriodicIO.hoodDemand, Constants.HOOD_GEAR_RATIO));
-                break;
-            case PERCENTAGE:
-                hoodMotor.set(ControlMode.PercentOutput, mPeriodicIO.hoodDemand);
                 break;
             case OFF:
                 hoodMotor.set(ControlMode.PercentOutput, 0.0);

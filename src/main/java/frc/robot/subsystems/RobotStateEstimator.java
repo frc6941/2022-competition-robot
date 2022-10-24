@@ -13,10 +13,10 @@ import frc.robot.subsystems.Limelight.TimeStampedTranslation2d;
 
 public class RobotStateEstimator implements Updatable {
     static RobotStateEstimator mInstance = new RobotStateEstimator();
-    private RobotState mRobotState = RobotState.getInstance();
-    private SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
-    private Turret mTurret = Turret.getInstance();
-    private Limelight mLimelight = Limelight.getInstance();
+    private final RobotState mRobotState = RobotState.getInstance();
+    private final SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
+    private final Turret mTurret = Turret.getInstance();
+    private final Limelight mLimelight = Limelight.getInstance();
 
     // status variables
     private Pose2d prev_swerve_pose_ = null;

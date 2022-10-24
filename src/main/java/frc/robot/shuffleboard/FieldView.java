@@ -14,11 +14,11 @@ import frc.robot.subsystems.Limelight;
 import frc.robot.utils.shoot.Targets;
 
 public class FieldView {
-    private Field2d mField2d = new Field2d();
-    private SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
-    private RobotState mRobotState = RobotState.getInstance();
+    private final Field2d mField2d = new Field2d();
+    private final SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
+    private final RobotState mRobotState = RobotState.getInstance();
 
-    private Pose2d[] mModulePoses = new Pose2d[4];
+    private final Pose2d[] mModulePoses = new Pose2d[4];
     private Pose2d mRobotPose = new Pose2d();
 
     public FieldView() {
@@ -43,7 +43,7 @@ public class FieldView {
         mField2d.setRobotPose(mRobotPose);
         mField2d.getObject("Swerve Modules").setPoses(mModulePoses);
         mField2d.getObject("Target").setPose(new Pose2d(FieldConstants.hubCenter, new Rotation2d()));
-        mField2d.getObject("Raw Wrong Ball Target").setPose(new Pose2d(Targets.getRawWrongballTarget(mRobotPose, Superstructure.getInstance().getState() == Superstructure.STATE.SHOOTING), new Rotation2d()));
+        mField2d.getObject("Raw Wrong Ball Target").setPose(new Pose2d(Targets.getRawWrongBallTarget(mRobotPose, Superstructure.getInstance().getState() == Superstructure.STATE.SHOOTING), new Rotation2d()));
         mField2d.getObject("Predicted Robot Pose").setPose(mRobotState.getPredictedFieldToVehicle(0.2).getWpilibPose2d());
         if(Limelight.getInstance().getEstimatedVehicleToField().isPresent()){
             Translation2d estimatedVehicleToFieldTranslation = Limelight.getInstance().getEstimatedVehicleToField().get().translation;

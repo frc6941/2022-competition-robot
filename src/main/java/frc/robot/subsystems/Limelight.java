@@ -28,8 +28,8 @@ public class Limelight implements Updatable {
     private static Limelight mInstance = null;
 
     private int mLatencyCounter = 0;
-    public Optional<Double> mDistanceToTarget = Optional.empty();
-    public Optional<TimeStampedTranslation2d> mEstimatedVehicleToField = Optional.empty();
+    public Double mDistanceToTarget;
+    public TimeStampedTranslation2d mEstimatedVehicleToField;
     public Timer validTargetTimer = new Timer();
 
     public static class LimelightConstants {
@@ -42,7 +42,7 @@ public class Limelight implements Updatable {
 
     public boolean updateVision = false;
 
-    private NetworkTable mNetworkTable;
+    private final NetworkTable mNetworkTable;
 
     private Limelight() {
         mConstants = Constants.VisionConstants.Turret.LIMELIGHT_CONSTANTS;
@@ -59,7 +59,7 @@ public class Limelight implements Updatable {
     @Override
     public synchronized void update(double time, double dt) {
         List<TargetInfo> targetInfo = getTarget();
-        if (mPeriodicIO.sees_target && targetInfo != null) {
+        if (mPeriodicIO.seesTarget && targetInfo != null) {
             validTargetTimer.start();
             updateDistanceToTarget();
             if (validTargetTimer.get() > 0.5) {
@@ -87,7 +87,7 @@ public class Limelight implements Updatable {
     }
 
     public synchronized boolean limelightOK() {
-        return mPeriodicIO.has_comms;
+        return mPeriodicIO.hasComms;
     }
 
     public static class PeriodicIO {
@@ -98,8 +98,8 @@ public class Limelight implements Updatable {
         public double xOffset;
         public double yOffset;
         public double area;
-        public boolean has_comms;
-        public boolean sees_target;
+        public boolean hasComms;
+        public boolean seesTarget;
         public double[] targetCorners;
         public double[] cornerX;
         public double[] cornerY;
@@ -115,18 +115,18 @@ public class Limelight implements Updatable {
     }
 
     private LimelightConstants mConstants = null;
-    private PeriodicIO mPeriodicIO = new PeriodicIO();
+    private final PeriodicIO mPeriodicIO = new PeriodicIO();
     private boolean mOutputsHaveChanged = true;
 
     public synchronized List<TargetInfo> getTarget() {
-        List<TargetInfo> targets = new ArrayList<TargetInfo>(); // getRawTargetInfos();
+        List<TargetInfo> targets = new ArrayList<>(); // getRawTargetInfos();
         targets.add(new TargetInfo(Math.tan(Math.toRadians(-mPeriodicIO.xOffset)),
                 Math.tan(Math.toRadians(mPeriodicIO.yOffset))));
-        if (hasTarget() && targets != null) {
+        if (hasTarget()) {
             return targets;
         }
 
-        return null;
+        return new ArrayList<>();
     }
 
     public double getLensHeight() {
@@ -159,13 +159,13 @@ public class Limelight implements Updatable {
         }
 
         mPeriodicIO.latency = latency;
-        mPeriodicIO.has_comms = mLatencyCounter < 10;
+        mPeriodicIO.hasComms = mLatencyCounter < 10;
 
-        mPeriodicIO.sees_target = mNetworkTable.getEntry("tv").getDouble(0) == 1.0;
+        mPeriodicIO.seesTarget = mNetworkTable.getEntry("tv").getDouble(0) == 1.0;
 
         List<Double> cornerXList = new ArrayList<>();
         List<Double> cornerYList = new ArrayList<>();
-        if (mPeriodicIO.sees_target) {
+        if (mPeriodicIO.seesTarget) {
             boolean isX = true;
             for (double coordinate : mPeriodicIO.targetCorners) {
                 if (isX) {
@@ -201,12 +201,12 @@ public class Limelight implements Updatable {
 
     @Override
     public synchronized void telemetry() {
-        SmartDashboard.putBoolean("Limelight Ok", mPeriodicIO.has_comms);
+        SmartDashboard.putBoolean("Limelight Ok", mPeriodicIO.hasComms);
         SmartDashboard.putNumber(mConstants.kName + ": Pipeline Latency (ms)", mPeriodicIO.latency);
 
-        SmartDashboard.putBoolean(mConstants.kName + ": Has Target", mPeriodicIO.sees_target);
+        SmartDashboard.putBoolean(mConstants.kName + ": Has Target", mPeriodicIO.seesTarget);
 
-        if (mPeriodicIO.sees_target) {
+        if (mPeriodicIO.seesTarget) {
             if (getEstimatedVehicleToField().isPresent()) {
                 SmartDashboard.putString("Estimated Vehicle To Field",
                         getEstimatedVehicleToField().get().translation.toString());
@@ -239,8 +239,8 @@ public class Limelight implements Updatable {
     }
 
     public void updateDistanceToTarget() {
-        mDistanceToTarget = Optional.of(Constants.VisionConstants.Turret.VISION_MAP.getInterpolated(
-                new InterpolatingDouble(getOffsetAdjusted()[1])).value);
+        mDistanceToTarget = Constants.VisionConstants.Turret.VISION_MAP.getInterpolated(
+                new InterpolatingDouble(getOffsetAdjusted()[1])).value;
     }
 
     public void updateEstimatedVehicleToField(double time) {
@@ -253,13 +253,13 @@ public class Limelight implements Updatable {
                 .getInterpolated(new InterpolatingDouble(offsets[1])).value;
 
         if (Math.abs(mPeriodicIO.xOffset) < 15.0) {
-            mEstimatedVehicleToField = Optional.of(new TimeStampedTranslation2d(
+            mEstimatedVehicleToField = new TimeStampedTranslation2d(
                     new Translation2d(
                             FieldConstants.hubCenter.getX() - distance * combinedAngle.getCos(),
                             FieldConstants.hubCenter.getY() - distance * combinedAngle.getSin()),
-                    time));
+                    time);
         } else {
-            mEstimatedVehicleToField = Optional.empty();
+            mEstimatedVehicleToField = null;
         }
 
     }
@@ -273,11 +273,11 @@ public class Limelight implements Updatable {
     }
 
     public synchronized boolean hasTarget() {
-        return mPeriodicIO.sees_target;
+        return mPeriodicIO.seesTarget;
     }
 
     public synchronized boolean isOK() {
-        return mPeriodicIO.has_comms;
+        return mPeriodicIO.hasComms;
     }
 
     public synchronized boolean isAutonomousAimed() {
@@ -316,11 +316,11 @@ public class Limelight implements Updatable {
     }
 
     public Optional<Double> getLimelightDistanceToTarget() {
-        return mDistanceToTarget;
+        return Optional.ofNullable(mDistanceToTarget);
     }
 
     public Optional<TimeStampedTranslation2d> getEstimatedVehicleToField() {
-        return mEstimatedVehicleToField;
+        return Optional.ofNullable(mEstimatedVehicleToField);
     }
 
     @Override
