@@ -182,7 +182,7 @@ public class BallPath implements Updatable {
         //         slowProcessBoolean.update(false, 0.0);
         //         break;
         //     case PROCESSING:
-        //         if(isFull()){
+        //         if (isFull()) {
         //             if (slowProcessBoolean.update(true, Constants.BALLPATH_SLOW_PROCESS_TIME)) {
         //                 setState(STATE.IDLE);
         //                 slowProcessBoolean.update(false, 0.0);
@@ -325,8 +325,8 @@ public class BallPath implements Updatable {
                     break;
                 }
             case FEEDING:
-                if(!hasReversed){
-                    if (launchReverseBoolean.update(true, Constants.BALLPATH_FEEDING_REVERSE_TIME)){
+                if (!hasReversed) {
+                    if (launchReverseBoolean.update(true, Constants.BALLPATH_FEEDING_REVERSE_TIME)) {
                         hasReversed = true;
                     } else {
                         mPeriodicIO.feederDemand = Constants.FEEDER_FEED_REVERSE_PERCENTAGE;

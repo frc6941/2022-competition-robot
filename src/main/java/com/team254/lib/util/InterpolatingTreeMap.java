@@ -1,6 +1,7 @@
 package com.team254.lib.util;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 
 /**
@@ -54,8 +55,8 @@ public class InterpolatingTreeMap<K extends InverseInterpolable<K> & Comparable<
      * @return V or null; V if it is Interpolable or exists, null if it is at a bound and cannot average
      */
     public V getInterpolated(K key) {
-        V gotval = get(key);
-        if (gotval == null) {
+        Optional<V> gotval = Optional.ofNullable(get(key));
+        return gotval.orElseGet(() -> {
             // get surrounding keys for interpolation
             K topBound = ceilingKey(key);
             K bottomBound = floorKey(key);
@@ -73,8 +74,6 @@ public class InterpolatingTreeMap<K extends InverseInterpolable<K> & Comparable<
             V topElem = get(topBound);
             V bottomElem = get(bottomBound);
             return bottomElem.interpolate(topElem, bottomBound.inverseInterpolate(topBound, key));
-        } else {
-            return gotval;
-        }
+        });
     }
 }

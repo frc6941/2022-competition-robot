@@ -44,7 +44,7 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
             double dt) {
         if (time > trajectory.getTotalTimeSeconds()) {
             if (this.requiredOnTarget) {
-                if(this.xController.atSetpoint() && this.yController.atSetpoint()){
+                if (this.xController.atSetpoint() && this.yController.atSetpoint()) {
                     finished = true;
                     return new HolonomicDriveSignal(new Translation2d(0, 0), 0.0, true);
                 }
@@ -92,7 +92,7 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
         this.lockAngle = lock;
     }
 
-    public void setRequiredOnTarget(boolean requiredOnTarget){
+    public void setRequiredOnTarget(boolean requiredOnTarget) {
         this.requiredOnTarget = requiredOnTarget;
     }
 

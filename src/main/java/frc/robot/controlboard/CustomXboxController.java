@@ -49,15 +49,15 @@ public class CustomXboxController {
         return mController.getRawButton(button.id);
     }
 
-    public void setRumble(double power, double interval){
+    public void setRumble(double power, double interval) {
         rumblePower = power;
         rumbleInterval = interval;
     }
 
-    public void updateRumble(double time){
-        if(rumbleInterval == 0){
+    public void updateRumble(double time) {
+        if (rumbleInterval == 0) {
             mController.setRumble(RumbleType.kRightRumble, rumblePower);
-        } else if(Math.floor(time / rumbleInterval) % 2 == 0) {
+        } else if (Math.floor(time / rumbleInterval) % 2 == 0) {
             mController.setRumble(RumbleType.kRightRumble, rumblePower);
         } else {
             mController.setRumble(RumbleType.kRightRumble, 0.0);

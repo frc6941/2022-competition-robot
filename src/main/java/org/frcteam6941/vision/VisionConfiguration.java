@@ -15,7 +15,7 @@ public class VisionConfiguration {
     private CameraResolution cameraResolution;
     private CameraConstants cameraConstants;
 
-    public VisionConfiguration(int id, String name, double height, Pose2d robotToLens, Rotation2d horizontalPlaneToLens, CameraResolution cameraResolution, CameraConstants cameraConstants){
+    public VisionConfiguration(int id, String name, double height, Pose2d robotToLens, Rotation2d horizontalPlaneToLens, CameraResolution cameraResolution, CameraConstants cameraConstants) {
         this.id = id;
         this.name = name;
         this.height = height;
@@ -44,11 +44,11 @@ public class VisionConfiguration {
         return horizontalPlaneToLens;
     }
 
-    public CameraResolution getCameraResolution(){
+    public CameraResolution getCameraResolution() {
         return cameraResolution;
     }
 
-    public CameraConstants getCameraConstants(){
+    public CameraConstants getCameraConstants() {
         return cameraConstants;
     }
     

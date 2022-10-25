@@ -106,7 +106,7 @@ public class Superstructure implements Updatable {
         // Indicator Variables
         public TimedLEDState outIndicatorState = Lights.WARNING;
 
-        // Climber Vairables
+        // Climber Variables
         public double outClimberDemand = 0.05;
         public boolean outClimberHookOut = false;
     }
@@ -336,6 +336,7 @@ public class Superstructure implements Updatable {
                 }
             } else {
                 climbStep = 0;
+
                 if (mControlBoard.getClimberUp()) {
                     mPeriodicIO.outClimberDemand = Constants.CLIMBER_OPENLOOP_CONTROL_PERCENTAGE;
                 } else if (mControlBoard.getClimberDown()) {
@@ -343,6 +344,7 @@ public class Superstructure implements Updatable {
                 } else {
                     mPeriodicIO.outClimberDemand = 0.0;
                 }
+
                 if (mControlBoard.getClimberHootOut()) {
                     mPeriodicIO.outClimberHookOut = true;   
                 } else if (mControlBoard.getClimberHootIn()) {

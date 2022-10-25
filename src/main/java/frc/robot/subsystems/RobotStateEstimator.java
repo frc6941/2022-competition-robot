@@ -34,12 +34,12 @@ public class RobotStateEstimator implements Updatable {
     }
 
     @Override
-    public synchronized void read(double time, double dt){
+    public synchronized void read(double time, double dt) {
         // Auto Generated Method
     }
     
     @Override
-    public synchronized void update(double time, double dt){
+    public synchronized void update(double time, double dt) {
         if (prev_swerve_pose_ == null) {
             prev_swerve_pose_ = mRobotState.getLatestFieldToVehicle().getValue();
         }
@@ -57,41 +57,41 @@ public class RobotStateEstimator implements Updatable {
         final Pose2d predicted_velocity = measured_velocity.transformBy(latest_velocity_acceleration.scaled(dt));
 
         mRobotState.addObservations(time, odometry_delta, measured_velocity, predicted_velocity, latest_velocity_acceleration);
-        if(mTurret.isCalibrated()){
+        if (mTurret.isCalibrated()) {
             mRobotState.addVehicleToTurretObservation(time, new Pose2d(new Translation2d(0.068, 0.0), Rotation2d.fromDegrees(mTurret.getTurretAngle())));
         }
         prev_swerve_pose_ = swerve_pose_;
         prev_swerve_velocity = measured_velocity_filtered;
 
-        if(DriverStation.isTeleop() && mTurret.isCalibrated() && mLimelight.getEstimatedVehicleToField().isPresent()) {
+        if (DriverStation.isTeleop() && mTurret.isCalibrated() && mLimelight.getEstimatedVehicleToField().isPresent()) {
             TimeStampedTranslation2d estimate = mLimelight.getEstimatedVehicleToField().get();
-            if(RobotState.getInstance().getSmoothedMeasuredVelocity().getTranslation().norm() < 1.0){
+            if (RobotState.getInstance().getSmoothedMeasuredVelocity().getTranslation().norm() < 1.0) {
                 mSwerve.addVisionObservationTranslation(estimate.translation, estimate.timestamp);
             }
         }
     }
     
     @Override
-    public synchronized void write(double time, double dt){
+    public synchronized void write(double time, double dt) {
         // Auto Generated Method
     }
     
     @Override
-    public synchronized void telemetry(){
+    public synchronized void telemetry() {
         mRobotState.outputToSmartDashboard();
     }
     
     @Override
-    public synchronized void start(){
+    public synchronized void start() {
     }
     
     @Override
-    public synchronized void stop(){
+    public synchronized void stop() {
         // Auto Generated Method
     }
     
     @Override
-    public synchronized void disabled(double time, double dt){
+    public synchronized void disabled(double time, double dt) {
         // Auto Generated Method
     }
 }

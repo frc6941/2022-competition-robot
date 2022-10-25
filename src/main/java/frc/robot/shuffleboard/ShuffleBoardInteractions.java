@@ -25,7 +25,7 @@ public class ShuffleBoardInteractions {
         return mInstance;
     }
 
-    private final ArrayList<ShuffleboardTabBase> mTabs = new ArrayList<ShuffleboardTabBase>();
+    private final ArrayList<ShuffleboardTabBase> mTabs = new ArrayList<>();
 
     private final OperatorTab mOperatorTab;
     private final FieldView mFieldView = new FieldView();
@@ -45,7 +45,7 @@ public class ShuffleBoardInteractions {
         } else {
         }
 
-        for(ShuffleboardTabBase tab: mTabs) {
+        for (ShuffleboardTabBase tab: mTabs) {
             tab.createEntries();
         }
     }
@@ -61,7 +61,7 @@ public class ShuffleBoardInteractions {
         return mOperatorTab.getTab();
     }
 
-    public void configAutoSelector(AutoSelector autoSelector){
+    public void configAutoSelector(AutoSelector autoSelector) {
         mOperatorTab.configAutoModeSelector(autoSelector);
     }
 }

@@ -37,7 +37,7 @@ public class Alerts implements Updatable {
 
     private static Alerts instance;
     
-    public boolean isAlertPresent(){
+    public boolean isAlertPresent() {
         return alertPresent;
     }
 
@@ -47,33 +47,33 @@ public class Alerts implements Updatable {
     }
     
     @Override
-    public synchronized void read(double time, double dt){
+    public synchronized void read(double time, double dt) {
         // Auto Generated Method
     }
     
     @Override
-    public synchronized void write(double time, double dt){
+    public synchronized void write(double time, double dt) {
         // Auto Generated Method
     }
     
     @Override
-    public synchronized void telemetry(){
+    public synchronized void telemetry() {
         turretCalibrationWarning.set(!turretSubsystem.isCalibrated());
         autoWarning.set(autoSelector.getAutoWarning());
     }
 
     @Override
-    public synchronized void start(){
+    public synchronized void start() {
         // Auto Generated Method
     }
     
     @Override
-    public synchronized void stop(){
+    public synchronized void stop() {
         // Auto Generated Method
     }
     
     @Override
-    public synchronized void disabled(double time, double dt){
+    public synchronized void disabled(double time, double dt) {
         // Auto Generated Method
     }
 }

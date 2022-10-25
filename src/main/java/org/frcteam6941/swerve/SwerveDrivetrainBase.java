@@ -8,23 +8,21 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 public interface SwerveDrivetrainBase extends Updatable{
-    abstract void setModuleStates(SwerveModuleState[] desiredStates, boolean isOpenLoop);
+    void setModuleStates(SwerveModuleState[] desiredStates, boolean isOpenLoop);
 
-    abstract SwerveModuleState[] getSwerveModuleStates();
+    SwerveModuleState[] getSwerveModuleStates();
 
-    abstract void drive(Translation2d translation, double rotation, boolean fieldRelative);
+    void drive(Translation2d translation, double rotation, boolean fieldRelative);
     
-    abstract void setHeadingTarget(double heading);
+    void setHeadingTarget(double heading);
 
-    abstract void setLockHeading(boolean lockHeading);
+    void setLockHeading(boolean lockHeading);
 
-    abstract Pose2d getPose();
+    Pose2d getPose();
 
-    abstract SwerveDriveKinematics getKinematics();
+    SwerveDriveKinematics getKinematics();
     
-    abstract void resetOdometry(Pose2d pose);
+    void resetOdometry(Pose2d pose);
 
-    abstract void resetGyro(double degree);
-
-    
+    void resetGyro(double degree);
 }

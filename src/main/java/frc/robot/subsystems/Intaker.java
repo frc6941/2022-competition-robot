@@ -80,7 +80,7 @@ public class Intaker implements Updatable {
                 break;
             case RETRACTING:
                 mPeriodicIO.intakerExtenderDemand = DoubleSolenoid.Value.kReverse;
-                if(intakerRetractTurningBoolean.update(true, 0.1)){
+                if (intakerRetractTurningBoolean.update(true, 0.1)) {
                     mPeriodicIO.intakerDemand = 0.0;
                 } else {
                     mPeriodicIO.intakerDemand = Constants.INTAKER_FAST_INTAKE_PERCENTAGE;

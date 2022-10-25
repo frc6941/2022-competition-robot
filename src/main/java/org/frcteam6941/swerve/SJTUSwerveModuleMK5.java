@@ -36,7 +36,7 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
     public static double ANGLE_KP = 1.8;
     public static double ANGLE_KI = 0.001;
     public static double ANGLE_KD = 60;
-    public static double ANGLE_KF = 1023 * 0.8 / (4096 / 4);
+    public static double ANGLE_KF = 1023 * 0.8 / (4096.0 / 4.0);
     public static double ANGLE_CRUISE_V = 1300;
     public static double ANGLE_ACC = ANGLE_CRUISE_V / 0.4;
 
@@ -72,7 +72,7 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
      * Core function to set the state of the swerve module.
      * 
      * @param desiredState   The desired state of the module.
-     * @param isOpenLoop     Whether the speed controll will be open loop (voltage
+     * @param isOpenLoop     Whether the speed control will be open loop (voltage
      *                       control), or close loop (using on-board PIDF control to
      *                       reach the velocity set point).
      * @param overrideMotion Enable angle control even if the speed is lower than
@@ -162,7 +162,7 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
     }
 
     /**
-     * Get the Encoder angle unbound (may be greater than 360 or lower than 0) with
+     * Get the Encoder angle unbound (maybe greater than 360 or lower than 0) with
      * angle offset calculated.
      * 
      * @return The raw angle of the encoder in degrees.

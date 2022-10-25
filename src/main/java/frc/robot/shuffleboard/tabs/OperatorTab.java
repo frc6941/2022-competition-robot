@@ -53,7 +53,7 @@ public class OperatorTab extends ShuffleboardTabBase {
         mIsFull.setBoolean(mBallPath.isFull());
     }
 
-    public void configAutoModeSelector(AutoSelector autoSelector){
+    public void configAutoModeSelector(AutoSelector autoSelector) {
         mTab.add("Autonomous Choose", autoSelector.getSendableChooser()).withSize(3, 2);
     }
 }

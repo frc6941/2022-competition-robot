@@ -20,7 +20,7 @@ public class SwerveTab extends ShuffleboardTabBase {
     private NetworkTableEntry gyroAngle;
     private NetworkTableEntry swerveState;
 
-    public SwerveTab(){
+    public SwerveTab() {
         swerveModuleVelocities = new NetworkTableEntry[mSwerve.getSwerveModuleStates().length];
         swerveModuleAngles = new NetworkTableEntry[mSwerve.getSwerveModuleStates().length];
     }
@@ -59,7 +59,7 @@ public class SwerveTab extends ShuffleboardTabBase {
         for (SwerveModuleState state : moduleStates) {
             double speed = state.speedMetersPerSecond;
             double angle;
-            if(speed < 0.0){
+            if (speed < 0.0) {
                 angle = AngleNormalization.getAbsoluteAngleDegree(state.angle.getDegrees() + 180.0);
             } else {
                 angle = AngleNormalization.getAbsoluteAngleDegree(state.angle.getDegrees());

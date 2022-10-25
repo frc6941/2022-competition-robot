@@ -46,11 +46,11 @@ public class ControlBoard {
         operator = new CustomXboxController(Constants.OPERATOR_CONTROLLER_PORT);
     }
 
-    public CustomXboxController getDriverController(){
+    public CustomXboxController getDriverController() {
         return driver;
     }
 
-    public CustomXboxController getOperatorController(){
+    public CustomXboxController getOperatorController() {
         return operator;
     }
     
@@ -176,11 +176,11 @@ public class ControlBoard {
         return operator.getController().getPOV() == kDpadUp;
     }
 
-    public boolean getClimberHootOut(){
+    public boolean getClimberHootOut() {
         return operator.getController().getPOV() == kDpadRight;
     }
 
-    public boolean getClimberHootIn(){
+    public boolean getClimberHootIn() {
         return operator.getController().getPOV() == kDpadLeft;
     }
 
@@ -192,11 +192,11 @@ public class ControlBoard {
         return operator.getController().getBButtonPressed();
     }
 
-    public boolean getClimbAutoConfirmation(){
+    public boolean getClimbAutoConfirmation() {
         return operator.getButton(Button.A);
     }
 
-    public boolean getClimbAutoAbort(){
+    public boolean getClimbAutoAbort() {
         return operator.getButton(Button.X);
     }
 }

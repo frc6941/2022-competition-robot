@@ -113,11 +113,11 @@ public class Climber implements Updatable {
         }
     }
 
-    public synchronized boolean isLoaded(){
+    public synchronized boolean isLoaded() {
         return load;
     }
 
-    public void setClimberLoad(boolean value){
+    public void setClimberLoad(boolean value) {
         load = value;
     }
 
@@ -185,7 +185,7 @@ public class Climber implements Updatable {
             this.tryToExtend = false;
         }
 
-        switch(state){
+        switch (state) {
             case HOMING:
                 if (mPeriodicIO.climberCurret > 60.0) {
                     resetClimberPosition();
@@ -246,7 +246,7 @@ public class Climber implements Updatable {
     public synchronized void disabled(double time, double dt) {
     }
 
-    public static enum STATE {
+    public enum STATE {
         HOMING,
         PERCENTAGE,
         HEIGHT

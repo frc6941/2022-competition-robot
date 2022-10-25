@@ -54,21 +54,21 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
     // Swerve Kinematics and Odometry
     @GuardedBy("statusLock")
-    private SwerveDriveKinematics swerveKinematics;
+    private final SwerveDriveKinematics swerveKinematics;
     @GuardedBy("statusLock")
-    private SwerveDrivePoseEstimator poseEstimator;
-    private Translation2d[] swerveModulePositions;
-    private SJTUSwerveModuleMK5[] mSwerveMods;
+    private final SwerveDrivePoseEstimator poseEstimator;
+    private final Translation2d[] swerveModulePositions;
+    private final SJTUSwerveModuleMK5[] mSwerveMods;
 
     @GuardedBy("sensorLock")
-    private Pigeon gyro;
+    private final Pigeon gyro;
     private static SJTUSwerveMK5Drivebase instance;
 
     // Dynamic System Status
     @GuardedBy("statusLock")
     private Translation2d translation = new Translation2d();
     @GuardedBy("statusLock")
-    private MovingAverage angularVelocity = new MovingAverage(5);
+    private final MovingAverage angularVelocity = new MovingAverage(5);
     @GuardedBy("statusLock")
     private Pose2d pose = new Pose2d();
 
@@ -118,7 +118,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
                 new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.005, 0.005, 0.001), // Vision Error,
         kLooperDt);
         this.pose = poseEstimator.getEstimatedPosition();
-        headingController.enableContinuousInput(0, 360.0); // Enable continous rotation
+        headingController.enableContinuousInput(0, 360.0); // Enable continuous rotation
         headingController.setTolerance(2.0);
     }
 
@@ -170,7 +170,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     /**
      * Get the lock heading target for the swerve drive.
      * 
-     * @return The desired heading target from 0 - 360 in degrees.
+     * @return The desired heading target from 0 to 360 in degrees.
      */
     public double getHeadingTarget() {
         return this.headingTarget;
@@ -229,15 +229,15 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         }
     }
 
-    public void resetHeadingController(){
+    public void resetHeadingController() {
         headingController.reset(gyro.getYaw().getDegrees(),getAngularVelocity());
     }
 
-    public void addVisionObservation(Pose2d estimatedPose, double timestampSeconds){
+    public void addVisionObservation(Pose2d estimatedPose, double timestampSeconds) {
         this.poseEstimator.addVisionMeasurement(estimatedPose, timestampSeconds);
     }
 
-    public void addVisionObservationTranslation(Translation2d translation, double timestampSeconds){
+    public void addVisionObservationTranslation(Translation2d translation, double timestampSeconds) {
         addVisionObservation(new Pose2d(translation, gyro.getYaw()), timestampSeconds);
     }
 

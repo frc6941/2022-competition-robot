@@ -4,11 +4,11 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 public interface SwerveModuleBase {
-    abstract void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop, boolean overrideMotion);
+    void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop, boolean overrideMotion);
 
-    abstract Rotation2d getEncoder();
+    Rotation2d getEncoder();
 
-    abstract Rotation2d getEncoderUnbound();
+    Rotation2d getEncoderUnbound();
 
-    abstract SwerveModuleState getState();
+    SwerveModuleState getState();
 }
