@@ -25,9 +25,9 @@ public class AutoSelector {
 
     private AUTO_MODES mCachedDesiredMode = AUTO_MODES.DO_NOTHING;
 
-    private Optional<AutoModeBase> mAutoMode = Optional.empty();
+    private AutoModeBase mAutoMode;
 
-    private SendableChooser<AUTO_MODES> mModeChooser;
+    private final SendableChooser<AUTO_MODES> mModeChooser;
 
     private boolean autoWarning = false;
 
@@ -57,13 +57,13 @@ public class AutoSelector {
         }
         if (mCachedDesiredMode != desiredMode) {
             System.out.println("Auto Selection Changed:" + desiredMode.name());
-            mAutoMode = getAutoModeForParams(desiredMode);
-            if (mAutoMode.isPresent()) {
-                resetStartingPosition(mAutoMode.get().getStartingPose());
-            } else {
+            mAutoMode = getAutoModeForParams(desiredMode).map(autoModeBase -> {
+                resetStartingPosition(autoModeBase.getStartingPose());
+                return autoModeBase;
+            }).orElseGet(() -> {
                 resetStartingPosition(new Pose2d());
-            }
-
+                return null;
+            });
         }
         mCachedDesiredMode = desiredMode;
     }
@@ -105,7 +105,7 @@ public class AutoSelector {
     }
 
     public void reset() {
-        mAutoMode = Optional.empty();
+        mAutoMode = null;
         mCachedDesiredMode = null;
     }
 
@@ -115,10 +115,7 @@ public class AutoSelector {
     }
 
     public Optional<AutoModeBase> getAutoMode() {
-        if (!mAutoMode.isPresent()) {
-            return Optional.empty();
-        }
-        return mAutoMode;
+        return Optional.ofNullable(mAutoMode);
     }
 
     public SendableChooser<AUTO_MODES> getSendableChooser() {

@@ -39,7 +39,7 @@ public class TargetInfo {
         return skew;
     }
 
-    public double[][] getDoubleMatrix(){
+    public double[][] getDoubleMatrix() {
         return new double[][] {
             {x},{y},{z}
         };

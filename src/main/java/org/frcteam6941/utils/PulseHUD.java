@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -80,7 +81,7 @@ public final class PulseHUD {
     }
 
     /**
-     * Maps the specified key (where the key is the name of the {@link Sendable} to
+     * Maps the specified key where the key is the name of the {@link Sendable} to
      * the specified
      * value in this table. The value can be retrieved by calling the get method
      * with a key that is
@@ -104,12 +105,8 @@ public final class PulseHUD {
      * @throws IllegalArgumentException if the key is null
      */
     public static synchronized Sendable getData(String key) {
-        Sendable data = tablesToData.get(key);
-        if (data == null) {
-            throw new IllegalArgumentException("SmartDashboard data does not exist: " + key);
-        } else {
-            return data;
-        }
+        Optional<Sendable> data = Optional.ofNullable(tablesToData.get(key));
+        return data.orElseThrow(() -> new IllegalArgumentException("SmartDashboard data does not exist: " + key));
     }
 
     /**

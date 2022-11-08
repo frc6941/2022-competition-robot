@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj.Filesystem;
 
 public class CSVReader {
     public static String[][] readAsMatrix(String filePath) {
-        List<String[]> rowList = new ArrayList<String[]>();
+        List<String[]> rowList = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(
                 new FileReader(new File(Filesystem.getDeployDirectory(), filePath + ".csv")))) {
             String line;

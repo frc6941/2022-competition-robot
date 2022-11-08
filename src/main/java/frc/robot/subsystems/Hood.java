@@ -53,22 +53,22 @@ public class Hood implements Updatable{
     }
     private static Hood instance;
 
-    public synchronized void resetHood(double angle){
+    public synchronized void resetHood(double angle) {
         hoodMotor.setSelectedSensorPosition(
             Conversions.degreesToFalcon(angle, Constants.HOOD_GEAR_RATIO)
         );
         isCalibrated = true;
     }
 
-    public synchronized void setHoodPercentage(double power){
-        if(getState() != STATE.PERCENTAGE){
+    public synchronized void setHoodPercentage(double power) {
+        if (getState() != STATE.PERCENTAGE) {
             setState(STATE.PERCENTAGE);
         }
         mPeriodicIO.hoodDemand = power;
     }
 
-    public synchronized void setHoodAngle(double angle){
-        if(getState() != STATE.ANGLE){
+    public synchronized void setHoodAngle(double angle) {
+        if (getState() != STATE.ANGLE) {
             setState(STATE.ANGLE);
         }
         angle = Util.clamp(angle, Constants.HOOD_MINIMUM_ANGLE, Constants.HOOD_MAXIMUM_ANGLE);
@@ -84,48 +84,44 @@ public class Hood implements Updatable{
     }
 
     @Override
-    public synchronized void read(double time, double dt){
+    public synchronized void read(double time, double dt) {
         mPeriodicIO.hoodCurrent = hoodMotor.getStatorCurrent();
         mPeriodicIO.hoodPosition = hoodMotor.getSelectedSensorPosition();
         mPeriodicIO.hoodVelocity = hoodMotor.getSelectedSensorVelocity();
     }
     
     @Override
-    public synchronized void update(double time, double dt){
-        if(!isCalibrated){
+    public synchronized void update(double time, double dt) {
+        if (!isCalibrated) {
             setState(STATE.HOMING);
         }
 
-        switch(state){
+        switch (state) {
             case HOMING:
                 mPeriodicIO.hoodDemand = -0.2;
-                if(isCalibrated){
+                if (isCalibrated) {
                     setState(STATE.OFF);
                 }
-                if(mPeriodicIO.hoodCurrent > Constants.HOOD_HOMING_CURRENT_THRESHOLD){
+                if (mPeriodicIO.hoodCurrent > Constants.HOOD_HOMING_CURRENT_THRESHOLD) {
                     resetHood(Constants.HOOD_MINIMUM_ANGLE - 0.5);
                 }
                 break;
             case PERCENTAGE:
-                break;
             case ANGLE:
-                break;
             case OFF:
                 break;
         }
     }
     
     @Override
-    public synchronized void write(double time, double dt){
-        switch(state){
+    public synchronized void write(double time, double dt) {
+        switch (state) {
             case HOMING:
+            case PERCENTAGE:
                 hoodMotor.set(ControlMode.PercentOutput, mPeriodicIO.hoodDemand);
                 break;
             case ANGLE:
                 hoodMotor.set(ControlMode.MotionMagic, Conversions.degreesToFalcon(mPeriodicIO.hoodDemand, Constants.HOOD_GEAR_RATIO));
-                break;
-            case PERCENTAGE:
-                hoodMotor.set(ControlMode.PercentOutput, mPeriodicIO.hoodDemand);
                 break;
             case OFF:
                 hoodMotor.set(ControlMode.PercentOutput, 0.0);
@@ -134,27 +130,27 @@ public class Hood implements Updatable{
     }
     
     @Override
-    public synchronized void telemetry(){
+    public synchronized void telemetry() {
         SmartDashboard.putNumber("Hood Demand", mPeriodicIO.hoodDemand);
         SmartDashboard.putNumber("Hood Angle", getHoodAngle());
     }
     
     @Override
-    public synchronized void start(){
+    public synchronized void start() {
         isCalibrated = false;
         setState(STATE.HOMING);
     }
     
     @Override
-    public synchronized void stop(){
+    public synchronized void stop() {
     }
     
     @Override
-    public synchronized void disabled(double time, double dt){
+    public synchronized void disabled(double time, double dt) {
         // Auto Generated Method
     }
 
-    public static enum STATE {
+    public enum STATE {
         OFF,
         HOMING,
         PERCENTAGE,

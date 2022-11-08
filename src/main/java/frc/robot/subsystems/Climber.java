@@ -34,8 +34,8 @@ public class Climber implements Updatable {
 
     public PeriodicIO mPeriodicIO = new PeriodicIO();
 
-    private LazyTalonFX climberMotor = new LazyTalonFX(Constants.CANID.CLIMBER_MOTOR);
-    private DoubleSolenoid climberExtender = new DoubleSolenoid(PneumaticsModuleType.REVPH,
+    private final LazyTalonFX climberMotor = new LazyTalonFX(Constants.CANID.CLIMBER_MOTOR);
+    private final DoubleSolenoid climberExtender = new DoubleSolenoid(PneumaticsModuleType.REVPH,
             Constants.PNEUMATICS_ID.CLIMBER_EXTENDER_FORWARD,
             Constants.PNEUMATICS_ID.CLIMBER_EXTENDER_REVERSE);
 
@@ -73,7 +73,7 @@ public class Climber implements Updatable {
         if (getState() != STATE.PERCENTAGE) {
             setState(STATE.PERCENTAGE);
         }
-        mPeriodicIO.climberDemand = power > 1.0 ? 1.0 : power;
+        mPeriodicIO.climberDemand = Math.min(power, 1.0);
     }
 
     public boolean freeToExtend() {
@@ -113,11 +113,11 @@ public class Climber implements Updatable {
         }
     }
 
-    public synchronized boolean isLoaded(){
+    public synchronized boolean isLoaded() {
         return load;
     }
 
-    public void setClimberLoad(boolean value){
+    public void setClimberLoad(boolean value) {
         load = value;
     }
 
@@ -138,7 +138,7 @@ public class Climber implements Updatable {
         climberMotor.setSelectedSensorPosition(0.0);
     }
 
-    public synchronized void setExtentionHeight() {
+    public synchronized void setExtensionHeight() {
         if (getState() != STATE.HEIGHT) {
             setState(STATE.HEIGHT);
         }
@@ -159,7 +159,7 @@ public class Climber implements Updatable {
         setClimberHeight(Constants.CLIMBER_STAGING_HEIGHT);
     }
 
-    public synchronized void setDetatchingHeight() {
+    public synchronized void setDetachingHeight() {
         if (getState() != STATE.HEIGHT) {
             setState(STATE.HEIGHT);
         }
@@ -185,7 +185,7 @@ public class Climber implements Updatable {
             this.tryToExtend = false;
         }
 
-        switch(state){
+        switch (state) {
             case HOMING:
                 if (mPeriodicIO.climberCurret > 60.0) {
                     resetClimberPosition();
@@ -194,12 +194,6 @@ public class Climber implements Updatable {
                 }
                 break;
             case HEIGHT:
-                if (this.isExtended && this.freeToExtend()) { // At good height and received signal to extend
-                    mPeriodicIO.climberExtenderDemand = DoubleSolenoid.Value.kForward;
-                } else {
-                    mPeriodicIO.climberExtenderDemand = DoubleSolenoid.Value.kReverse;
-                }
-                break;
             case PERCENTAGE:
                 if (this.isExtended && this.freeToExtend()) { // At good height and received signal to extend
                     mPeriodicIO.climberExtenderDemand = DoubleSolenoid.Value.kForward;
@@ -252,7 +246,7 @@ public class Climber implements Updatable {
     public synchronized void disabled(double time, double dt) {
     }
 
-    public static enum STATE {
+    public enum STATE {
         HOMING,
         PERCENTAGE,
         HEIGHT

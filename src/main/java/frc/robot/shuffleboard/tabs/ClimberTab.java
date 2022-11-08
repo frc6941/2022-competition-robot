@@ -9,9 +9,9 @@ import frc.robot.shuffleboard.ShuffleboardTabBase;
 import frc.robot.subsystems.Climber;
 
 public class ClimberTab extends ShuffleboardTabBase {
-    private Superstructure mSuperstructure = Superstructure.getInstance();
-    private Climber mClimber = Climber.getInstance();
-    private SJTUSwerveMK5Drivebase mDrivebase = SJTUSwerveMK5Drivebase.getInstance();
+    private final Superstructure mSuperstructure = Superstructure.getInstance();
+    private final Climber mClimber = Climber.getInstance();
+    private final SJTUSwerveMK5Drivebase mDrivebase = SJTUSwerveMK5Drivebase.getInstance();
 
     private NetworkTableEntry mIsInClimbMode;
     private NetworkTableEntry mIsClimberHomed;

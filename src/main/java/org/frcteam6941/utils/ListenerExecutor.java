@@ -13,8 +13,8 @@ import java.util.concurrent.Executor;
  * synchronously from the main application thread.
  */
 class ListenerExecutor implements Executor {
-  private final Collection<Runnable> m_tasks = new ArrayList<>();
-  private final Object m_lock = new Object();
+  private final Collection<Runnable> mTasks = new ArrayList<>();
+  private final Object mLock = new Object();
 
   /**
    * Posts a task to the executor to be run synchronously from the main thread.
@@ -23,18 +23,18 @@ class ListenerExecutor implements Executor {
    */
   @Override
   public void execute(Runnable task) {
-    synchronized (m_lock) {
-      m_tasks.add(task);
+    synchronized (mLock) {
+      mTasks.add(task);
     }
   }
 
   /** Runs all posted tasks. Called periodically from main thread. */
   public void runListenerTasks() {
     // Locally copy tasks from internal list; minimizes blocking time
-    Collection<Runnable> tasks = new ArrayList<>();
-    synchronized (m_lock) {
-      tasks.addAll(m_tasks);
-      m_tasks.clear();
+    Collection<Runnable> tasks;
+    synchronized (mLock) {
+      tasks = new ArrayList<>(mTasks);
+      mTasks.clear();
     }
 
     // Run all tasks

@@ -9,11 +9,11 @@ import frc.robot.subsystems.BallPath;
 import frc.robot.subsystems.Limelight;
 
 public class OperatorTab extends ShuffleboardTabBase {
-    private Superstructure mSuperstructure = Superstructure.getInstance();
-    private Limelight mLimelight = Limelight.getInstance();
-    private BallPath mBallPath = BallPath.getInstance();
+    private final Superstructure mSuperstructure = Superstructure.getInstance();
+    private final Limelight mLimelight = Limelight.getInstance();
+    private final BallPath mBallPath = BallPath.getInstance();
 
-    private NetworkTableEntry mSupersturctureState;
+    private NetworkTableEntry mSuperStructureState;
     private NetworkTableEntry mHasTarget;
     private NetworkTableEntry mIsAimed;
     private NetworkTableEntry mIsOnTarget;
@@ -22,7 +22,7 @@ public class OperatorTab extends ShuffleboardTabBase {
     @Override
     public void createEntries() {
         mTab = Shuffleboard.getTab("Operator");
-        mSupersturctureState = mTab
+        mSuperStructureState = mTab
                 .add("Superstructure State", "PIT")
                 .withSize(3, 2)
                 .getEntry();
@@ -46,14 +46,14 @@ public class OperatorTab extends ShuffleboardTabBase {
 
     @Override
     public void update() {
-        mSupersturctureState.setString(mSuperstructure.getState().toString());
+        mSuperStructureState.setString(mSuperstructure.getState().toString());
         mHasTarget.setBoolean(mLimelight.hasTarget());
         mIsAimed.setBoolean(mSuperstructure.isOnTarget());
         mIsOnTarget.setBoolean(mSuperstructure.mPeriodicIO.SHOOT);
         mIsFull.setBoolean(mBallPath.isFull());
     }
 
-    public void configAutoModeSelector(AutoSelector autoSelector){
+    public void configAutoModeSelector(AutoSelector autoSelector) {
         mTab.add("Autonomous Choose", autoSelector.getSendableChooser()).withSize(3, 2);
     }
 }

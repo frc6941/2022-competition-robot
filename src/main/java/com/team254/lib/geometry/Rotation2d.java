@@ -52,7 +52,7 @@ public class Rotation2d implements IRotation2d<Rotation2d> {
         theta_degrees = Math.toDegrees(Math.atan2(sin_angle_, cos_angle_));
     }
     
-    public Rotation2d(double theta_degrees){
+    public Rotation2d(double theta_degrees) {
     	cos_angle_ = Math.cos(Math.toRadians(theta_degrees));
     	sin_angle_ = Math.sin(Math.toRadians(theta_degrees));
     	this.theta_degrees = theta_degrees;
@@ -103,7 +103,7 @@ public class Rotation2d implements IRotation2d<Rotation2d> {
         return Math.toDegrees(getRadians());
     }
     
-    public double getUnboundedDegrees(){
+    public double getUnboundedDegrees() {
     	return theta_degrees;
     }
 
@@ -111,7 +111,7 @@ public class Rotation2d implements IRotation2d<Rotation2d> {
      * We can rotate this Rotation2d by adding together the effects of it and another rotation.
      *
      * @param other The other rotation. See: https://en.wikipedia.org/wiki/Rotation_matrix
-     * @return This rotation rotated by other.
+     * @return This rotation rotated by others.
      */
     public Rotation2d rotateBy(final Rotation2d other) {
         return new Rotation2d(cos_angle_ * other.cos_angle_ - sin_angle_ * other.sin_angle_,
@@ -142,10 +142,10 @@ public class Rotation2d implements IRotation2d<Rotation2d> {
     /**
      * @return The pole nearest to this rotation.
      */
-    public Rotation2d nearestPole(){
+    public Rotation2d nearestPole() {
     	double pole_sin = 0.0;
     	double pole_cos = 0.0;
-    	if(Math.abs(cos_angle_) > Math.abs(sin_angle_)){
+    	if (Math.abs(cos_angle_) > Math.abs(sin_angle_)) {
     		pole_cos = Math.signum(cos_angle_);
     		pole_sin = 0.0;
     	}else{

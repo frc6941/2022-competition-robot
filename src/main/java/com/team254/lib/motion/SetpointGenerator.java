@@ -57,7 +57,7 @@ public class SetpointGenerator {
                 || !mGoal.equals(goal) || mProfile == null;
         if (!regenerate && !mProfile.isEmpty()) {
             Optional<MotionState> expected_state = mProfile.stateByTime(prev_state.t());
-            regenerate = !expected_state.isPresent() || !expected_state.get().equals(prev_state);
+            regenerate = expected_state.isEmpty() || !expected_state.get().equals(prev_state);
         }
         if (regenerate) {
             // Regenerate the profile, as our current profile does not satisfy the inputs.

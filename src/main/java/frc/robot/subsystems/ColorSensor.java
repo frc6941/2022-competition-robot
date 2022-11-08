@@ -32,7 +32,7 @@ public class ColorSensor implements Updatable{
         RED, BLUE, OTHER, NONE
     }
 
-    private ColorSensorV3 colorSensor;
+    private final ColorSensorV3 colorSensor;
     private boolean sawBall = false;
     public ColorChoices allianceColor = ColorChoices.NONE;
     public ColorChoices matchedColor;
@@ -59,7 +59,7 @@ public class ColorSensor implements Updatable{
         if (DriverStation.isDSAttached()) {
             if (edu.wpi.first.wpilibj.DriverStation.getAlliance() == Alliance.Red) {
                 allianceColor = ColorChoices.RED;
-            } else if (edu.wpi.first.wpilibj.DriverStation.getAlliance() == Alliance.Blue){
+            } else if (edu.wpi.first.wpilibj.DriverStation.getAlliance() == Alliance.Blue) {
                 allianceColor = ColorChoices.BLUE;
             }
         } else {
@@ -89,10 +89,7 @@ public class ColorSensor implements Updatable{
     }
 
     public boolean seesNewBall() {
-        boolean newBall = false;
-        if ((seesBall() && !sawBall)) {
-            newBall = true;
-        }
+        boolean newBall = seesBall() && !sawBall;
         sawBall = seesBall();
         return newBall;
     }
@@ -108,42 +105,42 @@ public class ColorSensor implements Updatable{
     }
 
     @Override
-    public synchronized void read(double time, double dt){
+    public synchronized void read(double time, double dt) {
         mPeriodicIO.red = colorSensor.getRed();
         mPeriodicIO.green = colorSensor.getGreen();
         mPeriodicIO.blue = colorSensor.getBlue();
         mPeriodicIO.adjustedBlue = mPeriodicIO.blue;
         mPeriodicIO.adjustedRed = mPeriodicIO.red + mPeriodicIO.colorOffset;
-        mPeriodicIO.colorRatio = (double) mPeriodicIO.adjustedRed / (double) mPeriodicIO.adjustedBlue;
+        mPeriodicIO.colorRatio = mPeriodicIO.adjustedRed / mPeriodicIO.adjustedBlue;
         mPeriodicIO.proximity = colorSensor.getProximity();
     }
 
     @Override
-    public synchronized void update(double time, double dt){
+    public synchronized void update(double time, double dt) {
         updateMatchedColor();
     }
 
     @Override
-    public synchronized void write(double time, double dt){
+    public synchronized void write(double time, double dt) {
         
     }
 
     @Override
-    public synchronized void telemetry(){
+    public synchronized void telemetry() {
     }
 
     @Override
-    public synchronized void start(){
+    public synchronized void start() {
         
     }
 
     @Override
-    public synchronized void stop(){
+    public synchronized void stop() {
 
     }
 
     @Override
-    public synchronized void disabled(double time, double dt){
+    public synchronized void disabled(double time, double dt) {
         updateAllianceColor();
         updateColorOffset();
     }

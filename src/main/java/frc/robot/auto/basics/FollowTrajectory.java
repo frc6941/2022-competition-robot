@@ -5,7 +5,7 @@ import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
-public class FollowTrajectory extends CommandBase{
+public class FollowTrajectory extends CommandBase {
     PathPlannerTrajectory trajectory;
     boolean angleLock;
     boolean reset;
@@ -13,7 +13,7 @@ public class FollowTrajectory extends CommandBase{
 
     SJTUSwerveMK5Drivebase mDrivebase;
 
-    public FollowTrajectory(SJTUSwerveMK5Drivebase mDrivebase, PathPlannerTrajectory trajectory, boolean angleLock, boolean reset, boolean requiredOnTarget){
+    public FollowTrajectory(SJTUSwerveMK5Drivebase mDrivebase, PathPlannerTrajectory trajectory, boolean angleLock, boolean reset, boolean requiredOnTarget) {
         this.mDrivebase = mDrivebase;
         this.trajectory = trajectory;
         this.angleLock = angleLock;

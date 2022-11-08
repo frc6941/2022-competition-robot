@@ -121,7 +121,7 @@ public class GoalTracker {
     }
 
     public synchronized void maybePruneTracks() {
-        mCurrentTracks.removeIf(track -> !track.isAlive());
+        mCurrentTracks.removeIf (track -> !track.isAlive());
     }
 
     public synchronized boolean hasTracks() {

@@ -38,13 +38,13 @@ public class BallPath implements Updatable {
 
     public PeriodicIO mPeriodicIO = new PeriodicIO();
 
-    private LazyTalonFX feederMotor = new LazyTalonFX(Constants.CANID.FEEDER_MOTOR);
-    private CANSparkMax triggerMotor = new CANSparkMax(Constants.CANID.TRIGGER_MOTOR, MotorType.kBrushless);
+    private final LazyTalonFX feederMotor = new LazyTalonFX(Constants.CANID.FEEDER_MOTOR);
+    private final CANSparkMax triggerMotor = new CANSparkMax(Constants.CANID.TRIGGER_MOTOR, MotorType.kBrushless);
 
-    private AnalogInput ballPositionOneDetector = new AnalogInput(Constants.ANALOG_ID.BALL_POSITION_ONE_DETECTOR);
-    private AnalogInput ballPositionTwoDetector = new AnalogInput(Constants.ANALOG_ID.BALL_POSITION_TWO_DETECTOR);
+    private final AnalogInput ballPositionOneDetector = new AnalogInput(Constants.ANALOG_ID.BALL_POSITION_ONE_DETECTOR);
+    private final AnalogInput ballPositionTwoDetector = new AnalogInput(Constants.ANALOG_ID.BALL_POSITION_TWO_DETECTOR);
 
-    private ColorSensor colorSensor = ColorSensor.getInstance();
+    private final ColorSensor colorSensor = ColorSensor.getInstance();
 
     private static BallPath instance;
 
@@ -52,10 +52,10 @@ public class BallPath implements Updatable {
     private boolean continueProcess = false;
     private boolean isLocking = false;
     private double lockingPositionRecorder = 0.0;
-    private TimeDelayedBoolean slowProcessBoolean = new TimeDelayedBoolean();
-    private TimeDelayedBoolean launchReverseBoolean = new TimeDelayedBoolean();
+    private final TimeDelayedBoolean slowProcessBoolean = new TimeDelayedBoolean();
+    private final TimeDelayedBoolean launchReverseBoolean = new TimeDelayedBoolean();
     private boolean hasReversed = false;
-    private TimeDelayedBoolean ejectBoolean = new TimeDelayedBoolean();
+    private final TimeDelayedBoolean ejectBoolean = new TimeDelayedBoolean();
     private STATE state = STATE.IDLE;
 
     private BallPath() {
@@ -182,7 +182,7 @@ public class BallPath implements Updatable {
         //         slowProcessBoolean.update(false, 0.0);
         //         break;
         //     case PROCESSING:
-        //         if(isFull()){
+        //         if (isFull()) {
         //             if (slowProcessBoolean.update(true, Constants.BALLPATH_SLOW_PROCESS_TIME)) {
         //                 setState(STATE.IDLE);
         //                 slowProcessBoolean.update(false, 0.0);
@@ -325,8 +325,8 @@ public class BallPath implements Updatable {
                     break;
                 }
             case FEEDING:
-                if(!hasReversed){
-                    if (launchReverseBoolean.update(true, Constants.BALLPATH_FEEDING_REVERSE_TIME)){
+                if (!hasReversed) {
+                    if (launchReverseBoolean.update(true, Constants.BALLPATH_FEEDING_REVERSE_TIME)) {
                         hasReversed = true;
                     } else {
                         mPeriodicIO.feederDemand = Constants.FEEDER_FEED_REVERSE_PERCENTAGE;
@@ -395,7 +395,7 @@ public class BallPath implements Updatable {
     public synchronized void disabled(double time, double dt) {
     }
 
-    public static enum STATE {
+    public enum STATE {
         IDLE,
         PROCESSING,
         FEEDING,

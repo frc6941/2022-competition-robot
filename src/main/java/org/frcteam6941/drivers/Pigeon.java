@@ -62,7 +62,7 @@ public class Pigeon {
         pitchAdjustmentAngle = getUnadjustedRoll().rotateBy(Rotation2d.fromDegrees(angleDeg).unaryMinus());
     }
 
-    public void setInverted(boolean inv){
+    public void setInverted(boolean inv) {
         inverted = inv;
     }
 

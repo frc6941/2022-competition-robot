@@ -88,11 +88,10 @@ public class Shooter implements Updatable {
 
     public synchronized boolean spunUp() {
         if (mPeriodicIO.shooterDemand > 0) {
-            boolean flywheelSpunUp = Util.epsilonEquals(
+            return Util.epsilonEquals(
                     getShooterRPM(),
                     mPeriodicIO.shooterDemand,
                     Constants.SHOOTER_ERROR_TOLERANCE);
-            return flywheelSpunUp;
         }
         return false;
     }
@@ -115,7 +114,7 @@ public class Shooter implements Updatable {
                 mPeriodicIO.shooterDemand = 0.0;
                 break;
             case OPEN_LOOP:
-                mPeriodicIO.shooterDemand = mPeriodicIO.shooterDemand <= 1.0 ? mPeriodicIO.shooterDemand : 1.0;
+                mPeriodicIO.shooterDemand = Math.min(mPeriodicIO.shooterDemand, 1.0);
                 break;
             case CLOSE_LOOP:
                 break;

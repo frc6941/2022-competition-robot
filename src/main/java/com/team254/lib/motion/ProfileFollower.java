@@ -3,6 +3,8 @@ package com.team254.lib.motion;
 import com.team254.lib.motion.MotionProfileGoal.CompletionBehavior;
 import com.team254.lib.util.Util;
 
+import java.util.Optional;
+
 /**
  * A controller for tracking a profile generated to attain a MotionProfileGoal. The controller uses feedforward on
  * acceleration, velocity, and position; proportional feedback on velocity and position; and integral feedback on

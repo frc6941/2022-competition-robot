@@ -9,7 +9,7 @@ import frc.robot.shuffleboard.ShuffleboardTabBase;
 import frc.robot.subsystems.BallPath;
 
 public class BallPathTab extends ShuffleboardTabBase {
-    private BallPath mBallPath = BallPath.getInstance();
+    private final BallPath mBallPath = BallPath.getInstance();
 
     private NetworkTableEntry mBallPathState;
     private NetworkTableEntry mFeederDemand;

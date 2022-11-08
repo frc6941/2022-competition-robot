@@ -42,7 +42,7 @@ public class Translation2d implements ITranslation2d<Translation2d> {
         y_ = other.getY();
     }
     
-    public static Translation2d fromPolar(Rotation2d direction, double magnitude){
+    public static Translation2d fromPolar(Rotation2d direction, double magnitude) {
     	return new Translation2d(direction.cos() * magnitude, direction.sin() * magnitude);
     }
 
@@ -66,7 +66,7 @@ public class Translation2d implements ITranslation2d<Translation2d> {
 	 * @return r / norm(r) or (0,0)
 	 */
 	public Translation2d normalize() {
-		if(epsilonEquals(identity(),Util.kEpsilon)) return this;
+		if (epsilonEquals(identity(),Util.kEpsilon)) return this;
 		return scale(1.0/norm());
 	}
 
@@ -78,11 +78,11 @@ public class Translation2d implements ITranslation2d<Translation2d> {
         return y_;
     }
     
-    public void setX(double x){
+    public void setX(double x) {
     	x_ = x;
     }
     
-    public void setY(double y){
+    public void setY(double y) {
     	y_ = y;
     }
     
@@ -216,7 +216,7 @@ public class Translation2d implements ITranslation2d<Translation2d> {
 		Translation2d m = (new Translation2d(B,M)).normalize(); // mid-vector
 		Translation2d a = (new Translation2d(B,A)).normalize(); // side vector
 		Translation2d d = (new Translation2d(B,this)).normalize(); // vector to here
-		if(vertical) {
+		if (vertical) {
 			m = m.inverse();
 			a = a.inverse();
 		}

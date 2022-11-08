@@ -18,12 +18,12 @@ public class OpenCVCalculatedUndistortMap implements UndistortMap {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     }
 
-    private CameraResolution cameraResolution;
-    private CameraConstants undistortConstants;
+    private final CameraResolution cameraResolution;
+    private final CameraConstants undistortConstants;
     double[][][] map;
 
-    private AtomicBoolean ready = new AtomicBoolean(false);
-    private AtomicBoolean loaded = new AtomicBoolean(false);
+    private final AtomicBoolean ready = new AtomicBoolean(false);
+    private final AtomicBoolean loaded = new AtomicBoolean(false);
 
     public OpenCVCalculatedUndistortMap(CameraConstants undistortConstants, CameraResolution cameraResolution, boolean loadAsync) {
         this.cameraResolution = cameraResolution;

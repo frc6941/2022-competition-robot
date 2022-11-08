@@ -16,7 +16,7 @@ public class ControlBoard {
 
     private static ControlBoard instance = null;
 
-    public enum SwerveCardinal {
+    public enum SWERVE_CARDINAL {
         NONE(0),
 
         FORWARDS(0),
@@ -26,7 +26,7 @@ public class ControlBoard {
 
         public final double degrees;
 
-        SwerveCardinal(double degrees) {
+        SWERVE_CARDINAL(double degrees) {
             this.degrees = degrees;
         }
     }
@@ -46,11 +46,11 @@ public class ControlBoard {
         operator = new CustomXboxController(Constants.OPERATOR_CONTROLLER_PORT);
     }
 
-    public CustomXboxController getDriverController(){
+    public CustomXboxController getDriverController() {
         return driver;
     }
 
-    public CustomXboxController getOperatorController(){
+    public CustomXboxController getOperatorController() {
         return operator;
     }
     
@@ -96,17 +96,17 @@ public class ControlBoard {
         return driver.getButton(Button.START);
     }
 
-    public SwerveCardinal getSwerveSnapRotation() {
+    public SWERVE_CARDINAL getSwerveSnapRotation() {
         if (driver.getButton(Button.A)) {
-            return SwerveCardinal.BACKWARDS;
+            return SWERVE_CARDINAL.BACKWARDS;
         } else if (driver.getButton(Button.X)) {
-            return SwerveCardinal.RIGHT;
+            return SWERVE_CARDINAL.RIGHT;
         } else if (driver.getButton(Button.B)) {
-            return SwerveCardinal.LEFT;
+            return SWERVE_CARDINAL.LEFT;
         } else if (driver.getButton(Button.Y)) {
-            return SwerveCardinal.FORWARDS;
+            return SWERVE_CARDINAL.FORWARDS;
         } else {
-            return SwerveCardinal.NONE;
+            return SWERVE_CARDINAL.NONE;
         }
             
     }
@@ -142,7 +142,7 @@ public class ControlBoard {
         return driver.getController().getPOV() == kDpadRight;
     }
 
-    public boolean getIncreaseShotAdjutment() {
+    public boolean getIncreaseShotAdjustment() {
         return driver.getController().getPOV() == kDpadLeft;
     }
 
@@ -176,11 +176,11 @@ public class ControlBoard {
         return operator.getController().getPOV() == kDpadUp;
     }
 
-    public boolean getClimberHootOut(){
+    public boolean getClimberHootOut() {
         return operator.getController().getPOV() == kDpadRight;
     }
 
-    public boolean getClimberHootIn(){
+    public boolean getClimberHootIn() {
         return operator.getController().getPOV() == kDpadLeft;
     }
 
@@ -192,11 +192,11 @@ public class ControlBoard {
         return operator.getController().getBButtonPressed();
     }
 
-    public boolean getClimbAutoConfirmation(){
+    public boolean getClimbAutoConfirmation() {
         return operator.getButton(Button.A);
     }
 
-    public boolean getClimbAutoAbort(){
+    public boolean getClimbAutoAbort() {
         return operator.getButton(Button.X);
     }
 }

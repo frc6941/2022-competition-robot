@@ -14,7 +14,7 @@ import frc.robot.utils.led.Lights;
 import frc.robot.utils.led.TimedLEDState;
 
 public class Indicator implements Updatable {
-    private AddressableLED ledIndicator = new AddressableLED(Constants.LED_CONTROL.LED_PORT);
+    private final AddressableLED ledIndicator = new AddressableLED(Constants.LED_CONTROL.LED_PORT);
 
     public static Indicator getInstance() {
         if (instance == null) {
@@ -31,12 +31,12 @@ public class Indicator implements Updatable {
     // Define LED State
     private TimedLEDState currentState = Lights.WARNING;
     private LEDState currentLED = new LEDState(0, 0, 0);
-    private AddressableLEDBuffer currentLedBuffer = new AddressableLEDBuffer(Constants.LED_CONTROL.LED_LENGTH);
+    private final AddressableLEDBuffer currentLedBuffer = new AddressableLEDBuffer(Constants.LED_CONTROL.LED_LENGTH);
     private STATE state = STATE.ON;
-    private SuppliedValueWidget<Boolean> colorWidget = Shuffleboard.getTab("MyBot").addBoolean("Color", () -> true);
+    private final SuppliedValueWidget<Boolean> colorWidget = Shuffleboard.getTab("MyBot").addBoolean("Color", () -> true);
 
     private static Indicator instance;
-    private double intensity = 0.3;
+    private final double intensity = 0.3;
 
     public void setLEDs(LEDState color) {
         for (var i = 0; i < currentLedBuffer.getLength(); i++) {
