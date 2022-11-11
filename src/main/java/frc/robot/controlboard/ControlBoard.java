@@ -146,6 +146,10 @@ public class ControlBoard {
         return driver.getController().getPOV() == kDpadLeft;
     }
 
+    public boolean getSwitchCompressorForceEnable() {
+        return driver.getController().getBackButtonPressed();
+    }
+
     // Climber Controls
     public boolean getEnterClimbMode() {
         return operator.getButton(Button.LB) && operator.getButton(Button.RB) && operator.getTriggerBoolean(Side.LEFT) && operator.getTriggerBoolean(Side.RIGHT);

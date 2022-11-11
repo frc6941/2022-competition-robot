@@ -17,6 +17,7 @@ import org.frcteam6941.utils.AngleNormalization;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.PneumaticHub;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -106,7 +107,7 @@ public class Superstructure implements Updatable {
         // Indicator Variables
         public TimedLEDState outIndicatorState = Lights.WARNING;
 
-        // Climber Vairables
+        // Climber Variables
         public double outClimberDemand = 0.05;
         public boolean outClimberHookOut = false;
     }
@@ -129,18 +130,19 @@ public class Superstructure implements Updatable {
     private Indicator mIndicator = Indicator.getInstance();
     private Climber mClimber = Climber.getInstance();
     private Limelight mLimelight = Limelight.getInstance();
+    private PneumaticHub mPneumaticHub = new PneumaticHub();
 
-    // Swerve setting related constants
+    // Swerve setting related variables
     private boolean robotOrientedDrive = false;
     private boolean swerveSelfLocking = false;
     private Optional<Double> swerveSelfLockheadingRecord = Optional.empty();
     private TimeDelayedBoolean swerveCanSelfLock = new TimeDelayedBoolean();
 
-    // Vision delta related
+    // Vision delta related controlls
     private PIDController angleDeltaController = new PIDController(0.7, 0.0, 0.0);
     private MovingAverage angleDeltaMovingAverage = new MovingAverage(5);
 
-    // Shooting related tracking constants
+    // Shooting related tracking variables
     private boolean onTarget = false;
     private boolean onSpeed = false;
     private boolean testShot = false;
@@ -150,7 +152,7 @@ public class Superstructure implements Updatable {
     private boolean moveAndShoot = true;
     private boolean visionAim = true;
 
-    // Climbing related tracking constants
+    // Climbing related tracking variables
     private boolean readyForClimbControls = false; // if all the subsystems is ready for climb
     private boolean openLoopClimbControl = false;
     private boolean autoTraversalClimb = false; // if we are running auto-traverse
@@ -158,6 +160,9 @@ public class Superstructure implements Updatable {
     private boolean inAutoClimbControl = false;
     private int climbStep = 0; // step of auto-climb we are currently on
     private double climbStepTimeRecord = 0.0;
+
+    // Pneumatics related tracking variables
+    private boolean pneumaticsForceEnable = false;
 
     private static Superstructure instance;
     private STATE state = STATE.PIT;
@@ -279,6 +284,10 @@ public class Superstructure implements Updatable {
 
         if (mControlBoard.getDecreaseShotAdjustment()) {
             coreShootingAdjustmentAngle -= 0.02;
+        }
+
+        if (mControlBoard.getSwitchCompressorForceEnable()) {
+            pneumaticsForceEnable = !pneumaticsForceEnable;
         }
 
         if (mControlBoard.getEnterClimbMode()) {
@@ -642,7 +651,19 @@ public class Superstructure implements Updatable {
                 && mControlBoard.getClimbAutoConfirmation())) {
             inAutoClimbControl = true;
         }
+    }
 
+    /** Determine compressor state according to output periodic. */
+    public synchronized void updateCompressorState() {
+        if (pneumaticsForceEnable) {
+            mPneumaticHub.enableCompressorDigital();
+        } else {
+            if(getState() == STATE.CLIMB) {
+                mPneumaticHub.enableCompressorDigital();
+            } else {
+                mPneumaticHub.disableCompressor();
+            }
+        }
     }
 
     /** Calculating and setting climber set points. */
@@ -980,6 +1001,7 @@ public class Superstructure implements Updatable {
         }
         updateJudgingConditions();
         updateSwerveAndTurretCoordination();
+        updateCompressorState();
         updateIndicator();
     }
 
