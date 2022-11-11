@@ -93,7 +93,7 @@ public class ControlBoard {
     }
 
     public boolean zeroGyro() {
-        return driver.getButton(Button.START);
+        return driver.getController().getStartButtonPressed();
     }
 
     public SwerveCardinal getSwerveSnapRotation() {
