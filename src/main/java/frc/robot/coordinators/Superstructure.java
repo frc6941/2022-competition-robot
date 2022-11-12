@@ -139,8 +139,8 @@ public class Superstructure implements Updatable {
     private TimeDelayedBoolean swerveCanSelfLock = new TimeDelayedBoolean();
 
     // Vision delta related controlls
-    private PIDController angleDeltaController = new PIDController(0.7, 0.0, 0.0);
-    private MovingAverage angleDeltaMovingAverage = new MovingAverage(5);
+    private PIDController angleDeltaController = new PIDController(1.0, 0.0, 10);
+    private MovingAverage angleDeltaMovingAverage = new MovingAverage(10);
 
     // Shooting related tracking variables
     private boolean onTarget = false;
@@ -150,7 +150,7 @@ public class Superstructure implements Updatable {
     private TimeDelayedBoolean ejectDelayedBoolean = new TimeDelayedBoolean();
     private boolean maintainReady = false;
     private boolean moveAndShoot = true;
-    private boolean visionAim = true;
+    private boolean visionAim = false;
 
     // Climbing related tracking variables
     private boolean readyForClimbControls = false; // if all the subsystems is ready for climb
@@ -610,13 +610,17 @@ public class Superstructure implements Updatable {
                             .setShootingVelocity(Constants.ShootingConstants.FLYWHEEL_MAP.getInterpolated(
                                     new InterpolatingDouble(distance)).value);
                 } else {
-                    angleDeltaMovingAverage = new MovingAverage(5);
+                    Pose2d robotPose = RobotState.getInstance().getFieldToVehicle(time);
+                    coreAimTargetRelative = Targets.getDefaultTarget().minus(robotPose.getWpilibPose2d().getTranslation());
                     coreShootingParameters
-                            .setTargetAngle(mPeriodicIO.inSwerveFieldHeadingAngle);
+                            .setTargetAngle(new Rotation2d(coreAimTargetRelative.getX(), coreAimTargetRelative.getY())
+                                    .getDegrees() + coreShootingAdjustmentAngle);
                     coreShootingParameters
-                            .setShotAngle(Constants.HOOD_MINIMUM_ANGLE);
+                            .setShotAngle(Constants.ShootingConstants.HOOD_MAP.getInterpolated(
+                                    new InterpolatingDouble(coreAimTargetRelative.getNorm())).value);
                     coreShootingParameters
-                            .setShootingVelocity(500.0);
+                            .setShootingVelocity(Constants.ShootingConstants.FLYWHEEL_MAP.getInterpolated(
+                                    new InterpolatingDouble(coreAimTargetRelative.getNorm())).value);
                 }
             } else {
                 Pose2d robotPose = RobotState.getInstance().getFieldToVehicle(time);
@@ -846,7 +850,7 @@ public class Superstructure implements Updatable {
     public synchronized void updateJudgingConditions() {
         if (Util.epsilonEquals(
                 coreShootingParameters.getTargetAngle(),
-                mPeriodicIO.inTurretFieldHeadingAngle, 3.5)
+                mPeriodicIO.inTurretFieldHeadingAngle, 2.54)
                 && Util.epsilonEquals(
                         coreShootingParameters.getShotAngle(),
                         mPeriodicIO.inHoodAngle, 0.5)) {
