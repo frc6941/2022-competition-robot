@@ -113,10 +113,10 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
         // Advanced kalman filter position estimator
         poseEstimator = new SwerveDrivePoseEstimator(Rotation2d.fromDegrees(getYaw()), new Pose2d(), swerveKinematics,
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.001, 0.001, 0.001), // State Error
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.01, 0.01, 0.001), // State Error
                 new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.001), // Encoder Error
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.005, 0.005, 0.001), // Vision Error,
-        kLooperDt);
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.03, 0.03, 0.001), // Vision Error,
+                kLooperDt);
         this.pose = poseEstimator.getEstimatedPosition();
         headingController.enableContinuousInput(0, 360.0); // Enable continuous rotation
         headingController.setTolerance(2.0);
@@ -230,15 +230,24 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     }
 
     public void resetHeadingController() {
-        headingController.reset(gyro.getYaw().getDegrees(),getAngularVelocity());
+        headingController.reset(gyro.getYaw().getDegrees(), getAngularVelocity());
     }
 
     public void addVisionObservation(Pose2d estimatedPose, double timestampSeconds) {
         this.poseEstimator.addVisionMeasurement(estimatedPose, timestampSeconds);
     }
 
+    public void addVisionObservationWithStdDeviation(Pose2d estimatedPose, double timestampSeconds, double xyStdDeviation) {
+        this.poseEstimator.addVisionMeasurement(estimatedPose, timestampSeconds,
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(xyStdDeviation, xyStdDeviation, 0.001));
+    }
+
     public void addVisionObservationTranslation(Translation2d translation, double timestampSeconds) {
         addVisionObservation(new Pose2d(translation, gyro.getYaw()), timestampSeconds);
+    }
+
+    public void addVisionObservationTranslationWithStdDeviation(Translation2d translation, double timestampSeconds, double xyStdDeviation) {
+        addVisionObservationWithStdDeviation(new Pose2d(translation, gyro.getYaw()), timestampSeconds, xyStdDeviation);
     }
 
     /**

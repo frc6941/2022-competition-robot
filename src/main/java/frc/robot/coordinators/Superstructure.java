@@ -17,6 +17,7 @@ import org.frcteam6941.utils.AngleNormalization;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.PneumaticHub;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -119,28 +120,29 @@ public class Superstructure implements Updatable {
     public double coreShootingTolerance = 50.0;
     public double coreShootingAdjustmentAngle = 0.0;
 
-    private final ControlBoard mControlBoard = ControlBoard.getInstance();
-    private final SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
-    private final BallPath mBallPath = BallPath.getInstance();
-    private final Shooter mShooter = Shooter.getInstance();
-    private final Turret mTurret = Turret.getInstance();
-    private final Hood mHood = Hood.getInstance();
-    private final Intaker mIntaker = Intaker.getInstance();
-    private final Indicator mIndicator = Indicator.getInstance();
-    private final Climber mClimber = Climber.getInstance();
-    private final Limelight mLimelight = Limelight.getInstance();
+    private ControlBoard mControlBoard = ControlBoard.getInstance();
+    private SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
+    private BallPath mBallPath = BallPath.getInstance();
+    private Shooter mShooter = Shooter.getInstance();
+    private Turret mTurret = Turret.getInstance();
+    private Hood mHood = Hood.getInstance();
+    private Intaker mIntaker = Intaker.getInstance();
+    private Indicator mIndicator = Indicator.getInstance();
+    private Climber mClimber = Climber.getInstance();
+    private Limelight mLimelight = Limelight.getInstance();
+    private PneumaticHub mPneumaticHub = new PneumaticHub();
 
-    // Swerve setting related constants
+    // Swerve setting related variables
     private boolean robotOrientedDrive = false;
     private boolean swerveSelfLocking = false;
     private Double swerveSelfLockheadingRecord;
     private final TimeDelayedBoolean swerveCanSelfLock = new TimeDelayedBoolean();
 
-    // Vision delta related
-    private final PIDController angleDeltaController = new PIDController(0.7, 0.0, 0.0);
-    private MovingAverage angleDeltaMovingAverage = new MovingAverage(5);
+    // Vision delta related controlls
+    private PIDController angleDeltaController = new PIDController(1.0, 0.0, 10);
+    private MovingAverage angleDeltaMovingAverage = new MovingAverage(10);
 
-    // Shooting related tracking constants
+    // Shooting related tracking variables
     private boolean onTarget = false;
     private boolean onSpeed = false;
     private boolean testShot = false;
@@ -148,9 +150,9 @@ public class Superstructure implements Updatable {
     private final TimeDelayedBoolean ejectDelayedBoolean = new TimeDelayedBoolean();
     private boolean maintainReady = false;
     private boolean moveAndShoot = true;
-    private boolean visionAim = true;
+    private boolean pureVisionAim = false;
 
-    // Climbing related tracking constants
+    // Climbing related tracking variables
     private boolean readyForClimbControls = false; // if all the subsystems is ready for climb
     private boolean openLoopClimbControl = false;
     private boolean autoTraversalClimb = false; // if we are running auto-traverse
@@ -158,6 +160,9 @@ public class Superstructure implements Updatable {
     private boolean inAutoClimbControl = false;
     private int climbStep = 0; // step of auto-climb we are currently on
     private double climbStepTimeRecord = 0.0;
+
+    // Pneumatics related tracking variables
+    private boolean pneumaticsForceEnable = false;
 
     private static Superstructure instance;
     private STATE state = STATE.PIT;
@@ -281,6 +286,10 @@ public class Superstructure implements Updatable {
             coreShootingAdjustmentAngle -= 0.02;
         }
 
+        if (mControlBoard.getSwitchCompressorForceEnable()) {
+            pneumaticsForceEnable = !pneumaticsForceEnable;
+        }
+
         if (mControlBoard.getEnterClimbMode()) {
             mPeriodicIO.outClimberDemand = 0.05;
             mPeriodicIO.outClimberHookOut = false;
@@ -401,8 +410,8 @@ public class Superstructure implements Updatable {
         moveAndShoot = value;
     }
 
-    public void setWantVisionAim(boolean value) {
-        visionAim = value;
+    public void setWantPureVisionAim(boolean value) {
+        pureVisionAim = value;
     }
 
     public void setWantSwerveSelfLocking(boolean value) {
@@ -586,7 +595,7 @@ public class Superstructure implements Updatable {
                     angle.get(),
                     RPM.get());
         } else {
-            if (visionAim) {
+            if (pureVisionAim) {
                 if (mLimelight.hasTarget()) {
                     angleDeltaMovingAverage.addNumber(mLimelight.getOffset()[0]);
                     double distance = mLimelight.getLimelightDistanceToTarget().get();
@@ -602,13 +611,17 @@ public class Superstructure implements Updatable {
                             .setShootingVelocity(Constants.ShootingConstants.FLYWHEEL_MAP.getInterpolated(
                                     new InterpolatingDouble(distance)).value);
                 } else {
-                    angleDeltaMovingAverage = new MovingAverage(5);
+                    Pose2d robotPose = RobotState.getInstance().getFieldToVehicle(time);
+                    coreAimTargetRelative = Targets.getDefaultTarget().minus(robotPose.getWpilibPose2d().getTranslation());
                     coreShootingParameters
-                            .setTargetAngle(mPeriodicIO.inSwerveFieldHeadingAngle);
+                            .setTargetAngle(new Rotation2d(coreAimTargetRelative.getX(), coreAimTargetRelative.getY())
+                                    .getDegrees() + coreShootingAdjustmentAngle);
                     coreShootingParameters
-                            .setShotAngle(Constants.HOOD_MINIMUM_ANGLE);
+                            .setShotAngle(Constants.ShootingConstants.HOOD_MAP.getInterpolated(
+                                    new InterpolatingDouble(coreAimTargetRelative.getNorm())).value);
                     coreShootingParameters
-                            .setShootingVelocity(500.0);
+                            .setShootingVelocity(Constants.ShootingConstants.FLYWHEEL_MAP.getInterpolated(
+                                    new InterpolatingDouble(coreAimTargetRelative.getNorm())).value);
                 }
             } else {
                 Pose2d robotPose = RobotState.getInstance().getFieldToVehicle(time);
@@ -643,7 +656,19 @@ public class Superstructure implements Updatable {
                 && mControlBoard.getClimbAutoConfirmation())) {
             inAutoClimbControl = true;
         }
+    }
 
+    /** Determine compressor state according to output periodic. */
+    public synchronized void updateCompressorState() {
+        if (pneumaticsForceEnable) {
+            mPneumaticHub.enableCompressorDigital();
+        } else {
+            if(getState() == STATE.CLIMB) {
+                mPneumaticHub.enableCompressorDigital();
+            } else {
+                mPneumaticHub.disableCompressor();
+            }
+        }
     }
 
     /** Calculating and setting climber set points. */
@@ -826,7 +851,7 @@ public class Superstructure implements Updatable {
     public synchronized void updateJudgingConditions() {
         onTarget = Util.epsilonEquals(
                 coreShootingParameters.getTargetAngle(),
-                mPeriodicIO.inTurretFieldHeadingAngle, 3.5)
+                mPeriodicIO.inTurretFieldHeadingAngle, 2.54)
                 && Util.epsilonEquals(
                 coreShootingParameters.getShotAngle(),
                 mPeriodicIO.inHoodAngle, 0.5);
@@ -969,6 +994,7 @@ public class Superstructure implements Updatable {
         }
         updateJudgingConditions();
         updateSwerveAndTurretCoordination();
+        updateCompressorState();
         updateIndicator();
     }
 

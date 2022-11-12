@@ -221,7 +221,7 @@ public final class Constants {
     public static final double TURRET_MOTION_CRUISE_VELOCITY = 72078.22222 / 0.35 * 0.2;
     public static final double TURRET_MOTION_ACCELERATION = 72078.2222 / 0.35 * 0.1 / 0.3;
     public static final double TURRET_INTEGRAL_ZONE = 1000.0;
-    public static final double TURRET_NEUTRAL_DEADBAND = 0.01;
+    public static final double TURRET_NEUTRAL_DEADBAND = 0.04;
 
     // Climber Constants
     public static final double CLIMBER_GEAR_RATIO = 8.0 * 56.0 / 22.0;

@@ -93,7 +93,7 @@ public class ControlBoard {
     }
 
     public boolean zeroGyro() {
-        return driver.getButton(Button.START);
+        return driver.getController().getStartButtonPressed();
     }
 
     public SWERVE_CARDINAL getSwerveSnapRotation() {
@@ -144,6 +144,10 @@ public class ControlBoard {
 
     public boolean getIncreaseShotAdjustment() {
         return driver.getController().getPOV() == kDpadLeft;
+    }
+
+    public boolean getSwitchCompressorForceEnable() {
+        return driver.getController().getBackButtonPressed();
     }
 
     // Climber Controls
