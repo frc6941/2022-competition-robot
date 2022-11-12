@@ -150,7 +150,7 @@ public class Superstructure implements Updatable {
     private TimeDelayedBoolean ejectDelayedBoolean = new TimeDelayedBoolean();
     private boolean maintainReady = false;
     private boolean moveAndShoot = true;
-    private boolean visionAim = false;
+    private boolean pureVisionAim = false;
 
     // Climbing related tracking variables
     private boolean readyForClimbControls = false; // if all the subsystems is ready for climb
@@ -408,8 +408,8 @@ public class Superstructure implements Updatable {
         moveAndShoot = value;
     }
 
-    public void setWantVisionAim(boolean value) {
-        visionAim = value;
+    public void setWantPureVisionAim(boolean value) {
+        pureVisionAim = value;
     }
 
     public void setWantSwerveSelfLocking(boolean value) {
@@ -594,7 +594,7 @@ public class Superstructure implements Updatable {
                     angle.get(),
                     RPM.get());
         } else {
-            if (visionAim) {
+            if (pureVisionAim) {
                 if (mLimelight.hasTarget()) {
                     angleDeltaMovingAverage.addNumber(mLimelight.getOffset()[0]);
                     double distance = mLimelight.getLimelightDistanceToTarget().get();
