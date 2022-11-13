@@ -73,6 +73,7 @@ public class Superstructure implements Updatable {
         public double inSwerveFieldHeadingAngle = 0.0;
         public double inSwerveRollAngle = 0.0;
         public double inSwerveAngularVelocity = 0.0;
+        public double inSwerveAngularAcceleration = 0.0;
 
         // Turret Variables
         public double inTurretAngle = 0.0;
@@ -455,15 +456,10 @@ public class Superstructure implements Updatable {
                 mPeriodicIO.outSwerveTranslation = mPeriodicIO.inSwerveTranslation;
                 mPeriodicIO.outSwerveRotation = mPeriodicIO.inSwerveRotation;
                 if (mPeriodicIO.inSwerveSnapRotation != SWERVE_CARDINAL.NONE) {
-                    swerveCanSelfLock.update(false, 0.0);
                     mPeriodicIO.outSwerveLockHeading = true;
                     mPeriodicIO.outSwerveHeadingTarget = mPeriodicIO.inSwerveSnapRotation.degrees;
                     swerveSelfLockheadingRecord = null;
-                } else if (swerveCanSelfLock.update(
-                        mPeriodicIO.outSwerveRotation == 0.0
-                                && mPeriodicIO.inSwerveAngularVelocity < 5.0,
-                        0.5)
-                        && swerveSelfLocking) {
+                } else if (mPeriodicIO.outSwerveRotation == 0.0 && mPeriodicIO.inSwerveAngularVelocity < 7.0 && swerveSelfLocking) {
                     mPeriodicIO.outSwerveLockHeading = true;
                     swerveSelfLockheadingRecord = Optional
                             .ofNullable(swerveSelfLockheadingRecord)
@@ -471,7 +467,6 @@ public class Superstructure implements Updatable {
 
                     mPeriodicIO.outSwerveHeadingTarget = swerveSelfLockheadingRecord;
                 } else {
-                    swerveCanSelfLock.update(false, 0.0);
                     mPeriodicIO.outSwerveLockHeading = false;
                     mPeriodicIO.outSwerveHeadingTarget = 0.0;
                     swerveSelfLockheadingRecord = null;
@@ -479,7 +474,6 @@ public class Superstructure implements Updatable {
                 mPeriodicIO.outTurretLockTarget = targetArrayUnLimited[0];
                 break;
             case SHOOTING:
-                swerveCanSelfLock.update(false, 0.0);
                 mPeriodicIO.outSwerveTranslation = mPeriodicIO.inSwerveTranslation;
                 mPeriodicIO.outTurretLockTarget = targetArrayUnLimited[0];
                 mPeriodicIO.outSwerveRotation = mPeriodicIO.inSwerveRotation;
@@ -494,7 +488,6 @@ public class Superstructure implements Updatable {
                 swerveSelfLockheadingRecord = null;
                 break;
             case CLIMB:
-                swerveCanSelfLock.update(false, 0.0);
                 mPeriodicIO.outSwerveTranslation = mPeriodicIO.inSwerveTranslation;
                 mPeriodicIO.outSwerveRotation = mPeriodicIO.inSwerveRotation;
                 mPeriodicIO.outSwerveLockHeading = false;
@@ -660,15 +653,16 @@ public class Superstructure implements Updatable {
 
     /** Determine compressor state according to output periodic. */
     public synchronized void updateCompressorState() {
-        if (pneumaticsForceEnable) {
-            mPneumaticHub.enableCompressorDigital();
-        } else {
-            if(getState() == STATE.CLIMB) {
-                mPneumaticHub.enableCompressorDigital();
-            } else {
-                mPneumaticHub.disableCompressor();
-            }
-        }
+        // if (pneumaticsForceEnable) {
+        //     mPneumaticHub.enableCompressorDigital();
+        // } else {
+        //     if(getState() == STATE.CLIMB) {
+        //         mPneumaticHub.enableCompressorDigital();
+        //     } else {
+        //         mPneumaticHub.disableCompressor();
+        //     }
+        // }
+        mPneumaticHub.disableCompressor();
     }
 
     /** Calculating and setting climber set points. */
@@ -968,6 +962,7 @@ public class Superstructure implements Updatable {
         mPeriodicIO.inSwerveFieldHeadingAngle = mSwerve.getYaw();
         mPeriodicIO.inSwerveRollAngle = mSwerve.getRoll();
         mPeriodicIO.inSwerveAngularVelocity = mSwerve.getAngularVelocity();
+        mPeriodicIO.inSwerveAngularAcceleration = RobotState.getInstance().getSmoothedMeasuredAcceleration().getRotation().getDegrees();
 
         mPeriodicIO.inTurretAngle = mTurret.getTurretAngle();
         mPeriodicIO.inTurretFieldHeadingAngle = mPeriodicIO.inSwerveFieldHeadingAngle + mPeriodicIO.inTurretAngle;
