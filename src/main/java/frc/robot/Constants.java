@@ -349,8 +349,8 @@ public final class Constants {
     /** Shooting Constants */
     public static class ShootingConstants {
         public static final double ACCELERATION_COMP_FACTOR = 0.02;
-        public static final double MAX_SHOOTING_DISTANCE = 7.0;
-        public static final double MIN_SHOOTING_DISTANCE = 2.6;
+        public static final double MAX_SHOOTING_DISTANCE = 7.5;
+        public static final double MIN_SHOOTING_DISTANCE = 2.5;
         public static final double WRONG_BALL_OFFSET_DISTANCE = 4.5;
 
         public static double[][] FLYWHEEL_REGRESSION = {

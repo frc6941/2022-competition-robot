@@ -146,6 +146,8 @@ public class Superstructure implements Updatable {
     // Shooting related tracking variables
     private boolean onTarget = false;
     private boolean onSpeed = false;
+    private boolean inRange = false;
+
     private boolean testShot = false;
     private boolean testLock = false;
     private boolean drivetrainOnlyAim = true;
@@ -827,21 +829,40 @@ public class Superstructure implements Updatable {
 
     /** Update Core Variables and Tracking Constants. */
     public synchronized void updateJudgingConditions() {
-        onTarget = Util.epsilonEquals(
+        if (drivetrainOnlyAim || pureVisionAim){
+            onTarget = Util.epsilonEquals(
+                coreShootingParameters.getTargetAngle(),
+                mPeriodicIO.inSwerveFieldHeadingAngle, 2.54)
+                && Util.epsilonEquals(
+                        coreShootingParameters.getShotAngle(),
+                        mPeriodicIO.inHoodAngle, 0.5);
+        } else {
+            onTarget = Util.epsilonEquals(
                 coreShootingParameters.getTargetAngle(),
                 mPeriodicIO.inTurretFieldHeadingAngle, 2.54)
                 && Util.epsilonEquals(
                         coreShootingParameters.getShotAngle(),
                         mPeriodicIO.inHoodAngle, 0.5);
+        }
 
         onSpeed = Util.epsilonEquals(
                 coreShootingParameters.getShootingVelocity(),
                 mPeriodicIO.inShooterRPM,
                 coreShootingTolerance);
 
+        if (drivetrainOnlyAim || pureVisionAim){
+            if(mLimelight.getLimelightDistanceToTarget().isPresent()){
+                inRange = mLimelight.getLimelightDistanceToTarget().map(distance -> distance > Constants.ShootingConstants.MIN_SHOOTING_DISTANCE && distance < Constants.ShootingConstants.MAX_SHOOTING_DISTANCE).get();
+            } else {
+                inRange = false;
+            }
+        } else {
+            inRange = coreAimTargetRelative.getNorm() > Constants.ShootingConstants.MIN_SHOOTING_DISTANCE && coreAimTargetRelative.getNorm() < Constants.ShootingConstants.MAX_SHOOTING_DISTANCE;
+        }
+
         if (getState() == STATE.SHOOTING) {
             if (onTarget) {
-                if (onSpeed) {
+                if (onSpeed && inRange && mLimelight.hasTarget()) {
                     mPeriodicIO.SHOOT = true;
                 } else {
                     // Ready then clear the ballpath, only stop when angle is not right
@@ -886,14 +907,13 @@ public class Superstructure implements Updatable {
                 if (mPeriodicIO.PREP_EJECT || mPeriodicIO.EJECT) {
                     mPeriodicIO.outIndicatorState = Lights.BALLPATH_WRONG_BALL;
                 } else {
-                    if (coreAimTargetRelative.getNorm() < Constants.ShootingConstants.MIN_SHOOTING_DISTANCE
-                            || coreAimTargetRelative.getNorm() > Constants.ShootingConstants.MAX_SHOOTING_DISTANCE) {
+                    if (!inRange) {
                         mPeriodicIO.outIndicatorState = Lights.OUT_OF_RANGE;
                     } else {
                         if (!mLimelight.hasTarget()) {
                             mPeriodicIO.outIndicatorState = Lights.FINDING_TARGET;
                         } else {
-                            mPeriodicIO.outIndicatorState = Lights.LOCK_ON;
+                            mPeriodicIO.outIndicatorState = Lights.NORMAL;
                         }
                     }
                 }
