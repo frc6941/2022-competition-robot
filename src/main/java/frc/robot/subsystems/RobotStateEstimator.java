@@ -22,8 +22,6 @@ public class RobotStateEstimator implements Updatable {
     private Pose2d prev_swerve_pose_ = null;
     private Pose2d prev_swerve_velocity = new Pose2d();
 
-    private boolean firstStable = false;
-
     public static RobotStateEstimator getInstance() {
         if (mInstance == null) {
             mInstance = new RobotStateEstimator();
@@ -68,10 +66,8 @@ public class RobotStateEstimator implements Updatable {
         if (DriverStation.isTeleop() && mTurret.isCalibrated() && mLimelight.getEstimatedVehicleToField().isPresent()) {
             TimeStampedTranslation2d estimate = mLimelight.getEstimatedVehicleToField().get();
             double speed = RobotState.getInstance().getSmoothedMeasuredVelocity().getTranslation().norm();
-            if(speed < 0.5) {
+            if(speed < 1.0) {
                 mSwerve.addVisionObservationTranslationWithStdDeviation(estimate.translation, estimate.timestamp, 0.001);
-            } else {
-                firstStable = false;
             }
         }
     }
