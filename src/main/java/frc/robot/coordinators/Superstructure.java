@@ -450,13 +450,14 @@ public class Superstructure implements Updatable {
 
         switch (state) {
             case PIT:
-                swerveCanSelfLock.update(false, 0.0);
                 mPeriodicIO.outSwerveTranslation = new Translation2d();
                 mPeriodicIO.outSwerveRotation = 0.0;
-                mPeriodicIO.outSwerveLockHeading = false;
-                mPeriodicIO.outSwerveHeadingTarget = 0.0;
+                mPeriodicIO.outSwerveLockHeading = true;
                 mPeriodicIO.outTurretLockTarget = 0.0;
-                swerveSelfLockheadingRecord = null;
+                swerveSelfLockheadingRecord = Optional
+                        .ofNullable(swerveSelfLockheadingRecord)
+                        .orElse(mPeriodicIO.inSwerveFieldHeadingAngle);
+                mPeriodicIO.outSwerveHeadingTarget = swerveSelfLockheadingRecord;
                 break;
             case CHASING:
                 mPeriodicIO.outSwerveTranslation = mPeriodicIO.inSwerveTranslation;
@@ -465,8 +466,8 @@ public class Superstructure implements Updatable {
                     mPeriodicIO.outSwerveLockHeading = true;
                     mPeriodicIO.outSwerveHeadingTarget = mPeriodicIO.inSwerveSnapRotation.degrees;
                     swerveSelfLockheadingRecord = mPeriodicIO.inSwerveSnapRotation.degrees;
-                    swerveCanSelfLock.update(false, 0.0);
-                } else if (swerveCanSelfLock.update(Math.abs(mPeriodicIO.outSwerveRotation) < 0.03 && mPeriodicIO.inSwerveAngularVelocity < 15.0, 0.1) 
+                } else if (Math.abs(mPeriodicIO.outSwerveRotation) <= 0.03
+                        && mPeriodicIO.inSwerveAngularVelocity < 15.0
                         && swerveSelfLocking) {
                     mPeriodicIO.outSwerveLockHeading = true;
                     swerveSelfLockheadingRecord = Optional
@@ -477,7 +478,6 @@ public class Superstructure implements Updatable {
                     mPeriodicIO.outSwerveLockHeading = false;
                     mPeriodicIO.outSwerveHeadingTarget = 0.0;
                     swerveSelfLockheadingRecord = null;
-                    swerveCanSelfLock.update(false, 0.0);
                 }
                 mPeriodicIO.outTurretLockTarget = targetArray[0];
                 break;
@@ -988,18 +988,10 @@ public class Superstructure implements Updatable {
                     mPeriodicIO.outTurretFeedforwardVelocity,
                     mPeriodicIO.outTurretFeedforwardAcceleration);
             mHood.setHoodAngle(coreShootingParameters.getShotAngle());
-
-            if (getState() == STATE.CHASING) {
-                // If: ejeting / ballpath is full / required to maintain velocity, automatically
-                // spin up
-                if (mPeriodicIO.PREP_EJECT || mPeriodicIO.EJECT || mBallPath.isFull() || maintainReady) {
-                    mShooter.setShooterRPM(coreShootingParameters.getShootingVelocity());
-                    // Otherwise, spin slowly to save electricity
-                } else {
-                    mShooter.setShooterRPM(500.0);
-                }
-            } else if (getState() == STATE.SHOOTING) {
+            if (getState() == STATE.SHOOTING || maintainReady){  
                 mShooter.setShooterRPM(coreShootingParameters.getShootingVelocity());
+            } else {
+                mShooter.setShooterRPM(700);
             }
 
             if (mPeriodicIO.SPIT) {
@@ -1080,7 +1072,7 @@ public class Superstructure implements Updatable {
                 mSwerve.setLockHeading(mPeriodicIO.outSwerveLockHeading);
                 mSwerve.setHeadingTarget(mPeriodicIO.outSwerveHeadingTarget);
                 mSwerve.drive(mPeriodicIO.outSwerveTranslation, mPeriodicIO.outSwerveRotation, true);
-            } 
+            }
         }
     }
 

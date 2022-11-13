@@ -118,9 +118,9 @@ public final class Constants {
     public static final double DRIVE_MAX_ANGULAR_ACCELERATION = 40; // FIXME: Need remeasurement for more accurate data.
     public static final int MAX_LATENCY_COMPENSATION_MAP_ENTRIES = 50;
 
-    public static final double DRIVETRAIN_HEADING_CONTROLLER_KP = 1.0 / 70.0;
-    public static final double DRIVETRAIN_HEADING_CONTROLLER_KI = 0.001;
-    public static final double DRIVETRAIN_HEADING_CONTROLLER_KD = 0.0;
+    public static final double DRIVETRAIN_HEADING_CONTROLLER_KP = 1.0 / 45.0;
+    public static final double DRIVETRAIN_HEADING_CONTROLLER_KI = 0.0;
+    public static final double DRIVETRAIN_HEADING_CONTROLLER_KD = 0.002;
     public static final double DRIVETRAIN_STATIC_HEADING_KS = 0.03;
     public static final TrapezoidProfile.Constraints DRIVETRAIN_HEADING_CONTROLLER_CONSTRAINT = new TrapezoidProfile.Constraints(
             300, 9000);
