@@ -464,23 +464,25 @@ public class Superstructure implements Updatable {
                 if (mPeriodicIO.inSwerveSnapRotation != SWERVE_CARDINAL.NONE) {
                     mPeriodicIO.outSwerveLockHeading = true;
                     mPeriodicIO.outSwerveHeadingTarget = mPeriodicIO.inSwerveSnapRotation.degrees;
-                    swerveSelfLockheadingRecord = null;
-                } else if (mPeriodicIO.outSwerveRotation == 0.0 && mPeriodicIO.inSwerveAngularVelocity < 7.0
+                    swerveSelfLockheadingRecord = mPeriodicIO.inSwerveSnapRotation.degrees;
+                    swerveCanSelfLock.update(false, 0.0);
+                } else if (swerveCanSelfLock.update(Math.abs(mPeriodicIO.outSwerveRotation) < 0.03 && mPeriodicIO.inSwerveAngularVelocity < 15.0, 0.1) 
                         && swerveSelfLocking) {
                     mPeriodicIO.outSwerveLockHeading = true;
                     swerveSelfLockheadingRecord = Optional
                             .ofNullable(swerveSelfLockheadingRecord)
                             .orElse(mPeriodicIO.inSwerveFieldHeadingAngle);
-
                     mPeriodicIO.outSwerveHeadingTarget = swerveSelfLockheadingRecord;
                 } else {
                     mPeriodicIO.outSwerveLockHeading = false;
                     mPeriodicIO.outSwerveHeadingTarget = 0.0;
                     swerveSelfLockheadingRecord = null;
+                    swerveCanSelfLock.update(false, 0.0);
                 }
                 mPeriodicIO.outTurretLockTarget = targetArray[0];
                 break;
             case SHOOTING:
+                swerveCanSelfLock.update(false, 0.0);
                 mPeriodicIO.outSwerveTranslation = mPeriodicIO.inSwerveTranslation;
                 mPeriodicIO.outTurretLockTarget = targetArray[0];
                 mPeriodicIO.outSwerveRotation = mPeriodicIO.inSwerveRotation;
@@ -497,7 +499,7 @@ public class Superstructure implements Updatable {
             case CLIMB:
                 mPeriodicIO.outSwerveTranslation = mPeriodicIO.inSwerveTranslation;
                 mPeriodicIO.outSwerveRotation = mPeriodicIO.inSwerveRotation;
-                mPeriodicIO.outSwerveLockHeading = false;
+                mPeriodicIO.outSwerveLockHeading = true;
                 mPeriodicIO.outSwerveHeadingTarget = 0.0;
                 mPeriodicIO.outTurretLockTarget = 90.0;
                 swerveSelfLockheadingRecord = null;
@@ -1072,9 +1074,13 @@ public class Superstructure implements Updatable {
                 mSwerve.getFollower().cancel();
                 mSwerve.setState(SJTUSwerveMK5Drivebase.STATE.DRIVE);
             }
-            mSwerve.setLockHeading(mPeriodicIO.outSwerveLockHeading);
-            mSwerve.setHeadingTarget(mPeriodicIO.outSwerveHeadingTarget);
-            mSwerve.drive(mPeriodicIO.outSwerveTranslation, mPeriodicIO.outSwerveRotation, !robotOrientedDrive);
+            if (robotOrientedDrive) {
+                mSwerve.drive(mPeriodicIO.outSwerveTranslation, mPeriodicIO.outSwerveRotation, false);
+            } else {
+                mSwerve.setLockHeading(mPeriodicIO.outSwerveLockHeading);
+                mSwerve.setHeadingTarget(mPeriodicIO.outSwerveHeadingTarget);
+                mSwerve.drive(mPeriodicIO.outSwerveTranslation, mPeriodicIO.outSwerveRotation, true);
+            } 
         }
     }
 
