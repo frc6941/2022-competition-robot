@@ -253,7 +253,7 @@ public final class Constants {
     public static final int EMERGENCY_REPARING_PORT = 4;
 
     public static final double CONTROLLER_DEADBAND = 0.09;
-    public static final double CONTROLLER_PEDAL = 0.4;
+    public static final double CONTROLLER_PEDAL = 0.3;
     public static final boolean CONTROLLER_INVERT_X = false;
     public static final boolean CONTROLLER_INVERT_Y = false;
     public static final boolean CONTROLLER_INVERT_R = false;

@@ -67,6 +67,7 @@ public class ControlBoard {
         double forwardAxis = driver.getAxis(Side.LEFT, Axis.Y);
         double strafeAxis = driver.getAxis(Side.LEFT, Axis.X);
         double pedal = driver.getTrigger(Side.RIGHT);
+        double breaker = driver.getTrigger(Side.LEFT);
 
         forwardAxis = Constants.CONTROLLER_INVERT_Y ? forwardAxis : -forwardAxis;
         strafeAxis = Constants.CONTROLLER_INVERT_X ? strafeAxis :-strafeAxis;
@@ -77,12 +78,13 @@ public class ControlBoard {
             return new Translation2d();
         } else {
             double pedalScale = 1.0 - Constants.CONTROLLER_PEDAL + Constants.CONTROLLER_PEDAL * pedal;
-            return tAxes.times(pedalScale);
+            double breakScale = (1.0 - Constants.CONTROLLER_PEDAL) * breaker;
+            return tAxes.times(pedalScale).minus(tAxes.times(breakScale));
         }
     }
 
     public double getSwerveRotation() {
-        double rotAxis = driver.getAxis(Side.RIGHT, Axis.X);
+        double rotAxis = driver.getAxis(Side.RIGHT, Axis.X) * 0.6;
         rotAxis = Constants.CONTROLLER_INVERT_R ? rotAxis : -rotAxis;
 
         if (Math.abs(rotAxis) < kSwerveDeadband) {
