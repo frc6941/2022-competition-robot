@@ -12,7 +12,7 @@ public interface SwerveDrivetrainBase extends Updatable{
 
     SwerveModuleState[] getSwerveModuleStates();
 
-    void drive(Translation2d translation, double rotation, boolean fieldRelative);
+    void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop);
     
     void setHeadingTarget(double heading);
 

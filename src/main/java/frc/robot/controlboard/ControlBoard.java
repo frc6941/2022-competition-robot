@@ -79,12 +79,12 @@ public class ControlBoard {
         } else {
             double pedalScale = 1.0 - Constants.CONTROLLER_PEDAL + Constants.CONTROLLER_PEDAL * pedal;
             double breakScale = (1.0 - Constants.CONTROLLER_PEDAL) * breaker;
-            return tAxes.times(pedalScale).minus(tAxes.times(breakScale));
+            return tAxes.times(pedalScale).minus(tAxes.times(breakScale)).times(Constants.DRIVE_MAX_VELOCITY);
         }
     }
 
     public double getSwerveRotation() {
-        double rotAxis = driver.getAxis(Side.RIGHT, Axis.X) * 0.6;
+        double rotAxis = driver.getAxis(Side.RIGHT, Axis.X) * 2.0;
         rotAxis = Constants.CONTROLLER_INVERT_R ? rotAxis : -rotAxis;
 
         if (Math.abs(rotAxis) < kSwerveDeadband) {

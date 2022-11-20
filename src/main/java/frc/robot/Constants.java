@@ -111,7 +111,7 @@ public final class Constants {
     public static final double BACK_LEFT_OFFSET = -151.875 - 90.0 + 180.0;
     public static final double BACK_RIGHT_OFFSET = 230.44921 - 90.0;
 
-    public static final double DRIVE_MAX_VELOCITY = 4.0; // FIXME: Need remeasurement for more accurate data.
+    public static final double DRIVE_MAX_VELOCITY = 3.0; // FIXME: Need remeasurement for more accurate data.
     public static final double DRIVE_MAX_ANGULAR_VELOCITY = 220; // FIXME: Need remeasurement for more accurate data.
     public static final double DRIVE_MAX_ANGULAR_ACCELERATION = 40; // FIXME: Need remeasurement for more accurate data.
     public static final int MAX_LATENCY_COMPENSATION_MAP_ENTRIES = 50;

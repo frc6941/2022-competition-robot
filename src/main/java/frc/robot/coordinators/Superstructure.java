@@ -137,7 +137,6 @@ public class Superstructure implements Updatable {
     private boolean robotOrientedDrive = false;
     private boolean swerveSelfLocking = false;
     private Double swerveSelfLockheadingRecord;
-    private Timer selfLockTimer = new Timer();
 
     // Vision delta related controlls
     private PIDController angleDeltaController = new PIDController(0.9, 0.0, 0.0);
@@ -1094,11 +1093,11 @@ public class Superstructure implements Updatable {
                 mSwerve.setState(SJTUSwerveMK5Drivebase.STATE.DRIVE);
             }
             if (robotOrientedDrive) {
-                mSwerve.drive(mPeriodicIO.outSwerveTranslation, mPeriodicIO.outSwerveRotation, false);
+                mSwerve.drive(mPeriodicIO.outSwerveTranslation, mPeriodicIO.outSwerveRotation, false, false);
             } else {
                 mSwerve.setLockHeading(mPeriodicIO.outSwerveLockHeading);
                 mSwerve.setHeadingTarget(mPeriodicIO.outSwerveHeadingTarget);
-                mSwerve.drive(mPeriodicIO.outSwerveTranslation, mPeriodicIO.outSwerveRotation, true);
+                mSwerve.drive(mPeriodicIO.outSwerveTranslation, mPeriodicIO.outSwerveRotation, true, false);
             }
         }
     }

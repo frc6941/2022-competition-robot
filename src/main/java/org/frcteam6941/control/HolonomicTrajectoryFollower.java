@@ -46,11 +46,11 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
             if (this.requiredOnTarget) {
                 if (this.xController.atSetpoint() && this.yController.atSetpoint()) {
                     finished = true;
-                    return new HolonomicDriveSignal(new Translation2d(0, 0), 0.0, true);
+                    return new HolonomicDriveSignal(new Translation2d(0, 0), 0.0, true, false);
                 }
             } else {
                 finished = true;
-                return new HolonomicDriveSignal(new Translation2d(0, 0), 0.0, true);
+                return new HolonomicDriveSignal(new Translation2d(0, 0), 0.0, true, false);
             }
         }
 
@@ -80,7 +80,8 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
         return new HolonomicDriveSignal(
                 translationVector,
                 rotation,
-                true
+                true,
+                false
         );
     }
 
