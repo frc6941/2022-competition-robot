@@ -35,7 +35,7 @@ public class Climber implements Updatable {
     public PeriodicIO mPeriodicIO = new PeriodicIO();
 
     private final LazyTalonFX climberMotor = new LazyTalonFX(Constants.CANID.CLIMBER_MOTOR);
-    private final DoubleSolenoid climberExtender = new DoubleSolenoid(PneumaticsModuleType.REVPH,
+    private final DoubleSolenoid climberExtender = new DoubleSolenoid(PneumaticsModuleType.CTREPCM,
             Constants.PNEUMATICS_ID.CLIMBER_EXTENDER_FORWARD,
             Constants.PNEUMATICS_ID.CLIMBER_EXTENDER_REVERSE);
 

@@ -20,7 +20,7 @@ public class Intaker implements Updatable {
 
     public PeriodicIO mPeriodicIO = new PeriodicIO();
 
-    private DoubleSolenoid intakerExtender = new DoubleSolenoid(PneumaticsModuleType.REVPH,
+    private DoubleSolenoid intakerExtender = new DoubleSolenoid(PneumaticsModuleType.CTREPCM,
             Constants.PNEUMATICS_ID.INTAKER_EXTENDER_FORWARD, Constants.PNEUMATICS_ID.INTAKER_EXTENDER_REVERSE);
 
     private CANSparkMax intakerMotor = new CANSparkMax(Constants.CANID.INTAKER_MOTOR, MotorType.kBrushless);

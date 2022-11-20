@@ -81,12 +81,10 @@ public final class Constants {
 
     // Pneumatics Configurations
     public static final class PNEUMATICS_ID {
-        public static final int FEEDER_EXTENDER_FORWARD = 10;
-        public static final int FEEDER_EXTENDER_REVERSE = 11;
-        public static final int INTAKER_EXTENDER_FORWARD = 8;// 8,9
-        public static final int INTAKER_EXTENDER_REVERSE = 9;
-        public static final int CLIMBER_EXTENDER_FORWARD = 12;// 13,12
-        public static final int CLIMBER_EXTENDER_REVERSE = 13;
+        public static final int INTAKER_EXTENDER_FORWARD = 4;
+        public static final int INTAKER_EXTENDER_REVERSE = 5;
+        public static final int CLIMBER_EXTENDER_FORWARD = 6;
+        public static final int CLIMBER_EXTENDER_REVERSE = 7;
     }
 
     /**
