@@ -17,10 +17,10 @@ import frc.robot.coordinators.Superstructure.STATE;
 
 public class DFivePlusOneAuto extends AutoModeBase{
     protected String autoName = "D - Five Plus One Auto";
-    private final PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 1", 3.2, 3.0);
-    private final PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 2", 3.2, 3.2);
-    private final PathPlannerTrajectory trajectoryPart3 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 3", 3.2, 3.2);
-    private final PathPlannerTrajectory trajectoryPart4 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 4", 3.2, 3.0);
+    private final PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 1", 3.5, 3.5);
+    private final PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 2", 3.5, 3.5);
+    private final PathPlannerTrajectory trajectoryPart3 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 3", 3.5, 3.5);
+    private final PathPlannerTrajectory trajectoryPart4 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 4", 3.5, 3.5);
     private final Superstructure mSuperstructure = Superstructure.getInstance();
     private final SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
 

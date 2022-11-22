@@ -209,9 +209,9 @@ public final class Constants {
     public static final double TURRET_ERROR_TOLERANCE = 1.0;
     public static final double TURRET_REVERSE_TO_CENTER_TRAVEL_DISTANCE = 52589.0 - 570.0;
 
-    public static final double TURRET_KF = 1024.0 / (72078.22222 / 2.0);
-    public static final double TURRET_KP = 0.4;
-    public static final double TURRET_KI = 0.005;
+    public static final double TURRET_KF = 1024.0 / (72078.22222 / 2.0) * 0.7;
+    public static final double TURRET_KP = 0.3;
+    public static final double TURRET_KI = 0.004;
     public static final double TURRET_KD = 1.0;
     public static final SimpleMotorFeedforward TURRET_FEEDFORWARD = new SimpleMotorFeedforward(0.6351, 0.020976,
             0.00029126);
@@ -355,15 +355,15 @@ public final class Constants {
                 /* TEMPLATE REGRESSION */
                 // @x --> distance from target (in meters)
                 // @y --> shooter velocity (in rpm)
-                { 2.430, 2090 },
-                { 3.490, 2250 },
-                { 3.930, 2375 },
-                { 4.430, 2550 },
-                { 4.930, 2625 },
-                { 5.430, 2750 },
-                { 5.930, 2815 },
-                { 6.430, 2910 },
-                { 6.930, 3050 },
+                { 2.430, 2090 + 50 },
+                { 3.490, 2250 + 50 },
+                { 3.930, 2375 + 50 },
+                { 4.430, 2550 + 50 },
+                { 4.930, 2625 + 75 },
+                { 5.430, 2750 + 75 },
+                { 5.930, 2815 + 50 },
+                { 6.430, 2910 + 50 },
+                { 6.930, 3050 + 50 },
                 
         };
 

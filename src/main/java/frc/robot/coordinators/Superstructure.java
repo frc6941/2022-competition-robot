@@ -139,7 +139,7 @@ public class Superstructure implements Updatable {
     private Double swerveSelfLockheadingRecord;
 
     // Vision delta related controlls
-    private PIDController angleDeltaController = new PIDController(0.9, 0.0, 0.0);
+    private PIDController angleDeltaController = new PIDController(0.8, 0.000, 0.0);
     private MovingAverage angleDeltaMovingAverage = new MovingAverage(10);
 
     // Shooting related tracking variables
@@ -149,7 +149,7 @@ public class Superstructure implements Updatable {
 
     private boolean testShot = false;
     private boolean testLock = false;
-    private boolean drivetrainOnlyAim = true;
+    private boolean drivetrainOnlyAim = false;
     private final TimeDelayedBoolean ejectDelayedBoolean = new TimeDelayedBoolean();
     private boolean maintainReady = false;
     private boolean moveAndShoot = true;
@@ -590,8 +590,11 @@ public class Superstructure implements Updatable {
 
             double newDist = toMovingGoal.getNorm();
 
+            double targetAngle = new Rotation2d(toMovingGoal.getX(), toMovingGoal.getY()).getDegrees();
+            double deltaAngle = mPeriodicIO.inTurretFieldHeadingAngle - targetAngle;
+
             coreShootingParameters
-                    .setTargetAngle(new Rotation2d(toMovingGoal.getX(), toMovingGoal.getY()).getDegrees()
+                    .setTargetAngle(angleDeltaController.calculate(deltaAngle, 0.0) + mPeriodicIO.inTurretFieldHeadingAngle
                             + coreShootingAdjustmentAngle);
             coreShootingParameters
                     .setShotAngle(Constants.ShootingConstants.HOOD_MAP.getInterpolated(
@@ -829,14 +832,14 @@ public class Superstructure implements Updatable {
         if (drivetrainOnlyAim || pureVisionAim) {
             onTarget = Util.epsilonEquals(
                     coreShootingParameters.getTargetAngle(),
-                    mPeriodicIO.inSwerveFieldHeadingAngle, 2.54)
+                    mPeriodicIO.inSwerveFieldHeadingAngle, 3.5)
                     && Util.epsilonEquals(
                             coreShootingParameters.getShotAngle(),
                             mPeriodicIO.inHoodAngle, 0.5);
         } else {
             onTarget = Util.epsilonEquals(
                     coreShootingParameters.getTargetAngle(),
-                    mPeriodicIO.inTurretFieldHeadingAngle, 2.54)
+                    mPeriodicIO.inTurretFieldHeadingAngle, 3.5)
                     && Util.epsilonEquals(
                             coreShootingParameters.getShotAngle(),
                             mPeriodicIO.inHoodAngle, 0.5);
@@ -1004,7 +1007,7 @@ public class Superstructure implements Updatable {
             mSwerve.resetPitch(0.0);
 
             // Always let turret and hood be ready to reduce launch waiting time
-            if (drivetrainOnlyAim){
+            if (!drivetrainOnlyAim){
                 mTurret.setTurretAngle(
                     mPeriodicIO.outTurretLockTarget,
                     mPeriodicIO.outTurretFeedforwardVelocity,
@@ -1093,6 +1096,8 @@ public class Superstructure implements Updatable {
                 mSwerve.setState(SJTUSwerveMK5Drivebase.STATE.DRIVE);
             }
             if (robotOrientedDrive) {
+                mSwerve.setLockHeading(false);
+                mSwerve.setHeadingTarget(0.0);
                 mSwerve.drive(mPeriodicIO.outSwerveTranslation, mPeriodicIO.outSwerveRotation, false, false);
             } else {
                 mSwerve.setLockHeading(mPeriodicIO.outSwerveLockHeading);
