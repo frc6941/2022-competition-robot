@@ -42,6 +42,9 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
 
     public int moduleNumber;
     public double angleOffset;
+    public boolean invertAngleOutput;
+    public boolean invertAngleSensorPhase;
+
     public LazyTalonSRX mAngleMotor;
     public LazyTalonFX mDriveMotor;
 
@@ -56,9 +59,11 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
      *                     TalonSRX motor controller.
      * @param angleOffset  Angle offset for the encoder in degrees.
      */
-    public SJTUSwerveModuleMK5(int moduleNumber, int driveMotorID, int angleMotorID, double angleOffset) {
+    public SJTUSwerveModuleMK5(int moduleNumber, int driveMotorID, int angleMotorID, double angleOffset, boolean invertOutput, boolean invertSensorPhase) {
         this.moduleNumber = moduleNumber;
         this.angleOffset = angleOffset;
+        this.invertAngleOutput = invertOutput;
+        this.invertAngleSensorPhase = invertSensorPhase;
         /* Angle Motor Config */
         mAngleMotor = new LazyTalonSRX(angleMotorID);
         configAngleMotor();
@@ -113,8 +118,8 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
     private void configAngleMotor() {
         mAngleMotor.configFactoryDefault();
         mAngleMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
-        mAngleMotor.setInverted(false);
-        mAngleMotor.setSensorPhase(true);
+        mAngleMotor.setInverted(invertAngleOutput);
+        mAngleMotor.setSensorPhase(invertAngleSensorPhase);
         mAngleMotor.setNeutralMode(NeutralMode.Coast);
 
         SupplyCurrentLimitConfiguration curr_lim = new SupplyCurrentLimitConfiguration(true, 15, 40, 0.02);
