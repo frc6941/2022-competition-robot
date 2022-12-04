@@ -1,7 +1,6 @@
 package frc.robot.coordinators;
 
 import java.util.Optional;
-import java.util.ResourceBundle.Control;
 
 import com.team254.lib.geometry.Pose2d;
 import com.team254.lib.util.InterpolatingDouble;
@@ -11,6 +10,8 @@ import com.team254.lib.util.Util;
 import com.team254.lib.vision.AimingParameters;
 
 import org.frcteam6328.utils.TunableNumber;
+import org.frcteam6941.led.AddressableLEDPattern;
+import org.frcteam6941.led.AddressableLEDWrapper;
 import org.frcteam6941.looper.UpdateManager.Updatable;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 import org.frcteam6941.utils.AngleNormalization;
@@ -31,13 +32,11 @@ import frc.robot.controlboard.SwerveCardinal.SWERVE_CARDINAL;
 import frc.robot.subsystems.BallPath;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Hood;
-import frc.robot.subsystems.Indicator;
 import frc.robot.subsystems.Intaker;
 import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
 import frc.robot.utils.led.Lights;
-import frc.robot.utils.led.TimedLEDState;
 import frc.robot.utils.shoot.ShootingParameters;
 import frc.robot.utils.shoot.Targets;
 
@@ -108,7 +107,7 @@ public class Superstructure implements Updatable {
         public boolean outIsTurretLimited = true;
 
         // Indicator Variables
-        public TimedLEDState outIndicatorState = Lights.WARNING;
+        public AddressableLEDPattern outIndicatorState = Lights.CONNECTING;
 
         // Climber Variables
         public double outClimberDemand = 0.05;
@@ -130,10 +129,10 @@ public class Superstructure implements Updatable {
     private Turret mTurret = Turret.getInstance();
     private Hood mHood = Hood.getInstance();
     private Intaker mIntaker = Intaker.getInstance();
-    private Indicator mIndicator = Indicator.getInstance();
     private Climber mClimber = Climber.getInstance();
     private Limelight mLimelight = Limelight.getInstance();
     private PneumaticsControlModule mPneumaticsControlModule = new PneumaticsControlModule();
+    private AddressableLEDWrapper mIndicator = new AddressableLEDWrapper(Constants.LED_CONTROL.LED_PORT, Constants.LED_CONTROL.LED_LENGTH);
 
     // Swerve setting related variables
     private boolean robotOrientedDrive = false;
@@ -891,14 +890,14 @@ public class Superstructure implements Updatable {
             case PIT:
                 if (mTurret.isCalibrated()) {
                     if (Constants.FMS.ALLIANCE().equals(Alliance.Red)) {
-                        mPeriodicIO.outIndicatorState = Lights.RED_ALLIANCE;
+                        mPeriodicIO.outIndicatorState = Lights.WAITING_ALLIANCE_RED;
                     } else if (Constants.FMS.ALLIANCE().equals(Alliance.Blue)) {
-                        mPeriodicIO.outIndicatorState = Lights.BLUE_ALLIANCE;
+                        mPeriodicIO.outIndicatorState = Lights.WAITING_ALLIANCE_BLUE;
                     } else {
                         mPeriodicIO.outIndicatorState = Lights.CONNECTING;
                     }
                 } else {
-                    mPeriodicIO.outIndicatorState = Lights.WARNING;
+                    mPeriodicIO.outIndicatorState = Lights.CONNECTING;
                 }
                 break;
             case CHASING:
@@ -924,15 +923,7 @@ public class Superstructure implements Updatable {
                             || coreAimTargetRelative.getNorm() > Constants.ShootingConstants.MAX_SHOOTING_DISTANCE) {
                         mPeriodicIO.outIndicatorState = Lights.OUT_OF_RANGE;
                     } else {
-                        if (!mLimelight.hasTarget()) {
-                            mPeriodicIO.outIndicatorState = Lights.FINDING_TARGET;
-                        } else {
-                            if (isReady()) {
-                                mPeriodicIO.outIndicatorState = Lights.READY;
-                            } else {
-                                mPeriodicIO.outIndicatorState = Lights.LOCK_ON;
-                            }
-                        }
+                        mPeriodicIO.outIndicatorState = Lights.NORMAL;
                     }
                 }
                 break;
@@ -948,7 +939,7 @@ public class Superstructure implements Updatable {
                 }
                 break;
         }
-        mIndicator.setIndicatorState(mPeriodicIO.outIndicatorState);
+        mIndicator.setPattern(mPeriodicIO.outIndicatorState);
     }
 
     public synchronized boolean isClimberOpenLoop() {

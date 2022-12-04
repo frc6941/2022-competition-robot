@@ -16,7 +16,6 @@ import frc.robot.subsystems.BallPath;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.ColorSensor;
 import frc.robot.subsystems.Hood;
-import frc.robot.subsystems.Indicator;
 import frc.robot.subsystems.Intaker;
 import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.RobotStateEstimator;
@@ -59,7 +58,6 @@ public class Robot extends TimedRobot {
                 Hood.getInstance(),
                 Shooter.getInstance(),
                 Climber.getInstance(),
-                Indicator.getInstance(),
                 Limelight.getInstance(),
                 RobotStateEstimator.getInstance(),
                 Alerts.getInstance(),
