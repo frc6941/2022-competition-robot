@@ -17,8 +17,8 @@ import frc.robot.coordinators.Superstructure;
 
 public class ATwoPlusOneAuto extends AutoModeBase {
     protected String autoName = "A - Two Plus One Auto";
-    private final PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("A 2+1 Ball Auto - Part 1", 3.5, 1.5);
-    private final PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("A 2+1 Ball Auto - Part 2", 3.5, 1.5);
+    private final PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("A 2+1 Ball Auto - Part 1", 3.5, 5.0);
+    private final PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("A 2+1 Ball Auto - Part 2", 3.5, 5.0);
     private final Superstructure mSuperstructure = Superstructure.getInstance();
     private final SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
 

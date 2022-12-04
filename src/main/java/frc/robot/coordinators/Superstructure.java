@@ -27,7 +27,6 @@ import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.RobotState;
 import frc.robot.controlboard.ControlBoard;
-import frc.robot.controlboard.ControlBoardX3D;
 import frc.robot.controlboard.SwerveCardinal.SWERVE_CARDINAL;
 import frc.robot.subsystems.BallPath;
 import frc.robot.subsystems.Climber;
@@ -459,7 +458,7 @@ public class Superstructure implements Updatable {
                 if (mPeriodicIO.inSwerveSnapRotation != SWERVE_CARDINAL.NONE) {
                     mPeriodicIO.outSwerveLockHeading = true;
                     mPeriodicIO.outSwerveHeadingTarget = mPeriodicIO.inSwerveSnapRotation.degrees;
-                    swerveSelfLockheadingRecord = mPeriodicIO.inSwerveSnapRotation.degrees;
+                    swerveSelfLockheadingRecord = null;
                 } else if (Math.abs(mPeriodicIO.outSwerveRotation) <= 0.03
                         && Math.abs(mPeriodicIO.inSwerveAngularVelocity) < 20.0
                         && swerveSelfLocking) {
@@ -493,7 +492,7 @@ public class Superstructure implements Updatable {
                 mPeriodicIO.outSwerveTranslation = mPeriodicIO.inSwerveTranslation;
                 mPeriodicIO.outSwerveRotation = mPeriodicIO.inSwerveRotation;
                 mPeriodicIO.outSwerveLockHeading = true;
-                mPeriodicIO.outSwerveHeadingTarget = 0.0;
+                mPeriodicIO.outSwerveHeadingTarget = 180.0;
                 mPeriodicIO.outTurretLockTarget = 90.0;
                 swerveSelfLockheadingRecord = null;
                 break;

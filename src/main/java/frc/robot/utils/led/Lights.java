@@ -28,7 +28,7 @@ public class Lights {
     public static final AddressableLEDPattern FINDING_TARGET = new BlinkingPattern(ORANGE, 0.2);
 
     public static final AddressableLEDPattern CLIMBING_MANUAL = new RainbowPattern();
-    public static final AddressableLEDPattern CLIMBING_HIGH = new BlinkingPattern(RED, 0.3);
-    public static final AddressableLEDPattern CLIMBING_TRAVERSAL = new BlinkingPattern(RED, 0.08);
+    public static final AddressableLEDPattern CLIMBING_HIGH = new BlinkingPattern(WHITE, 0.3);
+    public static final AddressableLEDPattern CLIMBING_TRAVERSAL = new BlinkingPattern(WHITE, 0.08);
     
 }

@@ -250,7 +250,7 @@ public class Limelight implements Updatable {
         double distance = Constants.VisionConstants.Turret.VISION_MAP
                 .getInterpolated(new InterpolatingDouble(offsets[1])).value;
 
-        if (Math.abs(mPeriodicIO.xOffset) < 15.0) {
+        if (Math.abs(mPeriodicIO.xOffset) < 20.0) {
             mEstimatedVehicleToField = new TimeStampedTranslation2d(
                     new Translation2d(
                             FieldConstants.hubCenter.getX() - distance * combinedAngle.getCos(),
