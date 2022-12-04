@@ -1,6 +1,7 @@
 package frc.robot.coordinators;
 
 import java.util.Optional;
+import java.util.ResourceBundle.Control;
 
 import com.team254.lib.geometry.Pose2d;
 import com.team254.lib.util.InterpolatingDouble;
@@ -25,7 +26,8 @@ import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.RobotState;
 import frc.robot.controlboard.ControlBoard;
-import frc.robot.controlboard.ControlBoard.SWERVE_CARDINAL;
+import frc.robot.controlboard.ControlBoardX3D;
+import frc.robot.controlboard.SwerveCardinal.SWERVE_CARDINAL;
 import frc.robot.subsystems.BallPath;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Hood;
@@ -139,7 +141,7 @@ public class Superstructure implements Updatable {
     private Double swerveSelfLockheadingRecord;
 
     // Vision delta related controlls
-    private PIDController angleDeltaController = new PIDController(0.8, 0.000, 0.0);
+    private PIDController angleDeltaController = new PIDController(0.9, 0.000, 0.0);
     private MovingAverage angleDeltaMovingAverage = new MovingAverage(10);
 
     // Shooting related tracking variables
@@ -224,7 +226,7 @@ public class Superstructure implements Updatable {
             return new double[] { delta + virtualTurretAngle, Double.POSITIVE_INFINITY };
         } else {
             return new double[] { availableTurretDelta + virtualTurretAngle,
-                    delta - availableTurretDelta + mPeriodicIO.inSwerveFieldHeadingAngle };
+                    (delta - availableTurretDelta) * 2.0 + mPeriodicIO.inSwerveFieldHeadingAngle };
         }
     }
 
@@ -279,14 +281,6 @@ public class Superstructure implements Updatable {
 
         if (mControlBoard.getSwitchRobotOrientedDrive()) {
             robotOrientedDrive = !robotOrientedDrive;
-        }
-
-        if (mControlBoard.getIncreaseShotAdjustment()) {
-            coreShootingAdjustmentAngle += 0.02;
-        }
-
-        if (mControlBoard.getDecreaseShotAdjustment()) {
-            coreShootingAdjustmentAngle -= 0.02;
         }
 
         if (mControlBoard.getSwitchCompressorForceEnable()) {
@@ -832,14 +826,14 @@ public class Superstructure implements Updatable {
         if (drivetrainOnlyAim || pureVisionAim) {
             onTarget = Util.epsilonEquals(
                     coreShootingParameters.getTargetAngle(),
-                    mPeriodicIO.inSwerveFieldHeadingAngle, 3.5)
+                    mPeriodicIO.inSwerveFieldHeadingAngle, 3.0)
                     && Util.epsilonEquals(
                             coreShootingParameters.getShotAngle(),
                             mPeriodicIO.inHoodAngle, 0.5);
         } else {
             onTarget = Util.epsilonEquals(
                     coreShootingParameters.getTargetAngle(),
-                    mPeriodicIO.inTurretFieldHeadingAngle, 3.5)
+                    mPeriodicIO.inTurretFieldHeadingAngle, 3.0)
                     && Util.epsilonEquals(
                             coreShootingParameters.getShotAngle(),
                             mPeriodicIO.inHoodAngle, 0.5);
@@ -1020,7 +1014,7 @@ public class Superstructure implements Updatable {
             if (getState() == STATE.SHOOTING || maintainReady) {
                 mShooter.setShooterRPM(coreShootingParameters.getShootingVelocity());
             } else {
-                mShooter.setShooterRPM(700);
+                mShooter.setShooterRPM(200);
             }
 
             if (mPeriodicIO.SPIT) {

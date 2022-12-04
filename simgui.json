@@ -99,6 +99,9 @@
       "Climber": {
         "open": true
       },
+      "Operator": {
+        "open": true
+      },
       "Swerve": {
         "open": true
       },
@@ -113,8 +116,5 @@
     "limelight": {
       "open": true
     }
-  },
-  "NetworkTables View": {
-    "visible": false
   }
 }

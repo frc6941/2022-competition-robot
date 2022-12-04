@@ -34,7 +34,7 @@ public class Turret implements Updatable {
     private final LazyTalonFX turretMotor = new LazyTalonFX(Constants.CANID.TURRET_MOTOR);
 
     private double zeroPosition = 0.0;
-    private final MovingAverage feedforwardMovingAverage = new MovingAverage(5);
+    private final MovingAverage feedforwardMovingAverage = new MovingAverage(7);
 
     private boolean isCalibrated = false;
 

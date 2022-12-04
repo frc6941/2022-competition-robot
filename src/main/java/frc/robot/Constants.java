@@ -131,7 +131,7 @@ public final class Constants {
             0.71241);
 
     // Intaker Constants
-    public static final double INTAKER_FAST_INTAKE_PERCENTAGE = 0.75;
+    public static final double INTAKER_FAST_INTAKE_PERCENTAGE = 0.6;
     public static final double INTAKER_SLOW_INTAKE_PERCENTAGE = 0.4;
     public static final double INTAKER_REVERSE_INTAKE_PERCENTAGE = -0.7;
     public static final double INTAKER_GAS_SAVER_TIME = 2.0;
@@ -209,7 +209,7 @@ public final class Constants {
     public static final double TURRET_ERROR_TOLERANCE = 1.0;
     public static final double TURRET_REVERSE_TO_CENTER_TRAVEL_DISTANCE = 52589.0 - 570.0;
 
-    public static final double TURRET_KF = 1024.0 / (72078.22222 / 2.0) * 0.7;
+    public static final double TURRET_KF = 1024.0 / (72078.22222 / 2.0) * 0.6;
     public static final double TURRET_KP = 0.3;
     public static final double TURRET_KI = 0.004;
     public static final double TURRET_KD = 1.0;
@@ -357,13 +357,13 @@ public final class Constants {
                 // @y --> shooter velocity (in rpm)
                 { 2.430, 2090 + 50 },
                 { 3.490, 2250 + 50 },
-                { 3.930, 2375 + 50 },
-                { 4.430, 2550 + 50 },
-                { 4.930, 2625 + 75 },
-                { 5.430, 2750 + 75 },
-                { 5.930, 2815 + 50 },
-                { 6.430, 2910 + 50 },
-                { 6.930, 3050 + 50 },
+                { 3.930, 2375 + 50 + 25 },
+                { 4.430, 2550 + 50 + 50 },
+                { 4.930, 2625 + 75 + 50 },
+                { 5.430, 2750 + 75 + 50 },
+                { 5.930, 2815 + 50 + 50 },
+                { 6.430, 2910 + 50 + 50 },
+                { 6.930, 3050 + 50 + 50 },
                 
         };
 
@@ -373,8 +373,8 @@ public final class Constants {
                 // @y --> hood angle (in degree)
                 { 2.430, 25 },
                 { 3.490, 25 },
-                { 3.930, 25 },
-                { 4.430, 27.5 },
+                { 3.930, 27 },
+                { 4.430, 29.5 },
                 { 4.930, 31 },
                 { 5.430, 33 },
                 { 5.930, 33.5 },

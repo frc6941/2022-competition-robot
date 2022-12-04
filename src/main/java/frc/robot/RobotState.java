@@ -91,7 +91,7 @@ public class RobotState {
         vehicle_velocity_measured_ = Pose2d.identity();
         vehicle_velocity_measured_filtered_ = new MovingAveragePose2d(10);
         vehicle_acceleration_measured_ = Pose2d.identity();
-        vehicle_acceleration_measured_filtered_ = new MovingAveragePose2d(15);
+        vehicle_acceleration_measured_filtered_ = new MovingAveragePose2d(50);
         distance_driven_ = 0.0;
     }
 
