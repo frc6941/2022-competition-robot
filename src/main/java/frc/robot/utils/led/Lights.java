@@ -1,39 +1,34 @@
 package frc.robot.utils.led;
 
+import org.frcteam6941.led.AddressableLEDPattern;
+import org.frcteam6941.led.patterns.BlinkingPattern;
+import org.frcteam6941.led.patterns.RainbowPattern;
+import org.frcteam6941.led.patterns.ScannerPattern;
 
 import edu.wpi.first.wpilibj.util.Color;
-import frc.robot.utils.led.TimedLEDState.BlinkingLEDState;
-import frc.robot.utils.led.TimedLEDState.BreathingLEDState;
-import frc.robot.utils.led.TimedLEDState.RainbowLEDState;
-import frc.robot.utils.led.TimedLEDState.StaticLEDState;
 
 public class Lights {
-    public static final LEDState OFF = new LEDState(0.0, 0.0, 0.0);
-    public static final LEDState ALLIANCE_RED = LEDState.createFromColor(Color.kFirstRed);
-    public static final LEDState ALLIANCE_BLUE = LEDState.createFromColor(Color.kBlue);
-    public static final LEDState IP_BLUE = new LEDState(97.0 / 255.0, 196.0 / 255.0, 227.0 / 255.0);
-    public static final LEDState RED = LEDState.createFromColor(Color.kRed);
-    public static final LEDState BLUE = LEDState.createFromColor(Color.kBlue);
-    public static final LEDState GREEN = LEDState.createFromColor(Color.kGreen);
-    public static final LEDState ORANGE = LEDState.createFromColor(Color.kOrangeRed);
-    public static final LEDState WHITE = LEDState.createFromColor(Color.kWhite);
+    public static final Color OFF = Color.kBlack;
+    public static final Color ALLIANCE_RED = Color.kFirstRed;
+    public static final Color ALLIANCE_BLUE = Color.kBlue;
+    public static final Color IP_BLUE = new Color(97.0 / 255.0, 196.0 / 255.0, 227.0 / 255.0);
+    public static final Color RED = Color.kRed;
+    public static final Color BLUE = Color.kBlue;
+    public static final Color GREEN = Color.kGreen;
+    public static final Color ORANGE = Color.kOrangeRed;
+    public static final Color WHITE = Color.kWhite;
 
-    public static final BreathingLEDState RED_ALLIANCE= new BreathingLEDState(ALLIANCE_RED, 2.5);
-    public static final BreathingLEDState BLUE_ALLIANCE = new BreathingLEDState(ALLIANCE_BLUE, 2.5);
-    public static final BlinkingLEDState WARNING = new BlinkingLEDState(RED, OFF, 1.0);
-    public static final BlinkingLEDState CONNECTING = new BlinkingLEDState(RED, ORANGE, 1.0);
+    public static final AddressableLEDPattern CONNECTING = new BlinkingPattern(RED, 0.2);
+    public static final AddressableLEDPattern WAITING_ALLIANCE_RED = new ScannerPattern(ALLIANCE_RED, OFF, 20);
+    public static final AddressableLEDPattern WAITING_ALLIANCE_BLUE = new ScannerPattern(ALLIANCE_BLUE, OFF, 20);
 
-    public static final StaticLEDState BALLPATH_FULL = new StaticLEDState(IP_BLUE);
-    public static final StaticLEDState NORMAL = new StaticLEDState(ORANGE);
-    public static final StaticLEDState LOSS = new StaticLEDState(RED);
+    public static final AddressableLEDPattern NORMAL = new ScannerPattern(IP_BLUE, OFF, 10);
+    public static final AddressableLEDPattern BALLPATH_WRONG_BALL = new BlinkingPattern(RED, 0.1);
+    public static final AddressableLEDPattern OUT_OF_RANGE = new BlinkingPattern(RED, 0.2);
+    public static final AddressableLEDPattern FINDING_TARGET = new BlinkingPattern(ORANGE, 0.2);
 
-    public static final BlinkingLEDState BALLPATH_WRONG_BALL = new BlinkingLEDState(RED, OFF, 0.1);
-    public static final BlinkingLEDState OUT_OF_RANGE = new BlinkingLEDState(RED, OFF, 0.2);
-    public static final BlinkingLEDState FINDING_TARGET = new BlinkingLEDState(ORANGE, OFF, 0.2);
-    public static final BlinkingLEDState LOCK_ON = new BlinkingLEDState(IP_BLUE, OFF, 0.2);
-    public static final StaticLEDState READY = new StaticLEDState(GREEN);
+    public static final AddressableLEDPattern CLIMBING_MANUAL = new RainbowPattern();
+    public static final AddressableLEDPattern CLIMBING_HIGH = new BlinkingPattern(WHITE, 0.3);
+    public static final AddressableLEDPattern CLIMBING_TRAVERSAL = new BlinkingPattern(WHITE, 0.08);
 
-    public static final RainbowLEDState CLIMBING_MANUAL = new RainbowLEDState(5.0);
-    public static final BlinkingLEDState CLIMBING_HIGH = new BlinkingLEDState(WHITE, OFF, 0.5);
-    public static final BlinkingLEDState CLIMBING_TRAVERSAL = new BlinkingLEDState(WHITE, OFF, 0.25);
 }

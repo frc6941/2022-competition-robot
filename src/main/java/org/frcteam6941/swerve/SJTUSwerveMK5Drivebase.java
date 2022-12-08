@@ -73,7 +73,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     private Pose2d pose = new Pose2d();
 
     @GuardedBy("signalLock")
-    private HolonomicDriveSignal driveSignal = new HolonomicDriveSignal(new Translation2d(0, 0), 0, true);
+    private HolonomicDriveSignal driveSignal = new HolonomicDriveSignal(new Translation2d(0, 0), 0, true, true);
     private STATE state = STATE.DRIVE;
 
     // Thread locks
@@ -94,13 +94,13 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         // Swerve hardware configurations
         mSwerveMods = new SJTUSwerveModuleMK5[] {
                 new SJTUSwerveModuleMK5(0, Constants.CANID.DRIVETRAIN_FRONT_LEFT_DRIVE_MOTOR,
-                        Constants.CANID.DRIVETRAIN_FRONT_LEFT_STEER_MOTOR, Constants.FRONT_LEFT_OFFSET),
+                        Constants.CANID.DRIVETRAIN_FRONT_LEFT_STEER_MOTOR, Constants.FRONT_LEFT_OFFSET, false, true),
                 new SJTUSwerveModuleMK5(1, Constants.CANID.DRIVETRAIN_FRONT_RIGHT_DRIVE_MOTOR,
-                        Constants.CANID.DRIVETRAIN_FRONT_RIGHT_STEER_MOTOR, Constants.FRONT_RIGHT_OFFSET),
+                        Constants.CANID.DRIVETRAIN_FRONT_RIGHT_STEER_MOTOR, Constants.FRONT_RIGHT_OFFSET, false, true),
                 new SJTUSwerveModuleMK5(2, Constants.CANID.DRIVETRAIN_BACK_LEFT_DRIVE_MOTOR,
-                        Constants.CANID.DRIVETRAIN_BACK_LEFT_STEER_MOTOR, Constants.BACK_LEFT_OFFSET),
+                        Constants.CANID.DRIVETRAIN_BACK_LEFT_STEER_MOTOR, Constants.BACK_LEFT_OFFSET, false, true),
                 new SJTUSwerveModuleMK5(3, Constants.CANID.DRIVETRAIN_BACK_RIGHT_DRIVE_MOTOR,
-                        Constants.CANID.DRIVETRAIN_BACK_RIGHT_STEER_MOTOR, Constants.BACK_RIGHT_OFFSET)
+                        Constants.CANID.DRIVETRAIN_BACK_RIGHT_STEER_MOTOR, Constants.BACK_RIGHT_OFFSET, false, true)
         };
 
         // Module positions and swerve kinematics
@@ -113,10 +113,10 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
 
         // Advanced kalman filter position estimator
         poseEstimator = new SwerveDrivePoseEstimator(Rotation2d.fromDegrees(getYaw()), new Pose2d(), swerveKinematics,
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.001, 0.001, 0.001), // State Error
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.01, 0.01, 0.001), // State Error
                 new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.001), // Encoder Error
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.005, 0.005, 0.001), // Vision Error,
-        kLooperDt);
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.03, 0.03, 0.001), // Vision Error,
+                kLooperDt);
         this.pose = poseEstimator.getEstimatedPosition();
         headingController.enableContinuousInput(0, 360.0); // Enable continuous rotation
         headingController.setTolerance(2.0);
@@ -205,11 +205,18 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         synchronized (statusLock) {
             SwerveModuleState[] swerveModuleStates = swerveKinematics.toSwerveModuleStates(chassisSpeeds,
                     new Translation2d());
-            SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, 1.0);
-            for (SJTUSwerveModuleMK5 mod : mSwerveMods) {
-                mod.setDesiredState(swerveModuleStates[mod.moduleNumber], true, false);
-
+            if (driveSignal.isOpenLoop()) {
+                SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, 1.0);
+                for (SJTUSwerveModuleMK5 mod : mSwerveMods) {
+                    mod.setDesiredState(swerveModuleStates[mod.moduleNumber], true, false);
+                }
+            } else {
+                SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.DRIVE_MAX_VELOCITY);
+                for (SJTUSwerveModuleMK5 mod : mSwerveMods) {
+                    mod.setDesiredState(swerveModuleStates[mod.moduleNumber], false, false);
+                }
             }
+
         }
     }
 
@@ -230,15 +237,26 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     }
 
     public void resetHeadingController() {
-        headingController.reset(gyro.getYaw().getDegrees(),getAngularVelocity());
+        headingController.reset(gyro.getYaw().getDegrees(), getAngularVelocity());
     }
 
     public void addVisionObservation(Pose2d estimatedPose, double timestampSeconds) {
         this.poseEstimator.addVisionMeasurement(estimatedPose, timestampSeconds);
     }
 
+    public void addVisionObservationWithStdDeviation(Pose2d estimatedPose, double timestampSeconds,
+            double xyStdDeviation) {
+        this.poseEstimator.addVisionMeasurement(estimatedPose, timestampSeconds,
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(xyStdDeviation, xyStdDeviation, 0.001));
+    }
+
     public void addVisionObservationTranslation(Translation2d translation, double timestampSeconds) {
         addVisionObservation(new Pose2d(translation, gyro.getYaw()), timestampSeconds);
+    }
+
+    public void addVisionObservationTranslationWithStdDeviation(Translation2d translation, double timestampSeconds,
+            double xyStdDeviation) {
+        addVisionObservationWithStdDeviation(new Pose2d(translation, gyro.getYaw()), timestampSeconds, xyStdDeviation);
     }
 
     /**
@@ -249,9 +267,11 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
      * @param rotationalVelocity    Rotational magnitude of the swerve drive.
      * @param isFieldOriented       Is the drive signal field oriented.
      */
-    public void drive(Translation2d translationalVelocity, double rotationalVelocity, boolean isFieldOriented) {
+    public void drive(Translation2d translationalVelocity, double rotationalVelocity, boolean isFieldOriented,
+            boolean isOpenLoop) {
         synchronized (signalLock) {
-            driveSignal = new HolonomicDriveSignal(translationalVelocity, rotationalVelocity, isFieldOriented);
+            driveSignal = new HolonomicDriveSignal(translationalVelocity, rotationalVelocity, isFieldOriented,
+                    isOpenLoop);
         }
     }
 
@@ -406,7 +426,7 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
             setState(STATE.PATH_FOLLOWING);
             driveSignal = trajectorySignal.get();
             driveSignal = new HolonomicDriveSignal(driveSignal.getTranslation(), driveSignal.getRotation(),
-                    driveSignal.isFieldOriented());
+                    driveSignal.isFieldOriented(), driveSignal.isOpenLoop());
         }
 
         if (isLockHeading) {
@@ -417,7 +437,8 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
                 rotation += Math.signum(rotation) * Constants.DRIVETRAIN_STATIC_HEADING_KS;
             }
             rotation += headingFeedforward;
-            driveSignal = new HolonomicDriveSignal(driveSignal.getTranslation(), rotation, true);
+            driveSignal = new HolonomicDriveSignal(driveSignal.getTranslation(), rotation,
+                    driveSignal.isFieldOriented(), driveSignal.isOpenLoop());
         }
 
         synchronized (signalLock) {

@@ -11,18 +11,18 @@ import org.frcteam6941.utils.LazyTalonFX;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
-public class Hood implements Updatable{
+public class Hood implements Updatable {
     public static class PeriodicIO {
         // INPUT
         public double hoodCurrent;
         public double hoodPosition;
         public double hoodVelocity;
         public double hoodVoltage;
-    
+
         // OUTPUT
         public double hoodDemand;
     }
-    
+
     public PeriodicIO mPeriodicIO = new PeriodicIO();
 
     public LazyTalonFX hoodMotor = new LazyTalonFX(Constants.CANID.HOOD_MOTOR);
@@ -51,12 +51,12 @@ public class Hood implements Updatable{
         }
         return instance;
     }
+
     private static Hood instance;
 
     public synchronized void resetHood(double angle) {
         hoodMotor.setSelectedSensorPosition(
-            Conversions.degreesToFalcon(angle, Constants.HOOD_GEAR_RATIO)
-        );
+                Conversions.degreesToFalcon(angle, Constants.HOOD_GEAR_RATIO));
         isCalibrated = true;
     }
 
@@ -89,7 +89,7 @@ public class Hood implements Updatable{
         mPeriodicIO.hoodPosition = hoodMotor.getSelectedSensorPosition();
         mPeriodicIO.hoodVelocity = hoodMotor.getSelectedSensorVelocity();
     }
-    
+
     @Override
     public synchronized void update(double time, double dt) {
         if (!isCalibrated) {
@@ -107,44 +107,49 @@ public class Hood implements Updatable{
                 }
                 break;
             case PERCENTAGE:
+                break;
             case ANGLE:
+                break;
             case OFF:
                 break;
         }
     }
-    
+
     @Override
     public synchronized void write(double time, double dt) {
         switch (state) {
             case HOMING:
+                hoodMotor.set(ControlMode.PercentOutput, mPeriodicIO.hoodDemand);
+                break;
             case PERCENTAGE:
                 hoodMotor.set(ControlMode.PercentOutput, mPeriodicIO.hoodDemand);
                 break;
             case ANGLE:
-                hoodMotor.set(ControlMode.MotionMagic, Conversions.degreesToFalcon(mPeriodicIO.hoodDemand, Constants.HOOD_GEAR_RATIO));
+                hoodMotor.set(ControlMode.MotionMagic,
+                        Conversions.degreesToFalcon(mPeriodicIO.hoodDemand, Constants.HOOD_GEAR_RATIO));
                 break;
             case OFF:
                 hoodMotor.set(ControlMode.PercentOutput, 0.0);
                 break;
         }
     }
-    
+
     @Override
     public synchronized void telemetry() {
         SmartDashboard.putNumber("Hood Demand", mPeriodicIO.hoodDemand);
         SmartDashboard.putNumber("Hood Angle", getHoodAngle());
     }
-    
+
     @Override
     public synchronized void start() {
         isCalibrated = false;
         setState(STATE.HOMING);
     }
-    
+
     @Override
     public synchronized void stop() {
     }
-    
+
     @Override
     public synchronized void disabled(double time, double dt) {
         // Auto Generated Method

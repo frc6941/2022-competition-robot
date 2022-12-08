@@ -1,24 +1,27 @@
 package frc.robot.controlboard;
 
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.Joystick;
 
-public class CustomXboxController {
-    private final XboxController mController;
+public class LogitechX3D {
+    private final Joystick mController;
 
     private double rumblePower = 0.0;
     private double rumbleInterval = 0.0;
 
-    public enum Side {
-        LEFT, RIGHT
-    }
-
     public enum Axis {
-        X, Y
+        X(0), Y(1), Z(2), A(3);
+
+        public final int id;
+
+        Axis(int id) {
+            this.id = id;
+        }
     }
 
     public enum Button {
-        A(1), B(2), X(3), Y(4), LB(5), RB(6), BACK(7), START(8), L_JOYSTICK(9), R_JOYSTICK(10);
+        TRIGGER(1), SIDE(2), THREE(3), FOUR(4), FIVE(5), SIX(6), SEVEN(7), EIGHT(8), NINE(9), TEN(10), ELEVEN(11),
+        TWELVE(12);
 
         public final int id;
 
@@ -27,22 +30,12 @@ public class CustomXboxController {
         }
     }
 
-    CustomXboxController(int port) {
-        mController = new XboxController(port);
+    LogitechX3D(int port) {
+        mController = new Joystick(port);
     }
 
-    double getAxis(Side side, Axis axis) {
-        boolean left = side == Side.LEFT;
-        boolean y = axis == Axis.Y;
-        return mController.getRawAxis((left ? 0 : 4) + (y ? 1 : 0));
-    }
-
-    public double getTrigger(Side side) {
-        return mController.getRawAxis(side == Side.LEFT ? 2 : 3);
-    }
-
-    public boolean getTriggerBoolean(Side side) {
-        return mController.getRawAxis(side == Side.LEFT ? 2 : 3) > 0.5;
+    double getAxis(Axis axis) {
+        return mController.getRawAxis(axis.id);
     }
 
     public boolean getButton(Button button) {
@@ -64,7 +57,7 @@ public class CustomXboxController {
         }
     }
 
-    public XboxController getController() {
+    public Joystick getController() {
         return mController;
     }
 }

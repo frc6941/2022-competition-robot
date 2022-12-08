@@ -2,12 +2,11 @@ package frc.robot.controlboard;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Constants;
-import frc.robot.controlboard.CustomXboxController.Axis;
-import frc.robot.controlboard.CustomXboxController.Button;
-import frc.robot.controlboard.CustomXboxController.Side;
+import frc.robot.controlboard.LogitechX3D.Axis;
+import frc.robot.controlboard.LogitechX3D.Button;
 import frc.robot.controlboard.SwerveCardinal.SWERVE_CARDINAL;
 
-public class ControlBoard {
+public class ControlBoardX3D {
     public final double kSwerveDeadband = Constants.CONTROLLER_DEADBAND;
 
     private final int kDpadUp = 0;
@@ -15,24 +14,24 @@ public class ControlBoard {
     private final int kDpadDown = 180;
     private final int kDpadLeft = 270;
 
-    private static ControlBoard instance = null;
+    private static ControlBoardX3D instance = null;
 
-    public static ControlBoard getInstance() {
+    public static ControlBoardX3D getInstance() {
         if (instance == null) {
-            instance = new ControlBoard();
+            instance = new ControlBoardX3D();
         }
         return instance;
     }
 
-    private final CustomXboxController driver;
+    private final LogitechX3D driver;
     private final CustomXboxController operator;
 
-    private ControlBoard() {
-        driver = new CustomXboxController(Constants.DRIVER_CONTROLLER_PORT);
+    private ControlBoardX3D() {
+        driver = new LogitechX3D(Constants.DRIVER_CONTROLLER_PORT);
         operator = new CustomXboxController(Constants.OPERATOR_CONTROLLER_PORT);
     }
 
-    public CustomXboxController getDriverController() {
+    public LogitechX3D getDriverController() {
         return driver;
     }
 
@@ -44,16 +43,10 @@ public class ControlBoard {
         driver.setRumble(power, interval);
     }
 
-    public void setOperatorRumble(double power, double interval) {
-        operator.setRumble(power, interval);
-    }
-
     /* DRIVER METHODS */
     public Translation2d getSwerveTranslation() {
-        double forwardAxis = driver.getAxis(Side.LEFT, Axis.Y);
-        double strafeAxis = driver.getAxis(Side.LEFT, Axis.X);
-        double pedal = driver.getTrigger(Side.RIGHT);
-        double breaker = driver.getTrigger(Side.LEFT);
+        double forwardAxis = driver.getAxis(Axis.Y);
+        double strafeAxis = driver.getAxis(Axis.X);
 
         forwardAxis = Constants.CONTROLLER_INVERT_Y ? forwardAxis : -forwardAxis;
         strafeAxis = Constants.CONTROLLER_INVERT_X ? strafeAxis : -strafeAxis;
@@ -63,14 +56,12 @@ public class ControlBoard {
         if (Math.abs(tAxes.getNorm()) < kSwerveDeadband) {
             return new Translation2d();
         } else {
-            double pedalScale = 1.0 - Constants.CONTROLLER_PEDAL + Constants.CONTROLLER_PEDAL * pedal;
-            double breakScale = (1.0 - Constants.CONTROLLER_PEDAL) * breaker;
-            return tAxes.times(pedalScale).minus(tAxes.times(breakScale)).times(Constants.DRIVE_MAX_VELOCITY);
+            return tAxes.times(Constants.DRIVE_MAX_VELOCITY);
         }
     }
 
     public double getSwerveRotation() {
-        double rotAxis = driver.getAxis(Side.RIGHT, Axis.X) * 2.0;
+        double rotAxis = driver.getAxis(Axis.Z) * 2.0;
         rotAxis = Constants.CONTROLLER_INVERT_R ? rotAxis : -rotAxis;
 
         if (Math.abs(rotAxis) < kSwerveDeadband) {
@@ -81,72 +72,61 @@ public class ControlBoard {
     }
 
     public boolean zeroGyro() {
-        return driver.getController().getStartButtonPressed();
+        return driver.getController().getRawButtonPressed(Button.SEVEN.id);
     }
 
     public SWERVE_CARDINAL getSwerveSnapRotation() {
-        if (driver.getButton(Button.A)) {
+        if (driver.getController().getPOV() == kDpadDown) {
             return SWERVE_CARDINAL.BACKWARDS;
-        } else if (driver.getButton(Button.X)) {
+        } else if (driver.getController().getPOV() == kDpadRight) {
             return SWERVE_CARDINAL.RIGHT;
-        } else if (driver.getButton(Button.B)) {
+        } else if (driver.getController().getPOV() == kDpadLeft) {
             return SWERVE_CARDINAL.LEFT;
-        } else if (driver.getButton(Button.Y)) {
+        } else if (driver.getController().getPOV() == kDpadUp) {
             return SWERVE_CARDINAL.FORWARDS;
         } else {
             return SWERVE_CARDINAL.NONE;
         }
-
-    }
-
-    public boolean getSwitchEject() {
-        return driver.getController().getPOV() == kDpadDown;
     }
 
     // Locks wheels in X formation
     public boolean getSwerveBrake() {
-        return driver.getButton(Button.R_JOYSTICK);
+        return driver.getButton(Button.FOUR);
     }
 
     // Robot oriented switch
     public boolean getSwitchRobotOrientedDrive() {
-        return driver.getController().getLeftStickButtonPressed();
+        return driver.getButton(Button.FIVE);
+    }
+
+    public boolean getSwitchCompressorForceEnable() {
+        return driver.getButton(Button.TWELVE);
     }
 
     // Start intake
     public boolean getIntake() {
-        return driver.getButton(Button.LB);
+        return driver.getButton(Button.SIDE);
     }
 
     public boolean getShoot() {
-        return driver.getButton(Button.RB);
+        return driver.getButton(Button.TRIGGER);
     }
 
     public boolean getSpit() {
         return driver.getController().getPOV() == kDpadDown;
     }
 
-    public boolean getDecreaseShotAdjustment() {
-        return driver.getController().getPOV() == kDpadRight;
-    }
-
-    public boolean getIncreaseShotAdjustment() {
-        return driver.getController().getPOV() == kDpadLeft;
-    }
-
-    public boolean getSwitchCompressorForceEnable() {
-        return driver.getController().getBackButtonPressed();
-    }
-
     // Climber Controls
     public boolean getEnterClimbMode() {
-        return operator.getButton(Button.LB) && operator.getButton(Button.RB) && operator.getTriggerBoolean(Side.LEFT)
-                && operator.getTriggerBoolean(Side.RIGHT);
+        return operator.getButton(CustomXboxController.Button.LB) && operator.getButton(CustomXboxController.Button.RB)
+                && operator.getTriggerBoolean(CustomXboxController.Side.LEFT)
+                && operator.getTriggerBoolean(CustomXboxController.Side.RIGHT);
         // return operator.getButton(Button.LB) && operator.getButton(Button.RB);
     }
 
     public boolean getExitClimbMode() {
-        return operator.getButton(Button.BACK) && operator.getButton(Button.START);
+        return operator.getButton(CustomXboxController.Button.BACK)
+                && operator.getButton(CustomXboxController.Button.START);
     }
 
     public boolean getToggleOpenLoopClimbMode() {
@@ -186,10 +166,10 @@ public class ControlBoard {
     }
 
     public boolean getClimbAutoConfirmation() {
-        return operator.getButton(Button.A);
+        return operator.getButton(CustomXboxController.Button.A);
     }
 
     public boolean getClimbAutoAbort() {
-        return operator.getButton(Button.X);
+        return operator.getButton(CustomXboxController.Button.X);
     }
 }

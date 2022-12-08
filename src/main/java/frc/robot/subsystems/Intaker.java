@@ -4,7 +4,6 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
-import com.team254.lib.util.TimeDelayedBoolean;
 
 import org.frcteam6941.looper.UpdateManager.Updatable;
 
@@ -21,13 +20,12 @@ public class Intaker implements Updatable {
 
     public PeriodicIO mPeriodicIO = new PeriodicIO();
 
-    private DoubleSolenoid intakerExtender = new DoubleSolenoid(PneumaticsModuleType.REVPH,
+    private DoubleSolenoid intakerExtender = new DoubleSolenoid(PneumaticsModuleType.CTREPCM,
             Constants.PNEUMATICS_ID.INTAKER_EXTENDER_FORWARD, Constants.PNEUMATICS_ID.INTAKER_EXTENDER_REVERSE);
 
     private CANSparkMax intakerMotor = new CANSparkMax(Constants.CANID.INTAKER_MOTOR, MotorType.kBrushless);
 
     private static Intaker instance;
-    private final TimeDelayedBoolean intakerRetractTurningBoolean = new TimeDelayedBoolean();
     private boolean spin = false;
     private boolean reverse = false;
     private STATE state = STATE.RETRACTING;
@@ -76,15 +74,10 @@ public class Intaker implements Updatable {
                 } else {
                     mPeriodicIO.intakerDemand = 0.0;
                 }
-                intakerRetractTurningBoolean.update(false, 0.0);
                 break;
             case RETRACTING:
                 mPeriodicIO.intakerExtenderDemand = DoubleSolenoid.Value.kReverse;
-                if (intakerRetractTurningBoolean.update(true, 0.1)) {
-                    mPeriodicIO.intakerDemand = 0.0;
-                } else {
-                    mPeriodicIO.intakerDemand = Constants.INTAKER_FAST_INTAKE_PERCENTAGE;
-                }
+                mPeriodicIO.intakerDemand = 0.0;
                 break;
         }
     }

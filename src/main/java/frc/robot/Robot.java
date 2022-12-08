@@ -12,20 +12,19 @@ import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.subsystems.BallPath;
-import frc.robot.subsystems.Climber;
-import frc.robot.subsystems.ColorSensor;
-import frc.robot.subsystems.Hood;
-import frc.robot.subsystems.Indicator;
-import frc.robot.subsystems.Intaker;
-import frc.robot.subsystems.Limelight;
-import frc.robot.subsystems.RobotStateEstimator;
-import frc.robot.subsystems.Shooter;
 import frc.robot.auto.AutoSelector;
 import frc.robot.auto.modes.AutoModeBase;
 import frc.robot.coordinators.Alerts;
 import frc.robot.coordinators.Superstructure;
 import frc.robot.shuffleboard.ShuffleBoardInteractions;
+import frc.robot.subsystems.BallPath;
+import frc.robot.subsystems.Climber;
+import frc.robot.subsystems.ColorSensor;
+import frc.robot.subsystems.Hood;
+import frc.robot.subsystems.Intaker;
+import frc.robot.subsystems.Limelight;
+import frc.robot.subsystems.RobotStateEstimator;
+import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
 
 /**
@@ -59,7 +58,6 @@ public class Robot extends TimedRobot {
                 Hood.getInstance(),
                 Shooter.getInstance(),
                 Climber.getInstance(),
-                Indicator.getInstance(),
                 Limelight.getInstance(),
                 RobotStateEstimator.getInstance(),
                 Alerts.getInstance(),
@@ -100,7 +98,7 @@ public class Robot extends TimedRobot {
 
         Superstructure.getInstance().setWantEject(false);
         Superstructure.getInstance().setWantMoveAndShoot(false);
-        Superstructure.getInstance().setWantVisionAim(false);
+        Superstructure.getInstance().setWantPureVisionAim(false);
         Superstructure.getInstance().setWantSwerveSelfLocking(false);
 
         CommandScheduler.getInstance().enable();
@@ -129,7 +127,7 @@ public class Robot extends TimedRobot {
         Superstructure.getInstance().setWantMaintain(false);
         Superstructure.getInstance().setWantEject(false);
         Superstructure.getInstance().setWantMoveAndShoot(true);
-        Superstructure.getInstance().setWantVisionAim(true);
+        Superstructure.getInstance().setWantPureVisionAim(false);
         Superstructure.getInstance().setWantSwerveSelfLocking(true);
 
         this.updateManager.stopDisableLoop();

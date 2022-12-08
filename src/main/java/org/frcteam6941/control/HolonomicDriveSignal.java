@@ -13,11 +13,13 @@ public class HolonomicDriveSignal {
     private final Translation2d translation;
     private final double rotation;
     private final boolean fieldOriented;
+    private final boolean isOpenLoop;
 
-    public HolonomicDriveSignal(Translation2d translation, double rotation, boolean fieldOriented) {
+    public HolonomicDriveSignal(Translation2d translation, double rotation, boolean fieldOriented, boolean isOpenLoop) {
         this.translation = translation;
         this.rotation = rotation;
         this.fieldOriented = fieldOriented;
+        this.isOpenLoop = isOpenLoop;
     }
 
     public Translation2d getTranslation() {
@@ -30,5 +32,9 @@ public class HolonomicDriveSignal {
 
     public boolean isFieldOriented() {
         return fieldOriented;
+    }
+
+    public boolean isOpenLoop() {
+        return isOpenLoop;
     }
 }

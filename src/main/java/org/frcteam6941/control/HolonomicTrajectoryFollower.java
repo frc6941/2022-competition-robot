@@ -24,7 +24,7 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
     private boolean requiredOnTarget = false;
     private boolean lockAngle = true;
 
-    private double TARGET_DISTANCE_ACCURACY_REQUIREMENT = 0.03;
+    private double TARGET_DISTANCE_ACCURACY_REQUIREMENT = 0.10;
     private double TARGET_VELOCITY_ACCURACY_REQUIREMENT = 0.10;
 
     public HolonomicTrajectoryFollower(PIDController xController, PIDController yController,
@@ -46,11 +46,11 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
             if (this.requiredOnTarget) {
                 if (this.xController.atSetpoint() && this.yController.atSetpoint()) {
                     finished = true;
-                    return new HolonomicDriveSignal(new Translation2d(0, 0), 0.0, true);
+                    return new HolonomicDriveSignal(new Translation2d(0, 0), 0.0, true, false);
                 }
             } else {
                 finished = true;
-                return new HolonomicDriveSignal(new Translation2d(0, 0), 0.0, true);
+                return new HolonomicDriveSignal(new Translation2d(0, 0), 0.0, true, false);
             }
         }
 
@@ -80,7 +80,8 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
         return new HolonomicDriveSignal(
                 translationVector,
                 rotation,
-                true
+                true,
+                false
         );
     }
 

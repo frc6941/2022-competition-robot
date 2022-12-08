@@ -1,14 +1,15 @@
 package frc.robot;
 
+import java.util.Map;
+
 import com.team254.lib.geometry.Pose2d;
 import com.team254.lib.geometry.Rotation2d;
 import com.team254.lib.util.InterpolatingDouble;
 import com.team254.lib.util.InterpolatingTreeMap;
 import com.team254.lib.util.MovingAveragePose2d;
+
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
-import java.util.Map;
 
 public class RobotState {
     private static RobotState mInstance;
@@ -87,11 +88,11 @@ public class RobotState {
         field_to_vehicle_ = new InterpolatingTreeMap<>(OBSERVATION_BUFFER_SIZE);
         field_to_vehicle_.put(new InterpolatingDouble(start_time), initial_field_to_vehicle);
         vehicle_velocity_predicted_ = Pose2d.identity();
-        vehicle_velocity_predicted_filtered_ = new MovingAveragePose2d(5);
+        vehicle_velocity_predicted_filtered_ = new MovingAveragePose2d(10);
         vehicle_velocity_measured_ = Pose2d.identity();
-        vehicle_velocity_measured_filtered_ = new MovingAveragePose2d(5);
+        vehicle_velocity_measured_filtered_ = new MovingAveragePose2d(10);
         vehicle_acceleration_measured_ = Pose2d.identity();
-        vehicle_acceleration_measured_filtered_ = new MovingAveragePose2d(10);
+        vehicle_acceleration_measured_filtered_ = new MovingAveragePose2d(50);
         distance_driven_ = 0.0;
     }
 
