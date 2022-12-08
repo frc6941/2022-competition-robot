@@ -22,7 +22,6 @@ public class ATwoPlusOneAuto extends AutoModeBase {
     private final Superstructure mSuperstructure = Superstructure.getInstance();
     private final SJTUSwerveMK5Drivebase mSwerve = SJTUSwerveMK5Drivebase.getInstance();
 
-
     @Override
     public Pose2d getStartingPose() {
         return trajectoryPart1.getInitialPose();
@@ -40,14 +39,14 @@ public class ATwoPlusOneAuto extends AutoModeBase {
                 new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
                 new ParallelCommandGroup(
                         new WaitUntilCommand(mSuperstructure::isReady).withTimeout(1.0),
-                        new InstantCommand(() -> mSuperstructure.setState(Superstructure.STATE.SHOOTING))
-                ),
+                        new InstantCommand(() -> mSuperstructure.setState(Superstructure.STATE.SHOOTING))),
                 new WaitCommand(1.0),
                 new InstantCommand(() -> mSuperstructure.setState(Superstructure.STATE.CHASING)),
                 new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
                 // Part 2: Collect two wrong cargo and spit
                 new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
-                new InstantCommand(() -> mSwerve.setHeadingTarget(trajectoryPart2.getInitialPose().getRotation().getDegrees())),
+                new InstantCommand(
+                        () -> mSwerve.setHeadingTarget(trajectoryPart2.getInitialPose().getRotation().getDegrees())),
                 new InstantCommand(() -> mSwerve.setLockHeading(true)),
                 new WaitUntilCommand(mSwerve::isHeadingOnTarget).withTimeout(2.0),
                 new InstantCommand(() -> mSwerve.setLockHeading(false)),
@@ -58,8 +57,7 @@ public class ATwoPlusOneAuto extends AutoModeBase {
                 new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
                 new InstantCommand(() -> mSuperstructure.setWantSpit(false)),
                 // End Settings
-                new InstantCommand(() -> mSuperstructure.setWantEject(true))
-        );
+                new InstantCommand(() -> mSuperstructure.setWantEject(true)));
     };
 
     public ATwoPlusOneAuto() {

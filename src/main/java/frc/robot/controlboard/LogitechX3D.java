@@ -13,14 +13,15 @@ public class LogitechX3D {
         X(0), Y(1), Z(2), A(3);
 
         public final int id;
-        
+
         Axis(int id) {
             this.id = id;
         }
     }
 
     public enum Button {
-        TRIGGER(1), SIDE(2), THREE(3), FOUR(4), FIVE(5), SIX(6), SEVEN(7), EIGHT(8), NINE(9), TEN(10), ELEVEN(11), TWELVE(12);
+        TRIGGER(1), SIDE(2), THREE(3), FOUR(4), FIVE(5), SIX(6), SEVEN(7), EIGHT(8), NINE(9), TEN(10), ELEVEN(11),
+        TWELVE(12);
 
         public final int id;
 
@@ -36,7 +37,7 @@ public class LogitechX3D {
     double getAxis(Axis axis) {
         return mController.getRawAxis(axis.id);
     }
-    
+
     public boolean getButton(Button button) {
         return mController.getRawButton(button.id);
     }

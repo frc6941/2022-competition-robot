@@ -238,7 +238,8 @@ public class Limelight implements Updatable {
     }
 
     public void updateDistanceToTarget() {
-        mDistanceToTarget = Constants.VisionConstants.Turret.VISION_MAP.getInterpolated(new InterpolatingDouble(getOffsetAdjusted()[1])).value;
+        mDistanceToTarget = Constants.VisionConstants.Turret.VISION_MAP
+                .getInterpolated(new InterpolatingDouble(getOffsetAdjusted()[1])).value;
     }
 
     public void updateEstimatedVehicleToField(double time) {

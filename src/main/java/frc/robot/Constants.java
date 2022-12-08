@@ -327,7 +327,7 @@ public final class Constants {
                     { -17.3024, 5.500 + 0.43 },
                     { -18.6645, 6.000 + 0.43 },
                     { -19.8421, 6.500 + 0.43 },
-                    
+
             };
 
             public static InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> VISION_MAP = new InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble>();
@@ -364,7 +364,7 @@ public final class Constants {
                 { 5.930, 2815 + 50 + 50 },
                 { 6.430, 2910 + 50 + 50 },
                 { 7.0, 3050 + 50 + 50 },
-                
+
         };
 
         public static double[][] HOOD_REGRESSION = {
@@ -380,7 +380,7 @@ public final class Constants {
                 { 5.930, 33.5 },
                 { 6.430, 37 },
                 { 7.0, 38 },
-                
+
         };
 
         public static double[][] TOLERANCE_REGRESSION = {

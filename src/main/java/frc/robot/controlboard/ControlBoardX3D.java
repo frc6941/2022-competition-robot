@@ -38,7 +38,7 @@ public class ControlBoardX3D {
     public CustomXboxController getOperatorController() {
         return operator;
     }
-    
+
     public void setDriverRumble(double power, double interval) {
         driver.setRumble(power, interval);
     }
@@ -49,7 +49,7 @@ public class ControlBoardX3D {
         double strafeAxis = driver.getAxis(Axis.X);
 
         forwardAxis = Constants.CONTROLLER_INVERT_Y ? forwardAxis : -forwardAxis;
-        strafeAxis = Constants.CONTROLLER_INVERT_X ? strafeAxis :-strafeAxis;
+        strafeAxis = Constants.CONTROLLER_INVERT_X ? strafeAxis : -strafeAxis;
 
         Translation2d tAxes = new Translation2d(forwardAxis, strafeAxis);
 
@@ -116,15 +116,17 @@ public class ControlBoardX3D {
         return driver.getController().getPOV() == kDpadDown;
     }
 
-
     // Climber Controls
     public boolean getEnterClimbMode() {
-        return operator.getButton(CustomXboxController.Button.LB) && operator.getButton(CustomXboxController.Button.RB) && operator.getTriggerBoolean(CustomXboxController.Side.LEFT) && operator.getTriggerBoolean(CustomXboxController.Side.RIGHT);
+        return operator.getButton(CustomXboxController.Button.LB) && operator.getButton(CustomXboxController.Button.RB)
+                && operator.getTriggerBoolean(CustomXboxController.Side.LEFT)
+                && operator.getTriggerBoolean(CustomXboxController.Side.RIGHT);
         // return operator.getButton(Button.LB) && operator.getButton(Button.RB);
     }
 
     public boolean getExitClimbMode() {
-        return operator.getButton(CustomXboxController.Button.BACK) && operator.getButton(CustomXboxController.Button.START);
+        return operator.getButton(CustomXboxController.Button.BACK)
+                && operator.getButton(CustomXboxController.Button.START);
     }
 
     public boolean getToggleOpenLoopClimbMode() {
@@ -158,7 +160,7 @@ public class ControlBoardX3D {
     public boolean getTraversalClimb() {
         return operator.getController().getYButtonPressed();
     }
-    
+
     public boolean getHighBarClimb() {
         return operator.getController().getBButtonPressed();
     }

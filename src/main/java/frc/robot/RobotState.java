@@ -1,14 +1,15 @@
 package frc.robot;
 
+import java.util.Map;
+
 import com.team254.lib.geometry.Pose2d;
 import com.team254.lib.geometry.Rotation2d;
 import com.team254.lib.util.InterpolatingDouble;
 import com.team254.lib.util.InterpolatingTreeMap;
 import com.team254.lib.util.MovingAveragePose2d;
+
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
-import java.util.Map;
 
 public class RobotState {
     private static RobotState mInstance;

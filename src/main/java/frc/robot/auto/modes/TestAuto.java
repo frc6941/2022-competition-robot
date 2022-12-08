@@ -14,11 +14,10 @@ import frc.robot.auto.basics.FollowTrajectory;
 import frc.robot.coordinators.Superstructure;
 import frc.robot.coordinators.Superstructure.STATE;
 
-public class TestAuto extends AutoModeBase{
+public class TestAuto extends AutoModeBase {
     protected String autoName = "Test Auto";
     public PathPlannerTrajectory testPath = PathPlanner.loadPath("Test Path", 3.5, 1.5);
     private final Superstructure mSuperstructure = Superstructure.getInstance();
-
 
     @Override
     public Pose2d getStartingPose() {
@@ -28,14 +27,13 @@ public class TestAuto extends AutoModeBase{
     @Override
     public Command getAutoCommand() {
         return new SequentialCommandGroup(
-            new WaitCommand(0.2),
-            new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
-            new FollowTrajectory(SJTUSwerveMK5Drivebase.getInstance(), testPath, true, true, true),
-            new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
-            new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
-            new WaitCommand(2.0),
-            new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING))
-        );
+                new WaitCommand(0.2),
+                new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
+                new FollowTrajectory(SJTUSwerveMK5Drivebase.getInstance(), testPath, true, true, true),
+                new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
+                new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
+                new WaitCommand(2.0),
+                new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING)));
     };
 
     public TestAuto() {

@@ -39,11 +39,11 @@ public class ControlBoard {
     public CustomXboxController getOperatorController() {
         return operator;
     }
-    
+
     public void setDriverRumble(double power, double interval) {
         driver.setRumble(power, interval);
     }
-    
+
     public void setOperatorRumble(double power, double interval) {
         operator.setRumble(power, interval);
     }
@@ -56,7 +56,7 @@ public class ControlBoard {
         double breaker = driver.getTrigger(Side.LEFT);
 
         forwardAxis = Constants.CONTROLLER_INVERT_Y ? forwardAxis : -forwardAxis;
-        strafeAxis = Constants.CONTROLLER_INVERT_X ? strafeAxis :-strafeAxis;
+        strafeAxis = Constants.CONTROLLER_INVERT_X ? strafeAxis : -strafeAxis;
 
         Translation2d tAxes = new Translation2d(forwardAxis, strafeAxis);
 
@@ -96,12 +96,12 @@ public class ControlBoard {
         } else {
             return SWERVE_CARDINAL.NONE;
         }
-            
+
     }
 
     public boolean getSwitchEject() {
         return driver.getController().getPOV() == kDpadDown;
-    } 
+    }
 
     // Locks wheels in X formation
     public boolean getSwerveBrake() {
@@ -140,7 +140,8 @@ public class ControlBoard {
 
     // Climber Controls
     public boolean getEnterClimbMode() {
-        return operator.getButton(Button.LB) && operator.getButton(Button.RB) && operator.getTriggerBoolean(Side.LEFT) && operator.getTriggerBoolean(Side.RIGHT);
+        return operator.getButton(Button.LB) && operator.getButton(Button.RB) && operator.getTriggerBoolean(Side.LEFT)
+                && operator.getTriggerBoolean(Side.RIGHT);
         // return operator.getButton(Button.LB) && operator.getButton(Button.RB);
     }
 
@@ -179,7 +180,7 @@ public class ControlBoard {
     public boolean getTraversalClimb() {
         return operator.getController().getYButtonPressed();
     }
-    
+
     public boolean getHighBarClimb() {
         return operator.getController().getBButtonPressed();
     }

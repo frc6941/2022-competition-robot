@@ -90,7 +90,9 @@ public class Turret implements Updatable {
             setState(STATE.ANGLE);
         }
         mPeriodicIO.turretDemand = angle;
-        feedforwardMovingAverage.addNumber(Constants.TURRET_FEEDFORWARD.calculate(drivetrainAngularVelocity, drivetrainAngularAcceleration) / 12.0);
+        feedforwardMovingAverage.addNumber(
+                Constants.TURRET_FEEDFORWARD.calculate(drivetrainAngularVelocity, drivetrainAngularAcceleration)
+                        / 12.0);
         mPeriodicIO.turretFeedforward = feedforwardMovingAverage.getAverage();
     }
 
@@ -180,7 +182,7 @@ public class Turret implements Updatable {
 
     @Override
     public synchronized void write(double time, double dt) {
-        switch(state){
+        switch (state) {
             case HOMING:
                 turretMotor.set(ControlMode.PercentOutput, mPeriodicIO.turretDemand);
                 break;
@@ -192,11 +194,13 @@ public class Turret implements Updatable {
                 // the reachable maximum or minimum.
                 if (Math.abs(mPeriodicIO.turretDemand) < Constants.TURRET_MAX_ROTATION_DEGREE) {
                     turretMotor.set(ControlMode.MotionMagic,
-                            Conversions.degreesToFalcon(mPeriodicIO.turretDemand, Constants.TURRET_GEAR_RATIO) + zeroPosition,
+                            Conversions.degreesToFalcon(mPeriodicIO.turretDemand, Constants.TURRET_GEAR_RATIO)
+                                    + zeroPosition,
                             DemandType.ArbitraryFeedForward, mPeriodicIO.turretFeedforward);
                 } else {
                     turretMotor.set(ControlMode.MotionMagic,
-                            Conversions.degreesToFalcon(Math.copySign(Constants.TURRET_MAX_ROTATION_DEGREE, mPeriodicIO.turretDemand),
+                            Conversions.degreesToFalcon(
+                                    Math.copySign(Constants.TURRET_MAX_ROTATION_DEGREE, mPeriodicIO.turretDemand),
                                     Constants.TURRET_GEAR_RATIO) + zeroPosition,
                             DemandType.ArbitraryFeedForward, mPeriodicIO.turretFeedforward);
                 }

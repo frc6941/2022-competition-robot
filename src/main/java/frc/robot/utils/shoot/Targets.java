@@ -69,7 +69,6 @@ public class Targets {
         return new Translation2d(distance, Rotation2d.fromDegrees(angle)).plus(robotPose.getTranslation());
     }
 
-    
     public static Translation2d getRawWrongBallTarget(Pose2d robotPose, boolean isShooting) {
         Translation2d rawWrongBallTarget = null;
         if (isShooting) {
@@ -93,9 +92,9 @@ public class Targets {
             double angle = robotPose.getRotation().getDegrees();
             double distance = Constants.ShootingConstants.MIN_SHOOTING_DISTANCE;
             rawWrongBallTarget = new Translation2d(distance, Rotation2d.fromDegrees(angle));
-        } 
-       
+        }
+
         return rawWrongBallTarget;
     }
-    
+
 }

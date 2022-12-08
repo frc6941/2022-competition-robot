@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.I2C.Port;
 import frc.robot.Constants;
 
-public class ColorSensor implements Updatable{
+public class ColorSensor implements Updatable {
     public static class PeriodicIO {
         // INPUTS
         public double red;
@@ -42,9 +42,9 @@ public class ColorSensor implements Updatable{
             mInstance = new ColorSensor();
         }
         return mInstance;
-    } 
+    }
 
-    private ColorSensor(){
+    private ColorSensor() {
         colorSensor = new ColorSensorV3(Port.kMXP);
         matchedColor = ColorChoices.NONE;
     }
@@ -70,8 +70,8 @@ public class ColorSensor implements Updatable{
 
     public void updateMatchedColor() {
         if (Util.epsilonEquals(mPeriodicIO.colorRatio,
-                               1.0,
-                               Constants.COLOR_SENSOR_RATIO_THRESHOLD)) { 
+                1.0,
+                Constants.COLOR_SENSOR_RATIO_THRESHOLD)) {
             matchedColor = ColorChoices.NONE;
         } else {
             if (mPeriodicIO.colorRatio > 1.0) {
@@ -100,8 +100,8 @@ public class ColorSensor implements Updatable{
 
     public boolean hasOppositeColor() {
         return !hasCorrectColor()
-                    && (matchedColor != ColorChoices.OTHER)
-                    && (matchedColor != ColorChoices.NONE);
+                && (matchedColor != ColorChoices.OTHER)
+                && (matchedColor != ColorChoices.NONE);
     }
 
     @Override
@@ -122,7 +122,7 @@ public class ColorSensor implements Updatable{
 
     @Override
     public synchronized void write(double time, double dt) {
-        
+
     }
 
     @Override
@@ -131,7 +131,7 @@ public class ColorSensor implements Updatable{
 
     @Override
     public synchronized void start() {
-        
+
     }
 
     @Override

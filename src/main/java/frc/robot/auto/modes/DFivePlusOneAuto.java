@@ -33,45 +33,45 @@ public class DFivePlusOneAuto extends AutoModeBase {
     @Override
     public Command getAutoCommand() {
         return new SequentialCommandGroup(
-                // Start settings
-                new InstantCommand(() -> mSuperstructure.setWantEject(false)),
-                new InstantCommand(() -> mSuperstructure.setWantMoveAndShoot(false)),
-                // Part 1: collect 3 cargos and shoot them together
-                new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
-                new InstantCommand(() -> mSuperstructure.setWantMaintain(true)),
-                new FollowTrajectory(mSwerve, trajectoryPart1, true, true, true),
-                new WaitUntilCommand(mSuperstructure::isReady).withTimeout(1.0),
-                new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
-                new WaitCommand(1.2),
-                // Part 2: collect 1 wrong cargo and spit into the hangar
-                new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING)),
-                new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
-                new ParallelCommandGroup(
-                        new FollowTrajectory(mSwerve, trajectoryPart2, true, false, true),
-                        new SequentialCommandGroup(
-                            new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
-                            new InstantCommand(() -> mSuperstructure.setWantMaintain(true)),
-                            new WaitCommand(2.0),
-                            new InstantCommand(() -> mSuperstructure.setWantSpit(true)),
-                            new InstantCommand(() -> mSuperstructure.setWantIntake(false)))),
-                new InstantCommand(() -> mSuperstructure.setWantSpit(false)),
-                new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
-                // Part 3: go to terminal and wait for ball feed
-                new FollowTrajectory(mSwerve, trajectoryPart3, true, false, true),
-                new WaitCommand(1.2),
-                // Part 4: come back and shoot
-                new FollowTrajectory(mSwerve, trajectoryPart4, true, false, true),
-                new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
-                new InstantCommand(() -> mSuperstructure.setWantMaintain(true)),
-                new WaitUntilCommand(mSuperstructure::isReady).withTimeout(1.0),
-                new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
-                new WaitCommand(0.8),
-                new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING)),
-                new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
-                // End settings
-                new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
-                new InstantCommand(() -> mSuperstructure.setWantEject(true)),
-                new InstantCommand(() -> mSuperstructure.setWantMoveAndShoot(true)));
+            // Start settings
+            new InstantCommand(() -> mSuperstructure.setWantEject(false)),
+            new InstantCommand(() -> mSuperstructure.setWantMoveAndShoot(false)),
+            // Part 1: collect 3 cargos and shoot them together
+            new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
+            new InstantCommand(() -> mSuperstructure.setWantMaintain(true)),
+            new FollowTrajectory(mSwerve, trajectoryPart1, true, true, true),
+            new WaitUntilCommand(mSuperstructure::isReady).withTimeout(1.0),
+            new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
+            new WaitCommand(1.2),
+            // Part 2: collect 1 wrong cargo and spit into the hangar
+            new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING)),
+            new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
+            new ParallelCommandGroup(
+                new FollowTrajectory(mSwerve, trajectoryPart2, true, false, true),
+                new SequentialCommandGroup(
+                    new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
+                    new InstantCommand(() -> mSuperstructure.setWantMaintain(true)),
+                    new WaitCommand(2.0),
+                    new InstantCommand(() -> mSuperstructure.setWantSpit(true)),
+                    new InstantCommand(() -> mSuperstructure.setWantIntake(false)))),
+            new InstantCommand(() -> mSuperstructure.setWantSpit(false)),
+            new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
+            // Part 3: go to terminal and wait for ball feed
+            new FollowTrajectory(mSwerve, trajectoryPart3, true, false, true),
+            new WaitCommand(1.2),
+            // Part 4: come back and shoot
+            new FollowTrajectory(mSwerve, trajectoryPart4, true, false, true),
+            new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
+            new InstantCommand(() -> mSuperstructure.setWantMaintain(true)),
+            new WaitUntilCommand(mSuperstructure::isReady).withTimeout(1.0),
+            new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
+            new WaitCommand(0.8),
+            new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING)),
+            new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
+            // End settings
+            new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
+            new InstantCommand(() -> mSuperstructure.setWantEject(true)),
+            new InstantCommand(() -> mSuperstructure.setWantMoveAndShoot(true)));
     };
 
     public DFivePlusOneAuto() {

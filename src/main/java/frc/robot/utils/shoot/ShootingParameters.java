@@ -1,7 +1,8 @@
 package frc.robot.utils.shoot;
 
 /**
- * Record of one set of Shooting Parameters, with all the needed variables to conduct a defined shot.
+ * Record of one set of Shooting Parameters, with all the needed variables to
+ * conduct a defined shot.
  */
 public class ShootingParameters {
     private double targetAngle;
@@ -10,8 +11,9 @@ public class ShootingParameters {
 
     /**
      * Constructor of one set of shooting parameters for a fully defined shot.
-     * @param targetAngle Field-oriented angle for shooting. In degrees.
-     * @param shotAngle Angle of the hood. In degrees.
+     * 
+     * @param targetAngle      Field-oriented angle for shooting. In degrees.
+     * @param shotAngle        Angle of the hood. In degrees.
      * @param shootingVelocity Launching velocity of the flywheel. In RPM.
      */
     public ShootingParameters(double targetAngle, double shotAngle, double shootingVelocity) {
@@ -28,7 +30,7 @@ public class ShootingParameters {
         return this.shotAngle;
     }
 
-    public double  getShootingVelocity() {
+    public double getShootingVelocity() {
         return this.shootingVelocity;
     }
 
