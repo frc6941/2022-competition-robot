@@ -131,7 +131,8 @@ public class Superstructure implements Updatable {
     private Climber mClimber = Climber.getInstance();
     private Limelight mLimelight = Limelight.getInstance();
     private PneumaticsControlModule mPneumaticsControlModule = new PneumaticsControlModule();
-    private AddressableLEDWrapper mIndicator = new AddressableLEDWrapper(Constants.LED_CONTROL.LED_PORT, Constants.LED_CONTROL.LED_LENGTH);
+    private AddressableLEDWrapper mIndicator = new AddressableLEDWrapper(Constants.LED_CONTROL.LED_PORT,
+            Constants.LED_CONTROL.LED_LENGTH);
 
     // Swerve setting related variables
     private boolean robotOrientedDrive = false;
@@ -139,7 +140,7 @@ public class Superstructure implements Updatable {
     private Double swerveSelfLockheadingRecord;
 
     // Vision delta related controlls
-    private PIDController angleDeltaController = new PIDController(0.9, 0.000, 0.0);
+    private PIDController angleDeltaController = new PIDController(0.95, 0.000, 0.0);
     private MovingAverage angleDeltaMovingAverage = new MovingAverage(10);
 
     // Shooting related tracking variables
@@ -149,6 +150,7 @@ public class Superstructure implements Updatable {
 
     private boolean testShot = false;
     private boolean testLock = false;
+    private boolean babyMode = true;
     private boolean drivetrainOnlyAim = false;
     private final TimeDelayedBoolean ejectDelayedBoolean = new TimeDelayedBoolean();
     private boolean maintainReady = false;
@@ -586,14 +588,21 @@ public class Superstructure implements Updatable {
             double deltaAngle = mPeriodicIO.inTurretFieldHeadingAngle - targetAngle;
 
             coreShootingParameters
-                    .setTargetAngle(angleDeltaController.calculate(deltaAngle, 0.0) + mPeriodicIO.inTurretFieldHeadingAngle
-                            + coreShootingAdjustmentAngle);
+                    .setTargetAngle(
+                            angleDeltaController.calculate(deltaAngle, 0.0) + mPeriodicIO.inTurretFieldHeadingAngle
+                                    + coreShootingAdjustmentAngle);
             coreShootingParameters
                     .setShotAngle(Constants.ShootingConstants.HOOD_MAP.getInterpolated(
                             new InterpolatingDouble(newDist)).value);
-            coreShootingParameters
+
+            if (babyMode) {
+                coreShootingParameters
+                    .setShootingVelocity(777.0);
+            } else {
+                coreShootingParameters
                     .setShootingVelocity(Constants.ShootingConstants.FLYWHEEL_MAP.getInterpolated(
-                            new InterpolatingDouble(newDist)).value);
+                                new InterpolatingDouble(newDist)).value);
+            }
 
             coreShootingTolerance = Constants.ShootingConstants.TOLERANCE_MAP.getInterpolated(
                     new InterpolatingDouble(newDist)).value;
@@ -858,7 +867,7 @@ public class Superstructure implements Updatable {
 
         if (getState() == STATE.SHOOTING) {
             if (onTarget) {
-                if (onSpeed && inRange && mLimelight.hasTarget()) {
+                if (onSpeed && inRange) {
                     mPeriodicIO.SHOOT = true;
                 } else {
                     // Ready then clear the ballpath, only stop when angle is not right
@@ -991,15 +1000,15 @@ public class Superstructure implements Updatable {
             mSwerve.resetPitch(0.0);
 
             // Always let turret and hood be ready to reduce launch waiting time
-            if (!drivetrainOnlyAim){
+            if (!drivetrainOnlyAim) {
                 mTurret.setTurretAngle(
-                    mPeriodicIO.outTurretLockTarget,
-                    mPeriodicIO.outTurretFeedforwardVelocity,
-                    mPeriodicIO.outTurretFeedforwardAcceleration);
+                        mPeriodicIO.outTurretLockTarget,
+                        mPeriodicIO.outTurretFeedforwardVelocity,
+                        mPeriodicIO.outTurretFeedforwardAcceleration);
             } else {
                 mTurret.setTurretAngle(0.0);
             }
-            
+
             mHood.setHoodAngle(coreShootingParameters.getShotAngle());
             if (getState() == STATE.SHOOTING || maintainReady) {
                 mShooter.setShooterRPM(coreShootingParameters.getShootingVelocity());
@@ -1096,6 +1105,7 @@ public class Superstructure implements Updatable {
         SmartDashboard.putBoolean("Shoot", mPeriodicIO.SHOOT);
         SmartDashboard.putBoolean("On Target", onTarget);
         SmartDashboard.putBoolean("On Speed", onSpeed);
+        SmartDashboard.putBoolean("In Range", inRange);
         SmartDashboard.putBoolean("Ready", isReady());
 
         SmartDashboard.putBoolean("Ready For Climb", readyForClimbControls);
