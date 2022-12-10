@@ -42,10 +42,6 @@ public class ATwoPlusTwoAuto extends AutoModeBase {
             new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
             // Part 2: Collect two wrong cargo and spit
             new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
-            new InstantCommand(() -> mSwerve.setHeadingTarget(trajectoryPart2.getInitialPose().getRotation().getDegrees())),
-            new InstantCommand(() -> mSwerve.setLockHeading(true)),
-            new WaitUntilCommand(mSwerve::isHeadingOnTarget).withTimeout(2.0),
-            new InstantCommand(() -> mSwerve.setLockHeading(false)),
             new FollowTrajectory(mSwerve, trajectoryPart2, true, false, true),
             new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
             new InstantCommand(() -> mSuperstructure.setWantSpit(true)),

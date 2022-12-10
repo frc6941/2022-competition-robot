@@ -355,9 +355,9 @@ public final class Constants {
                 /* TEMPLATE REGRESSION */
                 // @x --> distance from target (in meters)
                 // @y --> shooter velocity (in rpm)
-                { 2.430, 2090 + 50 },
-                { 3.490, 2250 + 50 },
-                { 3.930, 2375 + 50 + 25 },
+                { 2.430, 2090 + 50 + 75 },
+                { 3.490, 2250 + 50 + 75 },
+                { 3.930, 2375 + 50 + 75 },
                 { 4.430, 2550 + 50 + 50 },
                 { 4.930, 2625 + 75 + 50 },
                 { 5.430, 2750 + 75 + 50 },

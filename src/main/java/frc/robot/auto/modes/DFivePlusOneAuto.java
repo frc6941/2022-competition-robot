@@ -18,7 +18,7 @@ import frc.robot.coordinators.Superstructure.STATE;
 
 public class DFivePlusOneAuto extends AutoModeBase {
     protected String autoName = "D - Five Plus One Auto";
-    private final PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 1", 3.5, 3.5);
+    private final PathPlannerTrajectory trajectoryPart1 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 1", 3.5, 4.0);
     private final PathPlannerTrajectory trajectoryPart2 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 2", 3.5, 5.0);
     private final PathPlannerTrajectory trajectoryPart3 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 3", 3.5, 5.0);
     private final PathPlannerTrajectory trajectoryPart4 = PathPlanner.loadPath("D 5+1 Ball Auto - Part 4", 3.5, 5.0);
@@ -42,7 +42,7 @@ public class DFivePlusOneAuto extends AutoModeBase {
             new FollowTrajectory(mSwerve, trajectoryPart1, true, true, true),
             new WaitUntilCommand(mSuperstructure::isReady).withTimeout(1.0),
             new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
-            new WaitCommand(1.2),
+            new WaitCommand(1.5),
             // Part 2: collect 1 wrong cargo and spit into the hangar
             new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING)),
             new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
@@ -58,14 +58,14 @@ public class DFivePlusOneAuto extends AutoModeBase {
             new InstantCommand(() -> mSuperstructure.setWantIntake(true)),
             // Part 3: go to terminal and wait for ball feed
             new FollowTrajectory(mSwerve, trajectoryPart3, true, false, true),
-            new WaitCommand(1.2),
+            new WaitCommand(1.0),
             // Part 4: come back and shoot
             new FollowTrajectory(mSwerve, trajectoryPart4, true, false, true),
             new InstantCommand(() -> mSuperstructure.setWantIntake(false)),
             new InstantCommand(() -> mSuperstructure.setWantMaintain(true)),
             new WaitUntilCommand(mSuperstructure::isReady).withTimeout(1.0),
             new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
-            new WaitCommand(0.8),
+            new WaitCommand(1.5),
             new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING)),
             new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
             // End settings

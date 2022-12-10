@@ -42,7 +42,7 @@ public class DFiveAuto extends AutoModeBase{
             new FollowTrajectory(mSwerve, trajectoryPart1, true, true, true),
             new WaitUntilCommand(mSuperstructure::isReady).withTimeout(0.5),
             new InstantCommand(() -> mSuperstructure.setState(STATE.SHOOTING)),
-            new WaitCommand(1.2),
+            new WaitCommand(1.5),
             new InstantCommand(() -> mSuperstructure.setState(STATE.CHASING)),
             new InstantCommand(() -> mSuperstructure.setWantMaintain(false)),
             // Part 2: go to terminal and wait for ball feed

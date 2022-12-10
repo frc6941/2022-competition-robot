@@ -150,8 +150,9 @@ public class Superstructure implements Updatable {
 
     private boolean testShot = false;
     private boolean testLock = false;
-    private boolean babyMode = true;
+    private boolean babyMode = false;
     private boolean drivetrainOnlyAim = false;
+    private boolean visionDistanceAssist = false;
     private final TimeDelayedBoolean ejectDelayedBoolean = new TimeDelayedBoolean();
     private boolean maintainReady = false;
     private boolean moveAndShoot = true;
@@ -415,6 +416,10 @@ public class Superstructure implements Updatable {
         swerveSelfLocking = value;
     }
 
+    public void setWantVisionAssistDistance(boolean value) {
+        visionDistanceAssist = value;
+    }
+
     public boolean isOnTarget() {
         return onTarget;
     }
@@ -508,7 +513,11 @@ public class Superstructure implements Updatable {
                     .getWrongBallTarget(robotPose.getWpilibPose2d(), getState() == STATE.SHOOTING)
                     .minus(robotPose.getWpilibPose2d().getTranslation());
         } else {
-            coreAimTargetRelative = Targets.getDefaultTarget().minus(robotPose.getWpilibPose2d().getTranslation());
+            if (visionDistanceAssist && mLimelight.getEstimatedVehicleToField().isPresent()) {
+                coreAimTargetRelative = Targets.getDefaultTarget().minus(mLimelight.getEstimatedVehicleToField().get().translation);
+            } else {
+                coreAimTargetRelative = Targets.getDefaultTarget().minus(robotPose.getWpilibPose2d().getTranslation());
+            }   
         }
     }
 
