@@ -5,10 +5,13 @@ import edu.wpi.first.wpilibj2.command.*;
 
 public abstract class AutoModeBase {
     protected String autoName;
-    protected boolean autoFinished;
+    protected Command autoCommand;
 
     public abstract Pose2d getStartingPose();
-    public abstract Command getAutoCommand();
+
+    public Command getAutoCommand() {
+        return autoCommand;
+    }
 
     public AutoModeBase() {
         

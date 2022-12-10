@@ -150,7 +150,7 @@ public class Superstructure implements Updatable {
 
     private boolean testShot = false;
     private boolean testLock = false;
-    private boolean babyMode = true;
+    private boolean babyMode = false;
     private boolean drivetrainOnlyAim = false;
     private final TimeDelayedBoolean ejectDelayedBoolean = new TimeDelayedBoolean();
     private boolean maintainReady = false;
