@@ -100,6 +100,7 @@ public class Robot extends TimedRobot {
         Superstructure.getInstance().setWantMoveAndShoot(false);
         Superstructure.getInstance().setWantPureVisionAim(false);
         Superstructure.getInstance().setWantSwerveSelfLocking(false);
+        Superstructure.getInstance().setWantVisionAssistDistance(true);
 
         CommandScheduler.getInstance().enable();
         this.updateManager.startEnableLoop(Constants.LOOPER_DT);
@@ -129,6 +130,7 @@ public class Robot extends TimedRobot {
         Superstructure.getInstance().setWantMoveAndShoot(true);
         Superstructure.getInstance().setWantPureVisionAim(false);
         Superstructure.getInstance().setWantSwerveSelfLocking(true);
+        Superstructure.getInstance().setWantVisionAssistDistance(false);
 
         this.updateManager.stopDisableLoop();
         CommandScheduler.getInstance().enable();
