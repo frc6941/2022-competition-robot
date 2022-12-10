@@ -7,7 +7,6 @@ import java.util.List;
 import com.pathplanner.lib.PathPlannerTrajectory;
 
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
-import org.frcteam6941.swerve.SwerveDrivetrainBase;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -148,12 +147,11 @@ public class AutoBuilder {
         for (PathPlannerTrajectory traj : pathGroup) {
             group.addCommands(
                 stopEventGroup(traj.getStartStopEvent()),
-                new FollowTrajectoryWithEvents(driveBase, traj, eventMap, angleLock, reset, true)
+                new FollowTrajectoryWithEvents(driveBase, traj, eventMap, angleLock, reset, true),
+                stopEventGroup(traj.getEndStopEvent())
             );
             reset = false;
         }
-
-        group.addCommands(stopEventGroup(pathGroup.get(pathGroup.size() - 1).getEndStopEvent()));
 
         return group;
     }

@@ -105,11 +105,10 @@ public final class Constants {
     public static final double ANGLE_GEAR_RATIO = 10.0; // TODO: Need reconfirmation.
     public static final double DRIVETRAIN_SIDE_WIDTH = 0.58;
     public static final Translation2d DRIVETRAIN_CENTER_OF_ROTATION = new Translation2d(0.0, 0.0);
-
-    public static final double FRONT_LEFT_OFFSET = 47.109375 - 90.0 + 180.0;
-    public static final double FRONT_RIGHT_OFFSET = -407.109375 - 90.0 + 180.0;
-    public static final double BACK_LEFT_OFFSET = -151.875 - 90.0 + 180.0;
-    public static final double BACK_RIGHT_OFFSET = 230.44921 - 90.0;
+    public static final double FRONT_LEFT_OFFSET = -3339.755859 + 59.677734 + 180.0;
+    public static final double FRONT_RIGHT_OFFSET = -2304.580078 + 180.0;
+    public static final double BACK_LEFT_OFFSET = -2758.623047 + 180.0;
+    public static final double BACK_RIGHT_OFFSET = -2914.277344 + 180.0;
 
     public static final double DRIVE_MAX_VELOCITY = 3.0; // FIXME: Need remeasurement for more accurate data.
     public static final double DRIVE_MAX_ANGULAR_VELOCITY = 220; // FIXME: Need remeasurement for more accurate data.
@@ -346,7 +345,7 @@ public final class Constants {
 
     /** Shooting Constants */
     public static class ShootingConstants {
-        public static final double ACCELERATION_COMP_FACTOR = 0.02;
+        public static final double ACCELERATION_COMP_FACTOR = 0.03;
         public static final double MAX_SHOOTING_DISTANCE = 7.0;
         public static final double MIN_SHOOTING_DISTANCE = 2.0;
         public static final double WRONG_BALL_OFFSET_DISTANCE = 4.5;

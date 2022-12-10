@@ -48,6 +48,8 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
     public LazyTalonSRX mAngleMotor;
     public LazyTalonFX mDriveMotor;
 
+    private Double recordAngle = null;
+
     /**
      * Constructor function for the module.
      * 
@@ -107,9 +109,12 @@ public class SJTUSwerveModuleMK5 implements SwerveModuleBase {
         if (inMotion || overrideMotion) {
             double target = optimizedState.angle.getDegrees();
             mAngleMotor.set(ControlMode.MotionMagic, (target + angleOffset) / 360.0 * 4096.0);
+            recordAngle = null;
         } else {
-            mAngleMotor.set(ControlMode.MotionMagic,
-                    (this.getEncoderUnbound().getDegrees() + angleOffset) / 360.0 * 4096.0);
+            if (recordAngle == null) {
+                recordAngle = (this.getEncoderUnbound().getDegrees() + angleOffset) / 360.0 * 4096.0;
+            }
+            mAngleMotor.set(ControlMode.MotionMagic, recordAngle);
         }
 
     }

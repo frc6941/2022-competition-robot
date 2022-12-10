@@ -28,7 +28,7 @@ public class AutoSelector {
 
         for (File auto : files) {
             String autoName = auto.getName().substring(0, auto.getName().length() - ".path".length());
-            mModeChooser.addOption(autoName, new PathPlannerAuto(autoName, PathPlanner.loadPath(autoName, 3.5, 4.0),
+            mModeChooser.addOption(autoName, new PathPlannerAuto(autoName, PathPlanner.loadPathGroup(autoName, 3.5, 5.0),
                     autoBuilder, SJTUSwerveMK5Drivebase.getInstance(), true));
         }
     }

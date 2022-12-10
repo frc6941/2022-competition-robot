@@ -3,7 +3,6 @@ package frc.robot.auto.basics;
 import com.pathplanner.lib.PathPlannerTrajectory;
 
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
-import org.frcteam6941.swerve.SwerveDrivetrainBase;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 

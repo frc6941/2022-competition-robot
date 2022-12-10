@@ -20,7 +20,7 @@ public class AutoActions {
     private static final Command stopSpit = new InstantCommand(() -> Superstructure.getInstance().setWantSpit(false));
 
     private static final Command fire = new SequentialCommandGroup(
-        new WaitUntilCommand(() -> Superstructure.getInstance().isReady()),
+        new WaitUntilCommand(() -> Superstructure.getInstance().isOnTarget()),
         new InstantCommand(() -> Superstructure.getInstance().setState(STATE.SHOOTING)),
         new WaitCommand(1.2),
         new InstantCommand(() -> Superstructure.getInstance().setState(STATE.CHASING))

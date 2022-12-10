@@ -47,8 +47,8 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
     // Path Following Controller
     @GuardedBy("statusLock")
     private final HolonomicTrajectoryFollower trajectoryFollower = new HolonomicTrajectoryFollower(
-            new PIDController(1.0, 0.0, 0.0),
-            new PIDController(1.0, 0.0, 0.0),
+            new PIDController(1.8, 0.0, 0.0),
+            new PIDController(1.8, 0.0, 0.0),
             this.headingController,
             Constants.DRIVETRAIN_FEEDFORWARD);
 

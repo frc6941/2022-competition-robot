@@ -141,7 +141,7 @@ public class Superstructure implements Updatable {
 
     // Vision delta related controlls
     private PIDController angleDeltaController = new PIDController(0.95, 0.000, 0.0);
-    private MovingAverage angleDeltaMovingAverage = new MovingAverage(10);
+    private MovingAverage angleDeltaMovingAverage = new MovingAverage(20);
 
     // Shooting related tracking variables
     private boolean onTarget = false;
@@ -153,6 +153,7 @@ public class Superstructure implements Updatable {
     private boolean babyMode = false;
     private boolean drivetrainOnlyAim = false;
     private boolean visionDistanceAssist = false;
+    private Double visionDistance = 0.0;
     private final TimeDelayedBoolean ejectDelayedBoolean = new TimeDelayedBoolean();
     private boolean maintainReady = false;
     private boolean moveAndShoot = true;
@@ -513,11 +514,13 @@ public class Superstructure implements Updatable {
                     .getWrongBallTarget(robotPose.getWpilibPose2d(), getState() == STATE.SHOOTING)
                     .minus(robotPose.getWpilibPose2d().getTranslation());
         } else {
-            if (visionDistanceAssist && mLimelight.getEstimatedVehicleToField().isPresent()) {
-                coreAimTargetRelative = Targets.getDefaultTarget().minus(mLimelight.getEstimatedVehicleToField().get().translation);
-            } else {
-                coreAimTargetRelative = Targets.getDefaultTarget().minus(robotPose.getWpilibPose2d().getTranslation());
-            }   
+            coreAimTargetRelative = Targets.getDefaultTarget().minus(robotPose.getWpilibPose2d().getTranslation());
+        }
+
+        if (visionDistanceAssist && mLimelight.getEstimatedVehicleToField().isPresent()) {
+            visionDistance = Targets.getDefaultTarget().minus(mLimelight.getEstimatedVehicleToField().get().translation).getNorm();
+        } else {
+            visionDistance = null;
         }
     }
 
@@ -592,6 +595,9 @@ public class Superstructure implements Updatable {
             }
 
             double newDist = toMovingGoal.getNorm();
+            if (visionDistanceAssist && visionDistance != null) {
+                newDist = visionDistance;
+            }
 
             double targetAngle = new Rotation2d(toMovingGoal.getX(), toMovingGoal.getY()).getDegrees();
             double deltaAngle = mPeriodicIO.inTurretFieldHeadingAngle - targetAngle;
@@ -613,8 +619,7 @@ public class Superstructure implements Updatable {
                                 new InterpolatingDouble(newDist)).value);
             }
 
-            coreShootingTolerance = Constants.ShootingConstants.TOLERANCE_MAP.getInterpolated(
-                    new InterpolatingDouble(newDist)).value;
+            coreShootingTolerance = 150.0;
 
             double tangentialVelocityComponent = new Rotation2d(toMovingGoal.getX(), toMovingGoal.getY()).getSin()
                     * robotVelocity.getWpilibPose2d().getX() / newDist;
