@@ -26,36 +26,23 @@ public class Targets {
 
     private static final Translation2d[] TARGET_SELECTION_SEQUENCE = new Translation2d[] {
             FieldConstants.hangarCenter,
-            FieldConstants.hangarBottomLeftCorner,
-            FieldConstants.hangarTopLeftCorner,
-            FieldConstants.hangarBottomRightCorner,
-            FieldConstants.hangarTopRightCorner,
-            FieldConstants.terminalCenter.getTranslation(),
-            FieldConstants.hubCenter.plus(new Translation2d(0.0, -2.0)),
-            FieldConstants.hubCenter.plus(new Translation2d(0.0, 2.0))
+            FieldConstants.terminalCenter.getTranslation()
     };
 
     public static Translation2d getWrongBallTarget(Pose2d robotPose, boolean isShooting) {
         Translation2d rawWrongBallTarget = null;
-        if (isShooting) {
-            if (isReachable(robotPose, FieldConstants.hubCenter.plus(new Translation2d(0.0, -2.0)))) {
-                rawWrongBallTarget = FieldConstants.hubCenter.plus(new Translation2d(0.0, -2.0));
-            } else {
-                rawWrongBallTarget = FieldConstants.hubCenter.plus(new Translation2d(0.0, 2.0));
-            }
-        } else {
-            for (Translation2d location : TARGET_SELECTION_SEQUENCE) {
-                if (isReachable(robotPose, location)) {
-                    rawWrongBallTarget = location;
-                    break;
-                }
+        
+        for (Translation2d location : TARGET_SELECTION_SEQUENCE) {
+            if (isReachable(robotPose, location)) {
+                rawWrongBallTarget = location;
+                break;
             }
         }
 
         double angle;
         double distance;
 
-        if (rawWrongBallTarget == null) {
+        if (rawWrongBallTarget == null || isShooting) {
             angle = robotPose.getRotation().getDegrees();
             distance = Constants.ShootingConstants.MIN_SHOOTING_DISTANCE;
         } else {

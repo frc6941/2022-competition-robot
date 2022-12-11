@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.coordinators.Superstructure;
 import frc.robot.coordinators.Superstructure.STATE;
+import frc.robot.subsystems.BallPath;
 
 public class AutoActions {
     public static final HashMap<String, Command> commandMapping = new HashMap<>();
@@ -18,11 +19,13 @@ public class AutoActions {
 
     private static final Command spit = new InstantCommand(() -> Superstructure.getInstance().setWantSpit(true));
     private static final Command stopSpit = new InstantCommand(() -> Superstructure.getInstance().setWantSpit(false));
+    private static final Command slowSpit = new InstantCommand(() -> BallPath.getInstance().setSlowSpit(true));
+    private static final Command normalSpit = new InstantCommand(() -> BallPath.getInstance().setSlowSpit(false));
 
     private static final Command fire = new SequentialCommandGroup(
-        new WaitUntilCommand(() -> Superstructure.getInstance().isOnTarget()),
         new InstantCommand(() -> Superstructure.getInstance().setState(STATE.SHOOTING)),
-        new WaitCommand(1.2),
+        new WaitUntilCommand(() -> Superstructure.getInstance().isOnTarget()),
+        new WaitCommand(1.3),
         new InstantCommand(() -> Superstructure.getInstance().setState(STATE.CHASING))
     );
 
@@ -47,6 +50,8 @@ public class AutoActions {
         commandMapping.put("stop intake", stopIntake);
         commandMapping.put("spit", spit);
         commandMapping.put("stop spit", stopSpit);
+        commandMapping.put("slow spit", slowSpit);
+        commandMapping.put("normal spit", normalSpit);
         commandMapping.put("fire", fire);
         commandMapping.put("eject enable", ejectEnable);
         commandMapping.put("eject fisable", ejectDisable);

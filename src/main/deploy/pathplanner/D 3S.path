@@ -2,13 +2,13 @@
   "waypoints": [
     {
       "anchorPoint": {
-        "x": 7.550044497281396,
-        "y": 1.7498978020251659
+        "x": 7.55,
+        "y": 1.75
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.550044497281396,
-        "y": 1.361589169873744
+        "x": 7.55,
+        "y": 0.7500000000000009
       },
       "holonomicAngle": -90.0,
       "isReversal": false,
@@ -17,8 +17,7 @@
       "isStopPoint": false,
       "stopEvent": {
         "names": [
-          "intake",
-          "stop spit"
+          "intake"
         ],
         "executionBehavior": "parallel",
         "waitBehavior": "none",
@@ -28,18 +27,18 @@
     {
       "anchorPoint": {
         "x": 7.55,
-        "y": 0.85
+        "y": 0.7
       },
       "prevControl": {
-        "x": 7.640010615706936,
-        "y": 0.8172388151147012
+        "x": 7.55,
+        "y": 1.0534427576324186
       },
       "nextControl": {
-        "x": 7.459989384293063,
-        "y": 0.8827611848852988
+        "x": 7.55,
+        "y": 1.0534427576324186
       },
       "holonomicAngle": -90.0,
-      "isReversal": false,
+      "isReversal": true,
       "velOverride": null,
       "isLocked": false,
       "isStopPoint": false,
@@ -52,15 +51,18 @@
     },
     {
       "anchorPoint": {
-        "x": 5.368618499417015,
-        "y": 1.6955320450690454
+        "x": 5.830936780356973,
+        "y": 1.413855908280537
       },
       "prevControl": {
-        "x": 6.421955040441873,
-        "y": 1.2606059894200714
+        "x": 7.186288306225902,
+        "y": 0.9750730401934739
       },
-      "nextControl": null,
-      "holonomicAngle": 131.4236656250026,
+      "nextControl": {
+        "x": 5.616767439032137,
+        "y": 1.4831913065511675
+      },
+      "holonomicAngle": 147.1714582085876,
       "isReversal": false,
       "velOverride": null,
       "isLocked": false,
@@ -68,11 +70,37 @@
       "stopEvent": {
         "names": [
           "fire",
+          "intake"
+        ],
+        "executionBehavior": "parallel",
+        "waitBehavior": "none",
+        "waitTime": 2.0
+      }
+    },
+    {
+      "anchorPoint": {
+        "x": 5.0996320002118685,
+        "y": 1.930644619583078
+      },
+      "prevControl": {
+        "x": 5.341630749445413,
+        "y": 1.7136802237185191
+      },
+      "nextControl": null,
+      "holonomicAngle": 142.33437880141668,
+      "isReversal": false,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [
+          "intake",
+          "fire",
           "intake and stop"
         ],
         "executionBehavior": "parallel",
-        "waitBehavior": "deadline",
-        "waitTime": 2.0
+        "waitBehavior": "none",
+        "waitTime": 1.4
       }
     }
   ],

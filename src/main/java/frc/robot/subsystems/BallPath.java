@@ -49,6 +49,7 @@ public class BallPath implements Updatable {
     private static BallPath instance;
 
     private boolean enableColorEject = false;
+    private boolean spitSlow = false;
     private boolean continueProcess = false;
     private boolean isLocking = false;
     private double lockingPositionRecorder = 0.0;
@@ -125,6 +126,10 @@ public class BallPath implements Updatable {
 
     public synchronized void setContinueProcess(boolean value) {
         continueProcess = value;
+    }
+
+    public synchronized void setSlowSpit(boolean value) {
+        spitSlow  = value;
     }
 
     public synchronized boolean shouldInEject() {
@@ -258,7 +263,11 @@ public class BallPath implements Updatable {
 
                 break;
             case SPITTING:
-                mPeriodicIO.feederDemand = Constants.FEEDER_SPIT_PERCENTAGE;
+                if (spitSlow) {
+                    mPeriodicIO.feederDemand = Constants.FEEDER_SPIT_PERCENTAGE * 0.6;
+                } else {
+                    mPeriodicIO.feederDemand = Constants.FEEDER_SPIT_PERCENTAGE;
+                }
                 mPeriodicIO.triggerLock = false;
                 mPeriodicIO.triggerDemand = Constants.TRIGGER_REVERSING_VELOCITY;
                 break;

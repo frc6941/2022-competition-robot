@@ -347,18 +347,21 @@ public final class Constants {
     /** Shooting Constants */
     public static class ShootingConstants {
         public static final double ACCELERATION_COMP_FACTOR = 0.03;
-        public static final double MAX_SHOOTING_DISTANCE = 7.0;
-        public static final double MIN_SHOOTING_DISTANCE = 2.0;
-        public static final double WRONG_BALL_OFFSET_DISTANCE = 4.5;
+        public static final double MAX_SHOOTING_DISTANCE = 7.20;
+        public static final double MIN_SHOOTING_DISTANCE = 2.430;
+        public static final double WRONG_BALL_OFFSET_DISTANCE = 3.0;
 
         public static double[][] FLYWHEEL_REGRESSION = {
                 /* TEMPLATE REGRESSION */
                 // @x --> distance from target (in meters)
                 // @y --> shooter velocity (in rpm)
+                { 0.000, 600 },
+                { 2.000, 800 },
+                { 2.300, 1000 },
                 { 2.430, 2090 + 50 },
-                { 3.490, 2250 + 50 },
-                { 3.930, 2375 + 50 + 25 },
-                { 4.430, 2550 + 50 + 50 },
+                { 3.490, 2250 + 50 + 75 },
+                { 3.930, 2375 + 50 + 100 },
+                { 4.430, 2550 + 50 + 100 },
                 { 4.930, 2625 + 75 + 50 },
                 { 5.430, 2750 + 75 + 50 },
                 { 5.930, 2815 + 50 + 50 },
@@ -371,6 +374,8 @@ public final class Constants {
                 /* TEMPLATE REGRESSION */
                 // @x --> distance from target (in meters)
                 // @y --> hood angle (in degree)
+                { 0.000, 36 },
+                { 2.300, 30 },
                 { 2.430, 25 },
                 { 3.490, 25 },
                 { 3.930, 27 },

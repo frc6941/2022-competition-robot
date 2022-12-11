@@ -582,11 +582,11 @@ public class Superstructure implements Updatable {
                 double fixedShotTime = Constants.ShootingConstants.SHOT_TIME_MAP.getInterpolated(
                         new InterpolatingDouble(coreAimTargetRelative.getNorm())).value;
                 double virtualGoalX = coreAimTargetRelative.getX()
-                        - fixedShotTime * (robotVelocity.getWpilibPose2d().getX()
+                        - fixedShotTime * (robotVelocity.getWpilibPose2d().getX() * 0.7
                                 + robotAcceleration.getWpilibPose2d().getX()
                                         * Constants.ShootingConstants.ACCELERATION_COMP_FACTOR);
                 double virtualGoalY = coreAimTargetRelative.getY()
-                        - fixedShotTime * (robotVelocity.getWpilibPose2d().getY()
+                        - fixedShotTime * (robotVelocity.getWpilibPose2d().getY() * 0.7
                                 + robotAcceleration.getWpilibPose2d().getY()
                                         * Constants.ShootingConstants.ACCELERATION_COMP_FACTOR);
                 toMovingGoal = new Translation2d(virtualGoalX, virtualGoalY);
@@ -1024,7 +1024,7 @@ public class Superstructure implements Updatable {
             }
 
             mHood.setHoodAngle(coreShootingParameters.getShotAngle());
-            if (getState() == STATE.SHOOTING || maintainReady) {
+            if (getState() == STATE.SHOOTING || maintainReady || mPeriodicIO.PREP_EJECT) {
                 mShooter.setShooterRPM(coreShootingParameters.getShootingVelocity());
             } else {
                 mShooter.setShooterRPM(200);

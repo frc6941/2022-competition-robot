@@ -289,8 +289,8 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         this.trajectoryFollower.setLockAngle(isLockAngle);
         this.trajectoryFollower.setRequiredOnTarget(requiredOnTarget);
         if (resetOnStart) {
-            this.resetOdometry(targetTrajectory.getInitialPose());
-            this.gyro.setYaw(targetTrajectory.getInitialPose().getRotation().getDegrees());
+            this.resetOdometry(targetTrajectory.getInitialHolonomicPose());
+            this.gyro.setYaw(targetTrajectory.getInitialHolonomicPose().getRotation().getDegrees());
             this.headingController.reset(getYaw(), getAngularVelocity());
         }
         setState(STATE.PATH_FOLLOWING);
