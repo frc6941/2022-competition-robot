@@ -12,7 +12,6 @@ import org.frcteam6941.utils.LazyTalonFX;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
 public class Climber implements Updatable {
@@ -20,9 +19,7 @@ public class Climber implements Updatable {
         // INPUT
         public boolean limitSwith = false;
         public double climberPosition = 0.0;
-        public double climberVoltage = 0.0;
         public double climberCurret = 0.0;
-        public double climberVelocity = 0.0;
 
         public DoubleSolenoid.Value climberExtenderStatus = DoubleSolenoid.Value.kReverse;
 
@@ -95,11 +92,6 @@ public class Climber implements Updatable {
                 Constants.CLIMBER_GEAR_RATIO) / 360.0 * (Constants.CLIMBER_PULLER_DIAMETER * Math.PI);
     }
 
-    public synchronized double getClimberVelocity() {
-        return Conversions.falconToMPS(mPeriodicIO.climberVelocity,
-                Constants.CLIMBER_PULLER_DIAMETER * Math.PI, Constants.CLIMBER_GEAR_RATIO);
-    }
-
     public synchronized boolean isClimberCalibrated() {
         return this.isClimberCalibrated;
     }
@@ -169,9 +161,7 @@ public class Climber implements Updatable {
     @Override
     public synchronized void read(double time, double dt) {
         mPeriodicIO.climberCurret = climberMotor.getStatorCurrent();
-        mPeriodicIO.climberVelocity = climberMotor.getSelectedSensorVelocity();
         mPeriodicIO.climberPosition = climberMotor.getSelectedSensorPosition();
-        mPeriodicIO.climberVoltage = climberMotor.getMotorOutputVoltage();
     }
 
     @Override
@@ -231,7 +221,6 @@ public class Climber implements Updatable {
 
     @Override
     public synchronized void telemetry() {
-        SmartDashboard.putNumber("Climber Raw Velocity", mPeriodicIO.climberVelocity);
     }
 
     @Override

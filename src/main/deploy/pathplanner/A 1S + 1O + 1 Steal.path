@@ -83,48 +83,37 @@
         "x": 6.66949959492336,
         "y": 7.537314600695552
       },
-      "nextControl": {
-        "x": 5.791933858749234,
-        "y": 7.322798531852989
-      },
-      "holonomicAngle": -136.72699945610583,
-      "isReversal": false,
-      "velOverride": null,
-      "isLocked": false,
-      "isStopPoint": true,
-      "stopEvent": {
-        "names": [
-          "enable eject",
-          "fire",
-          "intake"
-        ],
-        "executionBehavior": "parallel",
-        "waitBehavior": "none",
-        "waitTime": 0
-      }
-    },
-    {
-      "anchorPoint": {
-        "x": 5.02162615699639,
-        "y": 6.162461614022755
-      },
-      "prevControl": {
-        "x": 5.319023434255399,
-        "y": 6.693876420928198
-      },
       "nextControl": null,
-      "holonomicAngle": -122.61924307119281,
+      "holonomicAngle": -136.72699945610583,
       "isReversal": false,
       "velOverride": null,
       "isLocked": false,
       "isStopPoint": false,
       "stopEvent": {
-        "names": [],
+        "names": [
+          "enable eject",
+          "fire"
+        ],
         "executionBehavior": "parallel",
         "waitBehavior": "none",
         "waitTime": 0
       }
     }
   ],
-  "markers": []
+  "markers": [
+    {
+      "position": 1.0,
+      "names": [
+        "stop intake",
+        "spit"
+      ]
+    },
+    {
+      "position": 1.3939393939393656,
+      "names": [
+        "stop spit",
+        "intake"
+      ]
+    }
+  ]
 }

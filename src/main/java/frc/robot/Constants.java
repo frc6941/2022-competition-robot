@@ -34,6 +34,7 @@ import frc.robot.subsystems.Limelight.LimelightConstants;
  */
 public final class Constants {
     public static final boolean TUNING = true;
+    public static final boolean AUTO_TUNING = false;
 
     // FMS Related Information
     public static final class FMS {
@@ -197,7 +198,7 @@ public final class Constants {
     public static final double HOOD_CRUISE_V = 30000.0 * 2.0;
     public static final double HOOD_CRUISE_ACC = 30000.0 * 3.0;
 
-    public static final double HOOD_HOMING_CURRENT_THRESHOLD = 12.0;
+    public static final double HOOD_HOMING_CURRENT_THRESHOLD = 8.0;
 
     // Turret Constants
     public static final double TURRET_GEAR_RATIO = 7.0 * 181.0 / 18.0;

@@ -80,8 +80,9 @@ public class BallPath implements Updatable {
         triggerMotor.getPIDController().setD(Constants.TRIGGER_KD_V_SLOT_1, 1);
         triggerMotor.getPIDController().setFF(Constants.TRIGGER_KF_V_SLOT_1, 1);
 
-        feederMotor.setStatusFramePeriod(StatusFrame.Status_1_General, 100);
-        feederMotor.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 100);
+        feederMotor.setStatusFramePeriod(StatusFrame.Status_1_General, 255);
+        feederMotor.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 255);
+        feederMotor.setStatusFramePeriod(StatusFrame.Status_4_AinTempVbat, 255);
 
         slowProcessBoolean.update(false, 0.0);
         launchReverseBoolean.update(false, 0.0);

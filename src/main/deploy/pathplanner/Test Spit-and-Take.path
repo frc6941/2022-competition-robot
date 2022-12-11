@@ -2,13 +2,13 @@
   "waypoints": [
     {
       "anchorPoint": {
-        "x": 2.496186982895293,
-        "y": 3.5492658663042445
+        "x": 1.0043252313992779,
+        "y": 3.6955268223332656
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.496186982895294,
-        "y": 3.5492658663042445
+        "x": 1.1895891090360382,
+        "y": 3.6760253615293963
       },
       "holonomicAngle": 0,
       "isReversal": false,
@@ -17,28 +17,28 @@
       "isStopPoint": false,
       "stopEvent": {
         "names": [
-          "Intake"
+          "spit"
         ],
         "executionBehavior": "parallel",
-        "waitBehavior": "before",
-        "waitTime": 3.0
+        "waitBehavior": "none",
+        "waitTime": 0
       }
     },
     {
       "anchorPoint": {
-        "x": 3.3249990670597454,
-        "y": 3.5492658663042445
+        "x": 1.4626095602902107,
+        "y": 3.6857760919313307
       },
       "prevControl": {
-        "x": 3.33474979746168,
-        "y": 2.7009523213359232
+        "x": 1.2636946600907426,
+        "y": 3.6857760919313307
       },
       "nextControl": {
-        "x": 3.33474979746168,
-        "y": 2.7009523213359232
+        "x": 1.6618683067276458,
+        "y": 3.6857760919313307
       },
       "holonomicAngle": 0,
-      "isReversal": true,
+      "isReversal": false,
       "velOverride": null,
       "isLocked": false,
       "isStopPoint": false,
@@ -51,24 +51,21 @@
     },
     {
       "anchorPoint": {
-        "x": 4.426831602478371,
-        "y": 3.5395151359023096
+        "x": 1.9208938891811433,
+        "y": 3.6857760919313307
       },
       "prevControl": {
-        "x": 4.046553116802916,
-        "y": 4.212315533635806
+        "x": 1.8549047114053936,
+        "y": 3.66888608882678
       },
       "nextControl": null,
-      "holonomicAngle": 0.0,
+      "holonomicAngle": 0,
       "isReversal": false,
       "velOverride": null,
       "isLocked": false,
       "isStopPoint": false,
       "stopEvent": {
-        "names": [
-          "Stop Intake",
-          "Stop Spit"
-        ],
+        "names": [],
         "executionBehavior": "parallel",
         "waitBehavior": "none",
         "waitTime": 0
@@ -77,10 +74,10 @@
   ],
   "markers": [
     {
-      "position": 0.9333333333334112,
+      "position": 1.042424242424237,
       "names": [
-        "Stop Intake",
-        "Spit"
+        "event",
+        "intake"
       ]
     }
   ]

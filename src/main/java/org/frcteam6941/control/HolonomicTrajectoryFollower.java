@@ -2,6 +2,7 @@ package org.frcteam6941.control;
 
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
+import com.pathplanner.lib.server.PathPlannerServer;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -19,6 +20,7 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
     private final SimpleMotorFeedforward feedforward;
 
     private PathPlannerTrajectory.PathPlannerState lastState = null;
+    private Pose2d actualPose = null;
 
     private boolean finished = false;
     private boolean requiredOnTarget = false;
@@ -53,6 +55,8 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
                 return new HolonomicDriveSignal(new Translation2d(0, 0), 0.0, true, false);
             }
         }
+
+        actualPose = currentPose;
 
         lastState = (PathPlannerState) trajectory.sample(time);
         double x = xController.calculate(currentPose.getX(), lastState.poseMeters.getX());
@@ -109,6 +113,13 @@ public class HolonomicTrajectoryFollower extends PathPlannerTrajectoryFollower<H
 
     public boolean isPathFollowing() {
         return this.getCurrentTrajectory().isPresent();
+    }
+
+    public void sendData() {
+        if (isPathFollowing()) {
+            PathPlannerServer.sendActivePath(getCurrentTrajectory().get().getStates());
+            PathPlannerServer.sendPathFollowingData(new Pose2d(lastState.poseMeters.getTranslation(), lastState.holonomicRotation), actualPose);
+        }
     }
 
     @Override

@@ -472,6 +472,9 @@ public class SJTUSwerveMK5Drivebase implements SwerveDrivetrainBase {
         }
         SmartDashboard.putNumber("Pitch", getPitch());
         SmartDashboard.putNumber("Roll", getRoll());
+        if (Constants.AUTO_TUNING) {
+            this.trajectoryFollower.sendData();
+        }
     }
 
     @Override

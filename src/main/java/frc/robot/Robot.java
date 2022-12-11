@@ -6,6 +6,8 @@ package frc.robot;
 
 import java.util.Optional;
 
+import com.pathplanner.lib.server.PathPlannerServer;
+
 import org.frcteam6941.looper.UpdateManager;
 import org.frcteam6941.swerve.SJTUSwerveMK5Drivebase;
 
@@ -40,7 +42,6 @@ public class Robot extends TimedRobot {
     private UpdateManager updateManager;
     private final AutoSelector mAutoSelector = AutoSelector.getInstance();
     private final ShuffleBoardInteractions mShuffleBoardInteractions = ShuffleBoardInteractions.getInstance();
-
     /**
      * This function is run when the robot is first started up and should be used
      * for any
@@ -65,6 +66,9 @@ public class Robot extends TimedRobot {
         this.updateManager.startEnableLoop(Constants.LOOPER_DT);
 
         CameraServer.startAutomaticCapture();
+        if (Constants.AUTO_TUNING) {
+            PathPlannerServer.startServer(6941);
+        }
     }
 
     @Override
@@ -101,6 +105,7 @@ public class Robot extends TimedRobot {
         Superstructure.getInstance().setWantPureVisionAim(false);
         Superstructure.getInstance().setWantSwerveSelfLocking(false);
         Superstructure.getInstance().setWantVisionAssistDistance(true);
+        Superstructure.getInstance().setWantMaintain(true);
 
         CommandScheduler.getInstance().enable();
         this.updateManager.startEnableLoop(Constants.LOOPER_DT);
@@ -131,6 +136,7 @@ public class Robot extends TimedRobot {
         Superstructure.getInstance().setWantPureVisionAim(false);
         Superstructure.getInstance().setWantSwerveSelfLocking(true);
         Superstructure.getInstance().setWantVisionAssistDistance(false);
+        
 
         this.updateManager.stopDisableLoop();
         CommandScheduler.getInstance().enable();
