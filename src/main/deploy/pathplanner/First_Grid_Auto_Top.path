@@ -1,0 +1,88 @@
+{
+  "waypoints": [
+    {
+      "anchorPoint": {
+        "x": 6.592627746659002,
+        "y": 2.14006568364014
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 5.59262774665899,
+        "y": 2.14006568364014
+      },
+      "holonomicAngle": 0,
+      "isReversal": false,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [
+          "检测cube",
+          "调整高度至从地面拾取cube的高度",
+          "intaker take cube（轮子内转）"
+        ],
+        "executionBehavior": "sequential",
+        "waitBehavior": "none",
+        "waitTime": 0
+      }
+    },
+    {
+      "anchorPoint": {
+        "x": 4.8,
+        "y": 1.07
+      },
+      "prevControl": {
+        "x": 6.121109227397538,
+        "y": 1.07
+      },
+      "nextControl": {
+        "x": 4.400893359826975,
+        "y": 1.07
+      },
+      "holonomicAngle": 0,
+      "isReversal": false,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [],
+        "executionBehavior": "parallel",
+        "waitBehavior": "none",
+        "waitTime": 0
+      }
+    },
+    {
+      "anchorPoint": {
+        "x": 1.8,
+        "y": 1.07
+      },
+      "prevControl": {
+        "x": 2.691645996584044,
+        "y": 1.07
+      },
+      "nextControl": null,
+      "holonomicAngle": 0,
+      "isReversal": false,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [
+          "Release cube （intaker轮子外转）"
+        ],
+        "executionBehavior": "parallel",
+        "waitBehavior": "none",
+        "waitTime": 0
+      }
+    }
+  ],
+  "markers": [
+    {
+      "position": 1.0,
+      "names": [
+        "Rotate counterclockwise 180 degree",
+        "调整intaker至top row对应的角度，伸长至top row对应长度"
+      ]
+    }
+  ]
+}

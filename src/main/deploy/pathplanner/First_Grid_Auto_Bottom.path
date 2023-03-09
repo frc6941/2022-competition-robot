@@ -1,0 +1,86 @@
+{
+  "waypoints": [
+    {
+      "anchorPoint": {
+        "x": 1.8,
+        "y": 1.0609422973231921
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.8000000000000105,
+        "y": 1.0609422973231921
+      },
+      "holonomicAngle": 0,
+      "isReversal": false,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [
+          "归零（initial state：preload cube，机械臂反转至bottom row对应角度，伸长至对应长度）",
+          "intaker轮子release cube，后调整高度至从地面拾取cube的高度"
+        ],
+        "executionBehavior": "sequential",
+        "waitBehavior": "none",
+        "waitTime": 0
+      }
+    },
+    {
+      "anchorPoint": {
+        "x": 4.3527666002700425,
+        "y": 1.0609422973231921
+      },
+      "prevControl": {
+        "x": 4.385462690202127,
+        "y": 1.0609422973231921
+      },
+      "nextControl": {
+        "x": 4.385462690202127,
+        "y": 1.0609422973231921
+      },
+      "holonomicAngle": 0,
+      "isReversal": true,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [],
+        "executionBehavior": "parallel",
+        "waitBehavior": "none",
+        "waitTime": 0
+      }
+    },
+    {
+      "anchorPoint": {
+        "x": 6.6,
+        "y": 0.9
+      },
+      "prevControl": {
+        "x": 6.299513259227891,
+        "y": 0.9
+      },
+      "nextControl": null,
+      "holonomicAngle": 0,
+      "isReversal": false,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [],
+        "executionBehavior": "parallel",
+        "waitBehavior": "none",
+        "waitTime": 0
+      }
+    }
+  ],
+  "markers": [
+    {
+      "position": 1.0,
+      "names": [
+        "event",
+        "Rotation for 180° while moving",
+        "调整intaker至ground对应角度和长度"
+      ]
+    }
+  ]
+}
